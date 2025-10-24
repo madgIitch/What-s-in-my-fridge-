@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -17,6 +16,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.whatsinmyfridge.domain.model.ExpiryState
 import com.example.whatsinmyfridge.domain.model.FoodItemUi
 import com.example.whatsinmyfridge.ui.navigation.Route
+import androidx.compose.material.icons.filled.Camera
+
 
 @Composable
 fun HomeScreen(nav: NavController, vm: HomeVm = hiltViewModel()) {

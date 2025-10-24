@@ -1,11 +1,13 @@
 package com.example.whatsinmyfridge.data.local.datastore
 
-import android.content.Context
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.room.processor.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
+
 
 private val Context.dataStore by preferencesDataStore(name = "prefs")
 
