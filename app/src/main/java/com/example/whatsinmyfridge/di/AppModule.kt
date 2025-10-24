@@ -56,5 +56,5 @@ val appModule = module {
     viewModel { HomeVm(get()) }
 
     // ScanVm() - sin parámetros por ahora
-    viewModel { ScanVm() }
+    viewModel { ScanVm(get()) }  // Ahora recibe DraftRepository
 }

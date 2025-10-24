@@ -74,6 +74,10 @@ dependencies {
     implementation("io.insert-koin:koin-androidx-compose:3.5.3")
     implementation("io.insert-koin:koin-androidx-navigation:3.5.3")
 
+    //Coil
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+
     // Testing
     testImplementation(libs.junit)
     testImplementation("io.insert-koin:koin-test:3.5.3")

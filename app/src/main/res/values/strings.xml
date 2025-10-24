@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">WhatsInMyFridge</string>
+    <string name="app_name">What\'s In My Fridge</string>
+    <string name="widget_description">Muestra items próximos a caducar</string>
 </resources>
