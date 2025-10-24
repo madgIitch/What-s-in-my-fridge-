@@ -5,6 +5,8 @@ plugins {
 
     // KSP solo para Room (Koin no lo necesita)
     id("com.google.devtools.ksp") version "2.0.21-1.0.28"
+    kotlin("plugin.serialization") version "2.0.21"  // Agregar plugin
+
 }
 
 android {
@@ -77,6 +79,8 @@ dependencies {
     //Coil
     implementation("io.coil-kt:coil-compose:2.5.0")
 
+    // Kotlinx Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     // Testing
     testImplementation(libs.junit)
