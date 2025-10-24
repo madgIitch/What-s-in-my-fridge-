@@ -22,6 +22,8 @@ import com.example.whatsinmyfridge.data.local.db.AppDb
 import com.example.whatsinmyfridge.domain.model.ExpiryState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -31,10 +33,13 @@ import java.time.temporal.ChronoUnit
  * Se actualiza cada 30 minutos y muestra hasta 5 items
  * ordenados por fecha de caducidad.
  */
-class ExpiryWidget : GlanceAppWidget() {
+class ExpiryWidget : GlanceAppWidget(), KoinComponent {
+
+    // Inyectar AppDb usando Koin
+    private val appDb: AppDb by inject()
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val items = loadExpiringItems(context)
+        val items = loadExpiringItems()
 
         provideContent {
             GlanceTheme {
@@ -123,14 +128,11 @@ class ExpiryWidget : GlanceAppWidget() {
         }
     }
 
-    private suspend fun loadExpiringItems(context: Context): List<WidgetItem> {
+    private suspend fun loadExpiringItems(): List<WidgetItem> {
         return withContext(Dispatchers.IO) {
             try {
-                val db = AppDb.getInstance(context)
-                val items = db.food().getAllFlow()
-
-                // Como Flow no se puede usar directamente, hacemos una query síncrona
-                val allItems = db.food().getAll() // Necesitarás agregar este método
+                // Usar la instancia de AppDb inyectada por Koin
+                val allItems = appDb.food().getAll()
 
                 allItems
                     .map { entity ->

@@ -14,7 +14,7 @@ interface FoodDao {
     @Query("SELECT * FROM food_items ORDER BY expiryDate ASC")
     fun getAllFlow(): Flow<List<FoodItemEntity>>
 
-    // Agregar este método para el widget
+    // NUEVO: Método síncrono para el widget
     @Query("SELECT * FROM food_items ORDER BY expiryDate ASC")
     suspend fun getAll(): List<FoodItemEntity>
 
