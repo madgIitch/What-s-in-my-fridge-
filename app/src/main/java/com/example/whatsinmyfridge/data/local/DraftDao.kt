@@ -19,6 +19,9 @@ interface DraftDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(draft: ParsedDraftEntity): Long
 
+    @Query("SELECT * FROM parsed_drafts WHERE confirmed = 0 ORDER BY timestamp DESC")
+    fun getPendingDrafts(): Flow<List<ParsedDraftEntity>>
+
     @Delete
     suspend fun delete(draft: ParsedDraftEntity)
 
