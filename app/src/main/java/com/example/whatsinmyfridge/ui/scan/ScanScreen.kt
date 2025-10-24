@@ -21,6 +21,9 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 
 /**
  * Pantalla de escaneo de tickets con cámara.
@@ -42,17 +45,15 @@ fun ScanScreen(
     val ocrResult by vm.ocrResult.collectAsState()
     val errorMessage by vm.errorMessage.collectAsState()
 
-    // Estado para permisos de cámara
     var hasCameraPermission by remember { mutableStateOf(false) }
 
-    // Launcher para solicitar permiso de cámara
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         hasCameraPermission = isGranted
     }
 
-    // Launcher para capturar foto
+    // Launcher para capturar foto con cámara
     val imageUri = remember {
         val file = File(context.cacheDir, "ticket_${System.currentTimeMillis()}.jpg")
         FileProvider.getUriForFile(
@@ -70,9 +71,13 @@ fun ScanScreen(
         }
     }
 
-    // Solicitar permiso al iniciar
-    LaunchedEffect(Unit) {
-        permissionLauncher.launch(Manifest.permission.CAMERA)
+    // NUEVO: Launcher para seleccionar imagen de galería
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            vm.processImage(it)
+        }
     }
 
     Scaffold(
@@ -80,30 +85,27 @@ fun ScanScreen(
             TopAppBar(
                 title = { Text("Escanear Ticket") },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        vm.clearState()
-                        nav.popBackStack()
-                    }) {
+                    IconButton(onClick = { nav.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, "Volver")
                     }
                 }
             )
         }
-    ) { padding ->
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(paddingValues)
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Mostrar imagen capturada
             capturedImageUri?.let { uri ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp)
+                        .height(200.dp)
                 ) {
                     Image(
                         painter = rememberAsyncImagePainter(uri),
@@ -126,7 +128,7 @@ fun ScanScreen(
                         Text(
                             text = "Texto detectado:",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                            fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = text,
@@ -137,8 +139,6 @@ fun ScanScreen(
 
                 Button(
                     onClick = {
-                        // TODO: Navegar a ReviewDraftScreen
-                        // nav.navigate(Route.ReviewDraft.path)
                         vm.clearState()
                         nav.popBackStack()
                     },
@@ -148,8 +148,22 @@ fun ScanScreen(
                 }
             }
 
-            // Botón de captura
+            // Botones de captura
             if (capturedImageUri == null) {
+                // NUEVO: Botón para seleccionar de galería
+                Button(
+                    onClick = {
+                        galleryLauncher.launch("image/*")
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isProcessing
+                ) {
+                    Icon(Icons.Default.Image, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Seleccionar de Galería")
+                }
+
+                // Botón para capturar con cámara
                 Button(
                     onClick = {
                         if (hasCameraPermission) {
@@ -163,20 +177,21 @@ fun ScanScreen(
                 ) {
                     Icon(Icons.Default.CameraAlt, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Capturar Ticket")
+                    Text("Capturar con Cámara")
                 }
 
                 Text(
-                    text = "Toma una foto clara del ticket de compra",
+                    text = "Toma una foto o selecciona una imagen del ticket de compra",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
                 )
             } else if (isProcessing) {
                 CircularProgressIndicator()
                 Text("Procesando imagen...")
             }
 
-            // Mostrar error si existe
+            // Mostrar error
             errorMessage?.let { error ->
                 Card(
                     colors = CardDefaults.cardColors(
