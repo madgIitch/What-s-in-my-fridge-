@@ -1,6 +1,5 @@
 package com.example.whatsinmyfridge.ui.home
 
-import androidx.camera.core.Camera
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,15 +11,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.androidx.compose.koinViewModel
 import com.example.whatsinmyfridge.domain.model.ExpiryState
 import com.example.whatsinmyfridge.domain.model.FoodItemUi
 import com.example.whatsinmyfridge.ui.navigation.Route
 import androidx.compose.material.icons.filled.Camera
 
-
 @Composable
-fun HomeScreen(nav: NavController, vm: HomeVm = hiltViewModel()) {
+fun HomeScreen(nav: NavController, vm: HomeVm = koinViewModel()) {
     val items by vm.items.collectAsState()
 
     Scaffold(

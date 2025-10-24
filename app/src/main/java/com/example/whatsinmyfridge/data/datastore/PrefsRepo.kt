@@ -1,22 +1,41 @@
-package com.example.whatsinmyfridge.data.local.datastore
+package com.example.whatsinmyfridge.data.datastore
 
-import androidx.datastore.preferences.core.edit
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import androidx.room.processor.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
-import jakarta.inject.Inject
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
-private val Context.dataStore by preferencesDataStore(name = "prefs")
+class PrefsRepo(private val context: Context) {
 
-class PrefsRepo @Inject constructor(@ApplicationContext ctx: Context) {
-    private val ds = ctx.dataStore
+    object PrefsKeys {
+        val CLOUD_CONSENT = booleanPreferencesKey("cloud_consent")
+        val REMINDER_DAYS = intPreferencesKey("reminder_days")
+    }
 
-    val consent = ds.data.map { it[PrefsKeys.consentCloud] ?: false }
+    val cloudConsent: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[PrefsKeys.CLOUD_CONSENT] ?: false
+    }
 
-    suspend fun setConsent(v: Boolean) {
-        ds.edit { it[PrefsKeys.consentCloud] = v }
+    val reminderDays: Flow<Int> = context.dataStore.data.map { prefs ->
+        prefs[PrefsKeys.REMINDER_DAYS] ?: 3
+    }
+
+    suspend fun setCloudConsent(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[PrefsKeys.CLOUD_CONSENT] = enabled
+        }
+    }
+
+    suspend fun setReminderDays(days: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[PrefsKeys.REMINDER_DAYS] = days
+        }
     }
 }

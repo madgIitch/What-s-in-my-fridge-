@@ -2,6 +2,8 @@ package com.example.whatsinmyfridge.data.local.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import com.example.whatsinmyfridge.data.local.Converters
 import com.example.whatsinmyfridge.data.local.DraftDao
 import com.example.whatsinmyfridge.data.local.FoodDao
 
@@ -9,6 +11,7 @@ import com.example.whatsinmyfridge.data.local.FoodDao
     entities = [FoodItemEntity::class, ParsedDraftEntity::class],
     version = 1
 )
+@TypeConverters(Converters::class)
 abstract class AppDb : RoomDatabase() {
     abstract fun food(): FoodDao
     abstract fun drafts(): DraftDao

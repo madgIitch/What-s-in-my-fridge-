@@ -14,8 +14,8 @@ sealed class Route(val path: String) {
 }
 
 @Composable
-fun AppNav(nav: NavHostController = androidx.navigation.compose.rememberNavController()) {
-    _root_ide_package_.androidx.navigation.NavHost(
+fun AppNav(nav: NavHostController = rememberNavController()) {
+    NavHost(
         navController = nav,
         startDestination = Route.Home.path
     ) {

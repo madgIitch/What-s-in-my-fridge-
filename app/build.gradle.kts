@@ -3,14 +3,13 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 
-    // Añadir:
-    id("com.google.dagger.hilt.android") version "2.52"
-    id("org.jetbrains.kotlin.kapt")
+    // KSP solo para Room (Koin no lo necesita)
+    id("com.google.devtools.ksp") version "2.0.21-1.0.28"
 }
 
 android {
     namespace = "com.example.whatsinmyfridge"
-    compileSdk { version = release(36) }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.whatsinmyfridge"
@@ -25,11 +24,18 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions { jvmTarget = "11" }
-    buildFeatures { compose = true }
+
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+
+    buildFeatures {
+        compose = true
+    }
 }
 
 dependencies {
+    // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -40,45 +46,49 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+
+    // Navigation
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
 
-    // **Iconos extendidos** (para Icons.Default.Camera)
+    // Material Icons Extended
     implementation("androidx.compose.material:material-icons-extended")
 
-    // Room
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
+    // Room con KSP
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.common.jvm)
+    ksp(libs.androidx.room.compiler)
+
+    // Glance (Widgets)
     implementation(libs.androidx.glance)
-    kapt("androidx.room:room-compiler:2.6.1")
+    implementation(libs.androidx.glance.appwidget)
 
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
 
-    // CameraX (ya lo tienes core; ok)
-
-    // **DataStore Preferences**
+    // DataStore Preferences
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
-    // **Hilt**
-    implementation("com.google.dagger:hilt-android:2.52")
-    kapt("com.google.dagger:hilt-android-compiler:2.52")
+    // Koin - Reemplazo de Hilt (sin KAPT/KSP)
+    implementation("io.insert-koin:koin-android:3.5.3")
+    implementation("io.insert-koin:koin-androidx-compose:3.5.3")
+    implementation("io.insert-koin:koin-androidx-navigation:3.5.3")
 
-    // Hilt + Navigation Compose (para hiltViewModel)
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-
+    // Testing
     testImplementation(libs.junit)
+    testImplementation("io.insert-koin:koin-test:3.5.3")
+    testImplementation("io.insert-koin:koin-test-junit4:3.5.3")
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+
+    // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-
 }
 
-// app/build.gradle.kts (a nivel de módulo)
 configurations.all {
     exclude(group = "com.intellij", module = "annotations")
 }
