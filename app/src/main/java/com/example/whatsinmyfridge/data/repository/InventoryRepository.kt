@@ -14,7 +14,7 @@ class InventoryRepository(private val dao: FoodDao) {
     fun observeUi(): Flow<List<FoodItemUi>> =
         dao.getAllFlow().map { list ->
             list.map { entity ->
-                val days = ChronoUnit.DAYS.between(LocalDate.now(), entity.expiryDate)  // Sin .toInt()
+                val days = ChronoUnit.DAYS.between(LocalDate.now(), entity.expiryDate)
                 val state = when {
                     days < 0 -> ExpiryState.EXPIRED
                     days <= 3 -> ExpiryState.SOON
@@ -24,7 +24,13 @@ class InventoryRepository(private val dao: FoodDao) {
             }
         }
 
+    // ✅ NUEVO: Método para obtener un item por ID
+    suspend fun getItemById(id: Long): FoodItemEntity? = dao.getById(id)
+
     suspend fun addItem(item: FoodItemEntity) = dao.insert(item)
+
+    // ✅ NUEVO: Método para actualizar un item
+    suspend fun updateItem(item: FoodItemEntity) = dao.update(item)
 
     suspend fun deleteItem(id: Long) = dao.deleteById(id)
 }

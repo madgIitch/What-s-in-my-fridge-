@@ -52,7 +52,6 @@ fun AddItemScreen(
                 enabled = !isSaving
             )
 
-            // TODO: Agregar DatePicker para expiryDate
             Text("Fecha de caducidad: $expiryDate")
 
             OutlinedTextField(

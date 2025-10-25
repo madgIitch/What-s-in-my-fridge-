@@ -28,8 +28,8 @@ class DetailVm(
             _isLoading.value = true
             try {
                 // Necesitarás agregar este método a InventoryRepository
-                // val item = inventoryRepository.getItemById(itemId)
-                // _item.value = item
+                val item = inventoryRepository.getItemById(itemId)
+                _item.value = item
             } catch (e: Exception) {
                 println("Error cargando item: ${e.message}")
             } finally {
@@ -55,8 +55,7 @@ class DetailVm(
                     notes = notes
                 )
                 try {
-                    // Necesitarás agregar este método a InventoryRepository
-                    // inventoryRepository.updateItem(updated)
+                    inventoryRepository.updateItem(updated)
                 } catch (e: Exception) {
                     println("Error actualizando item: ${e.message}")
                 }

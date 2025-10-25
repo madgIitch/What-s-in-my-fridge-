@@ -83,7 +83,6 @@ fun DetailScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // TODO: Agregar DatePicker para expiryDate
                 Text("Fecha de caducidad: $expiryDate")
 
                 OutlinedTextField(

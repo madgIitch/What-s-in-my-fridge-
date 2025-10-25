@@ -11,7 +11,10 @@ import com.example.whatsinmyfridge.data.local.FoodDao
 import com.example.whatsinmyfridge.data.local.db.AppDb
 import com.example.whatsinmyfridge.data.repository.DraftRepository
 import com.example.whatsinmyfridge.data.repository.InventoryRepository
+import com.example.whatsinmyfridge.ui.add.AddItemVm
+import com.example.whatsinmyfridge.ui.detail.DetailVm
 import com.example.whatsinmyfridge.ui.home.HomeVm
+import com.example.whatsinmyfridge.ui.review.ReviewDraftVm
 import com.example.whatsinmyfridge.ui.scan.ScanVm
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -57,4 +60,21 @@ val appModule = module {
 
     // ScanVm() - sin parámetros por ahora
     viewModel { ScanVm(get()) }  // Ahora recibe DraftRepository
+
+    // DetailVm con parámetros
+    viewModel { (itemId: Long) ->
+        DetailVm(itemId = itemId, inventoryRepository = get())
+    }
+
+    // AdItem
+    viewModel { AddItemVm(get()) }
+
+    //ReviewDraft
+    viewModel { (draftId: Long) ->
+        ReviewDraftVm(
+            draftId = draftId,
+            draftRepository = get(),
+            inventoryRepository = get()
+        )
+    }
 }
