@@ -82,6 +82,12 @@ dependencies {
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
+    //ML Kit
+    implementation("com.google.mlkit:text-recognition:16.0.0")
+    // Agregar después de las dependencias de ML Kit
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+
     // Testing
     testImplementation(libs.junit)
     testImplementation("io.insert-koin:koin-test:3.5.3")

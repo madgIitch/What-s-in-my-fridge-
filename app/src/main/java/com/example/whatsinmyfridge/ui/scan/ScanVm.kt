@@ -1,14 +1,19 @@
 package com.example.whatsinmyfridge.ui.scan
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.whatsinmyfridge.data.local.db.ParsedDraftEntity
 import com.example.whatsinmyfridge.data.repository.DraftRepository
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 /**
  * ViewModel para la pantalla de escaneo de tickets.
@@ -56,7 +61,7 @@ class ScanVm(
      *
      * @param imageUri URI de la imagen a procesar (desde cámara o galería)
      */
-    fun processImage(imageUri: Uri) {
+    fun processImage(context: Context, imageUri: Uri) {
         viewModelScope.launch {
             _isProcessing.value = true
             _capturedImageUri.value = imageUri
@@ -64,33 +69,22 @@ class ScanVm(
             _savedDraftId.value = null
 
             try {
-                // TODO: Implementar OCR real con ML Kit Text Recognition
-                // Pasos para implementación:
-                // 1. Agregar dependencia: implementation("com.google.mlkit:text-recognition:16.0.0")
-                // 2. Crear InputImage desde URI
-                // 3. Procesar con TextRecognizer
-                // 4. Extraer texto y parsear información
-
-                /*
-                val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                // Crear InputImage desde URI
                 val inputImage = InputImage.fromFilePath(context, imageUri)
+
+                // Procesar con TextRecognizer
+                val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
                 val result = recognizer.process(inputImage).await()
                 val rawText = result.text
 
-                // Parsear información del ticket
-                val parsedInfo = parseReceiptText(rawText)
-                */
+                _ocrResult.value = rawText
 
-                // Simulación temporal del resultado OCR
-                val simulatedText = buildSimulatedOcrText()
-                _ocrResult.value = simulatedText
-
-                // Parsear información del texto simulado
-                val parsedInfo = parseSimulatedText(simulatedText)
+                // Parsear información del texto OCR real
+                val parsedInfo = parseSimulatedText(rawText) // Reutiliza el parser existente temporalmente
 
                 // Crear entidad de borrador
                 val draft = ParsedDraftEntity(
-                    rawText = simulatedText,
+                    rawText = rawText,
                     merchant = parsedInfo.merchant,
                     purchaseDate = parsedInfo.date,
                     currency = parsedInfo.currency,
@@ -109,7 +103,6 @@ class ScanVm(
             }
         }
     }
-
     /**
      * Limpia todos los estados después de procesar una imagen.
      * Útil para resetear la pantalla antes de un nuevo escaneo.

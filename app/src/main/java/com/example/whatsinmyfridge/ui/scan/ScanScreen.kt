@@ -67,7 +67,7 @@ fun ScanScreen(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            vm.processImage(imageUri)
+            vm.processImage(context, imageUri)
         }
     }
 
@@ -76,7 +76,7 @@ fun ScanScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            vm.processImage(it)
+            vm.processImage(context, it)  // Agregar 'context' como primer parámetro
         }
     }
 
