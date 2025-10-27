@@ -167,13 +167,13 @@ class ScanVm(
         val lines = text.lines()
         println("\nTotal de líneas detectadas: ${lines.size}")
 
-        // Buscar merchant (ignorar productos, buscar nombre de tienda)
+        // Buscar merchant - buscar líneas con "Center", "Str.", "Damm"
         println("\n--- BUSCANDO MERCHANT ---")
         val merchant = lines
             .firstOrNull { line ->
-                val isValid = line.isNotBlank() &&
-                        line.contains("Str.") || line.contains("Damm") ||
-                        (line.length > 10 && !line.matches(Regex(""".*\d+[.,]\d{2}.*""")))
+                val isValid = line.contains("Center", ignoreCase = true) ||
+                        line.contains("Str.") ||
+                        line.contains("Damm")
                 if (isValid) {
                     println("✓ Merchant encontrado: '$line'")
                 }
@@ -183,18 +183,17 @@ class ScanVm(
 
         // Buscar fecha
         println("\n--- BUSCANDO FECHA ---")
-        val dateRegex = Regex("""(\d{2}[./]\d{2}[./]\d{4})|(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})""")
-        val date = dateRegex.find(text)?.value?.take(10) // Solo fecha, sin hora
+        val dateRegex = Regex("""(\d{2}[./]\d{2}[./]\d{4})|(\d{4}-\d{2}-\d{2})""")
+        val date = dateRegex.find(text)?.value?.take(10)
         println("Fecha encontrada: ${date ?: "NO ENCONTRADA"}")
 
         // Buscar total - buscar "SUMME" y luego el número más cercano
         println("\n--- BUSCANDO TOTAL ---")
-        val summeIndex = lines.indexOfFirst { it.trim() == "SUMME" }
+        val summeIndex = lines.indexOfFirst { it.trim().startsWith("SUMME") }
         var total: Double? = null
         if (summeIndex >= 0) {
-            // Buscar número en las siguientes 5 líneas
-            for (i in summeIndex + 1 until minOf(summeIndex + 6, lines.size)) {
-                val amountRegex = Regex("""^(\d+),?\s*(\d{2})$""")
+            for (i in summeIndex + 1 until minOf(summeIndex + 30, lines.size)) {
+                val amountRegex = Regex("""^(\d+),(\d{2})$""")
                 val match = amountRegex.find(lines[i].trim())
                 if (match != null) {
                     val euros = match.groupValues[1]
@@ -209,87 +208,102 @@ class ScanVm(
             println("✗ Total NO ENCONTRADO")
         }
 
-        // Buscar items
         println("\n--- BUSCANDO ITEMS ---")
         val items = mutableListOf<ParsedItem>()
 
-        // Patrón 1: "NOMBRE EUR X,XX A/B" (E-Center)
-        val pattern1 = Regex("""^([A-ZÄÖÜ][A-ZÄÖÜa-zäöü\s.]+?)\s+(?:EUR\s+)?(\d+[.,]\d{2})\s+[AB]$""")
-
-        // Patrón 2: Solo precio "X,XX B" o "X, XX B" (con espacio opcional)
-        val pattern2Standalone = Regex("""^(\d+),?\s*(\d{2})\s+B$""")
-
-        // Patrón 3: "NOMBRE" seguido de peso en siguiente línea
-        val pattern3 = Regex("""^([A-ZÄÖÜ][A-ZÄÖÜa-zäöü\s.]+)$""")
-        // Patrón 3b: Peso con espacio opcional después de coma
-        val pattern3b = Regex("""^\s*(\d+),?\s*(\d+)\s*kg\s*x\s*(\d+[.,]\d{2})\s*EUR/kg""")
-
-        // Mapear nombres a precios
+        // ESTRATEGIA PARA E-CENTER: Recolectar nombres y precios por separado
         val productNames = mutableListOf<String>()
         val productPrices = mutableListOf<Double>()
+
+        // Patrón para nombres de productos (líneas que empiezan con mayúscula/letra, sin números al final)
+        val namePattern = Regex("""^([A-ZÄÖÜ&][A-ZÄÖÜa-zäöü&.\s-]+)$""")
+
+        // Patrón para precios E-Center: "X,XX A" (con categoría fiscal A)
+        val pricePatternA = Regex("""^(\d+),(\d{2})\s+A$""")
+
+        // Patrón para precios Kaiserin-Augusta: "X,XX B" o "X, XX B"
+        val pricePatternB = Regex("""^(\d+),?\s*(\d{2})\s+B$""")
+
+        // Patrón para peso: "X,XXX kg x X,XX EUR/kg"
+        val weightPattern = Regex("""^\s*(\d+),?\s*(\d+)\s*kg\s*x\s*(\d+),(\d{2})\s*EUR/kg""")
 
         var i = 0
         while (i < lines.size) {
             val line = lines[i].trim()
             println("\nLínea $i: '$line'")
 
-            // Ignorar metadata
-            if (line.contains("Tel") || line.contains("UID") ||
+            // Ignorar metadata conocida
+            if (line.isEmpty() ||
+                line.contains("Tel") || line.contains("UID") ||
                 line.contains("Steuer") || line.contains("Geg.") ||
                 line.contains("TSE-") || line.contains("Zahlung") ||
-                line.contains("Beleg") || line.isEmpty() ||
+                line.contains("Beleg") || line.contains("Bitte") ||
                 line.contains("Netto") || line.contains("Brutto") ||
                 line.contains("Gesamtbetrag") || line == "EUR" ||
-                line.matches(Regex("""\d{7,}""")) || // IDs largos
-                line.contains("SUMME") || line.contains("Str.") ||
-                line.matches(Regex("""[a-zA-Z0-9+/]{20,}"""))) { // Firmas
-                println("  → IGNORADA (metadata/vacía)")
+                line.contains("Posten:") || line.contains("SUMME") ||
+                line.contains("Visa") || line.contains("Contactless") ||
+                line.contains("Datum:") || line.contains("Uhrzeit:") ||
+                line.contains("Beleg-Nr") || line.contains("Trace-Nr") ||
+                line.contains("Terminal") || line.contains("Pos-Info") ||
+                line.contains("AS-") || line.contains("Capt.") ||
+                line.contains("AID") || line.contains("EMV-") ||
+                line.contains("ProC-Code") || line.contains("Betrag") ||
+                line.contains("Bezahlung") || line.contains("erfolgt") ||
+                line.contains("aufbewahren") || line.contains("Kundenbeleg") ||
+                line.matches(Regex("""\d{2}:\d{2}.*""")) || // Horas
+                line.matches(Regex("""\d{5,}""")) || // IDs largos
+                line.matches(Regex("""[#*]+.*""")) || // Líneas con símbolos
+                line.matches(Regex("""\d{2}\.\d{2}\.\d{4}""")) || // Fechas solas
+                line.matches(Regex("""[A-Z]{2,}-[A-Z].*""")) || // Códigos tipo "VU-Nr"
+                line.matches(Regex(""".*\d{2}\s+\d{3}\s+\d{2}.*"""))) { // Códigos numéricos
+                println("  → IGNORADA (metadata)")
                 i++
                 continue
             }
 
-            // Patrón 1: E-Center
-            pattern1.find(line)?.let { match ->
-                println("  ✓ PATRÓN 1 (E-Center)")
-                println("    Nombre: '${match.groupValues[1].trim()}'")
-                println("    Precio: '${match.groupValues[2]}'")
-                items.add(ParsedItem(
-                    name = match.groupValues[1].trim(),
-                    quantity = 1,
-                    price = match.groupValues[2].replace(",", ".").toDoubleOrNull()
-                ))
-                i++
-                return@let
-            }
-
-            // Patrón 2: Precio standalone
-            pattern2Standalone.find(line)?.let { match ->
+            // Intentar capturar precio E-Center (X,XX A)
+            pricePatternA.find(line)?.let { match ->
                 val euros = match.groupValues[1]
                 val cents = match.groupValues[2]
                 val price = "$euros.$cents".toDoubleOrNull()
-                println("  ✓ PATRÓN 2 (Precio standalone)")
-                println("    Precio: €$price")
-                productPrices.add(price ?: 0.0)
+                println("  ✓ PRECIO E-CENTER: €$price")
+                if (price != null) {
+                    productPrices.add(price)
+                }
                 i++
                 return@let
             }
 
-            // Patrón 3: Nombre + peso
-            pattern3.find(line)?.let { nameMatch ->
+            // Intentar capturar precio Kaiserin-Augusta (X,XX B)
+            pricePatternB.find(line)?.let { match ->
+                val euros = match.groupValues[1]
+                val cents = match.groupValues[2]
+                val price = "$euros.$cents".toDoubleOrNull()
+                println("  ✓ PRECIO KAISERIN: €$price")
+                if (price != null) {
+                    productPrices.add(price)
+                }
+                i++
+                return@let
+            }
+
+            // Intentar capturar nombre + peso en siguiente línea
+            namePattern.find(line)?.let { nameMatch ->
                 if (i + 1 < lines.size) {
                     val nextLine = lines[i + 1]
-                    println("  ? PATRÓN 3 (nombre detectado)")
-                    println("    Nombre: '${nameMatch.groupValues[1].trim()}'")
+                    println("  ? NOMBRE DETECTADO: '${nameMatch.groupValues[1]}'")
                     println("    Siguiente línea: '$nextLine'")
 
-                    pattern3b.find(nextLine)?.let { priceMatch ->
-                        val weightInt = priceMatch.groupValues[1]
-                        val weightDec = priceMatch.groupValues[2]
+                    weightPattern.find(nextLine)?.let { weightMatch ->
+                        val weightInt = weightMatch.groupValues[1]
+                        val weightDec = weightMatch.groupValues[2]
                         val weight = "$weightInt.$weightDec".toDoubleOrNull() ?: 1.0
-                        val pricePerKg = priceMatch.groupValues[3].replace(",", ".").toDoubleOrNull()
+                        val priceInt = weightMatch.groupValues[3]
+                        val priceDec = weightMatch.groupValues[4]
+                        val pricePerKg = "$priceInt.$priceDec".toDoubleOrNull()
                         val totalPrice = pricePerKg?.times(weight)
 
-                        println("  ✓ PATRÓN 3 COMPLETO")
+                        println("  ✓ ITEM CON PESO")
                         println("    Peso: ${weight}kg")
                         println("    Precio/kg: €$pricePerKg")
                         println("    Precio total: €$totalPrice")
@@ -302,10 +316,18 @@ class ScanVm(
                         i += 2
                         return@let
                     }
-                    println("  ✗ Siguiente línea no coincide con patrón de peso")
                 }
-                // Si no hay peso, guardar nombre para emparejar después
-                productNames.add(nameMatch.groupValues[1].trim())
+
+                // Si no hay peso, guardar como nombre para emparejar después
+                val name = nameMatch.groupValues[1].trim()
+                // Filtrar nombres que son claramente metadata
+                if (name.length > 3 &&
+                    !name.contains("Berlin") &&
+                    !name.contains("Debit") &&
+                    !name.contains("Nr.")) {
+                    println("  ✓ NOMBRE GUARDADO: '$name'")
+                    productNames.add(name)
+                }
             }
 
             println("  ✗ NO COINCIDE con ningún patrón")
@@ -313,14 +335,16 @@ class ScanVm(
         }
 
         // Emparejar nombres con precios
+        println("\n--- EMPAREJANDO NOMBRES Y PRECIOS ---")
         val minSize = minOf(productNames.size, productPrices.size)
+        println("Nombres: ${productNames.size}, Precios: ${productPrices.size}")
         for (j in 0 until minSize) {
             items.add(ParsedItem(
                 name = productNames[j],
                 quantity = 1,
                 price = productPrices[j]
             ))
-            println("  ✓ Emparejado: ${productNames[j]} → €${productPrices[j]}")
+            println("  ✓ ${productNames[j]} → €${productPrices[j]}")
         }
 
         println("\n========== RESUMEN PARSING ==========")
@@ -341,6 +365,8 @@ class ScanVm(
             itemsJson = Json.encodeToString(items)
         )
     }
+
+
 
     /**
      * Maneja errores durante el procesamiento OCR.
