@@ -11,7 +11,7 @@ import com.example.whatsinmyfridge.data.local.FoodDao
 
 @Database(
     entities = [FoodItemEntity::class, ParsedDraftEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

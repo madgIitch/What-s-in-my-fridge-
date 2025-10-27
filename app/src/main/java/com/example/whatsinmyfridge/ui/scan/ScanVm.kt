@@ -217,10 +217,10 @@ class ScanVm(
         val productNames = mutableListOf<String>()
         val productPrices = mutableListOf<Double>()
 
-        // Patrón para nombres de productos (líneas que empiezan con mayúscula/letra, sin números al final)
+        // Patrón para nombres de productos
         val namePattern = Regex("""^([A-ZÄÖÜ&][A-ZÄÖÜa-zäöü&.\s-]+)$""")
 
-        // Patrón para precios E-Center: "X,XX A" (con categoría fiscal A)
+        // Patrón para precios E-Center: "X,XX A"
         val pricePatternA = Regex("""^(\d+),(\d{2})\s+A$""")
 
         // Patrón para precios Kaiserin-Augusta: "X,XX B" o "X, XX B"
@@ -252,12 +252,13 @@ class ScanVm(
                 line.contains("ProC-Code") || line.contains("Betrag") ||
                 line.contains("Bezahlung") || line.contains("erfolgt") ||
                 line.contains("aufbewahren") || line.contains("Kundenbeleg") ||
-                line.matches(Regex("""\d{2}:\d{2}.*""")) || // Horas
-                line.matches(Regex("""\d{5,}""")) || // IDs largos
-                line.matches(Regex("""[#*]+.*""")) || // Líneas con símbolos
-                line.matches(Regex("""\d{2}\.\d{2}\.\d{4}""")) || // Fechas solas
-                line.matches(Regex("""[A-Z]{2,}-[A-Z].*""")) || // Códigos tipo "VU-Nr"
-                line.matches(Regex(""".*\d{2}\s+\d{3}\s+\d{2}.*"""))) { // Códigos numéricos
+                line.matches(Regex("""\d{2}:\d{2}.*""")) ||
+                line.matches(Regex("""\d{5,}""")) ||
+                line.matches(Regex("""[#*]+.*""")) ||
+                line.matches(Regex("""\d{2}\.\d{2}\.\d{4}""")) ||
+                line.matches(Regex("""[A-Z]{2,}-[A-Z].*""")) ||
+                line.matches(Regex(""".*\d{2}\s+\d{3}\s+\d{2}.*"""))
+            ) {
                 println("  → IGNORADA (metadata)")
                 i++
                 continue
@@ -298,9 +299,11 @@ class ScanVm(
             // Intentar capturar nombre + peso en siguiente línea
             if (!matched) {
                 namePattern.find(line)?.let { nameMatch ->
+                    println("  ? NOMBRE DETECTADO: '${nameMatch.groupValues[1]}'")
+
+                    // Verificar si hay una siguiente línea para buscar peso
                     if (i + 1 < lines.size) {
                         val nextLine = lines[i + 1]
-                        println("  ? NOMBRE DETECTADO: '${nameMatch.groupValues[1]}'")
                         println("    Siguiente línea: '$nextLine'")
 
                         weightPattern.find(nextLine)?.let { weightMatch ->
@@ -317,52 +320,61 @@ class ScanVm(
                             println("    Precio/kg: €$pricePerKg")
                             println("    Precio total: €$totalPrice")
 
-                            items.add(ParsedItem(
-                                name = "${nameMatch.groupValues[1].trim()} (${weight}kg)",
-                                quantity = 1,
-                                price = totalPrice
-                            ))
+                            items.add(
+                                ParsedItem(
+                                    name = "${nameMatch.groupValues[1].trim()} (${weight}kg)",
+                                    quantity = 1,
+                                    price = totalPrice
+                                )
+                            )
                             matched = true
-                            i += 2
+                            i += 2  // Salta nombre + peso
                             return@let
                         }
                     }
 
                     // Si no hay peso, guardar como nombre para emparejar después
                     val name = nameMatch.groupValues[1].trim()
-                    // Filtrar nombres que son claramente metadata
                     if (name.length > 3 &&
                         !name.contains("Berlin") &&
                         !name.contains("Debit") &&
-                        !name.contains("Nr.")) {
+                        !name.contains("Nr.")
+                    ) {
                         println("  ✓ NOMBRE GUARDADO: '$name'")
                         productNames.add(name)
                         matched = true
+                        i++  // ✅ CRÍTICO: Incrementar después de guardar nombre
+                        return@let
                     }
                 }
             }
 
-            // Si ningún patrón coincidió, guardar como no reconocida
-            if (!matched && line.length > 2) {
-                println("  ⚠ LÍNEA NO RECONOCIDA: '$line'")
-                unrecognizedLines.add(line)
-            }
-
+            // Al final del while, solo incrementar si NINGÚN patrón coincidió
             if (!matched) {
+                println("  ✗ NO COINCIDE con ningún patrón")
+
+                // Si la línea no es metadata y tiene contenido, guardar como no reconocida
+                if (line.length > 2) {
+                    println("  ⚠ LÍNEA NO RECONOCIDA: '$line'")
+                    unrecognizedLines.add(line)
+                }
+
                 i++
             }
-        }
+        } // ← CIERRE DEL WHILE
 
-        // Emparejar nombres con precios
+        // Emparejar nombres con precios (FUERA del while)
         println("\n--- EMPAREJANDO NOMBRES Y PRECIOS ---")
         val minSize = minOf(productNames.size, productPrices.size)
         println("Nombres: ${productNames.size}, Precios: ${productPrices.size}")
         for (j in 0 until minSize) {
-            items.add(ParsedItem(
-                name = productNames[j],
-                quantity = 1,
-                price = productPrices[j]
-            ))
+            items.add(
+                ParsedItem(
+                    name = productNames[j],
+                    quantity = 1,
+                    price = productPrices[j]
+                )
+            )
             println("  ✓ ${productNames[j]} → €${productPrices[j]}")
         }
 
@@ -389,7 +401,6 @@ class ScanVm(
             unrecognizedLinesJson = Json.encodeToString(unrecognizedLines)
         )
     }
-
 
     /**
      * Maneja errores durante el procesamiento OCR.
