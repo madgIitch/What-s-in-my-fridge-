@@ -14,5 +14,6 @@ data class ParsedDraftEntity(
     val currency: String = "EUR",
     val total: Double? = null,
     val linesJson: String = "[]",
+    val unrecognizedLines: String = "[]", // ← NUEVO: JSON array de líneas no reconocidas
     val confirmed: Boolean = false  // Nuevo campo
 )

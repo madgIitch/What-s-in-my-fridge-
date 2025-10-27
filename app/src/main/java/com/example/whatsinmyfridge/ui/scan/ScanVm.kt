@@ -92,7 +92,8 @@ class ScanVm(
                     purchaseDate = parsedInfo.date,
                     currency = parsedInfo.currency,
                     total = parsedInfo.total,
-                    linesJson = parsedInfo.itemsJson
+                    linesJson = parsedInfo.itemsJson,
+                    unrecognizedLines = parsedInfo.unrecognizedLinesJson
                 )
 
                 // Guardar en base de datos y obtener ID
@@ -210,6 +211,7 @@ class ScanVm(
 
         println("\n--- BUSCANDO ITEMS ---")
         val items = mutableListOf<ParsedItem>()
+        val unrecognizedLines = mutableListOf<String>()
 
         // ESTRATEGIA PARA E-CENTER: Recolectar nombres y precios por separado
         val productNames = mutableListOf<String>()
@@ -261,6 +263,8 @@ class ScanVm(
                 continue
             }
 
+            var matched = false
+
             // Intentar capturar precio E-Center (X,XX A)
             pricePatternA.find(line)?.let { match ->
                 val euros = match.groupValues[1]
@@ -270,68 +274,83 @@ class ScanVm(
                 if (price != null) {
                     productPrices.add(price)
                 }
+                matched = true
                 i++
                 return@let
             }
 
             // Intentar capturar precio Kaiserin-Augusta (X,XX B)
-            pricePatternB.find(line)?.let { match ->
-                val euros = match.groupValues[1]
-                val cents = match.groupValues[2]
-                val price = "$euros.$cents".toDoubleOrNull()
-                println("  ✓ PRECIO KAISERIN: €$price")
-                if (price != null) {
-                    productPrices.add(price)
+            if (!matched) {
+                pricePatternB.find(line)?.let { match ->
+                    val euros = match.groupValues[1]
+                    val cents = match.groupValues[2]
+                    val price = "$euros.$cents".toDoubleOrNull()
+                    println("  ✓ PRECIO KAISERIN: €$price")
+                    if (price != null) {
+                        productPrices.add(price)
+                    }
+                    matched = true
+                    i++
+                    return@let
                 }
-                i++
-                return@let
             }
 
             // Intentar capturar nombre + peso en siguiente línea
-            namePattern.find(line)?.let { nameMatch ->
-                if (i + 1 < lines.size) {
-                    val nextLine = lines[i + 1]
-                    println("  ? NOMBRE DETECTADO: '${nameMatch.groupValues[1]}'")
-                    println("    Siguiente línea: '$nextLine'")
+            if (!matched) {
+                namePattern.find(line)?.let { nameMatch ->
+                    if (i + 1 < lines.size) {
+                        val nextLine = lines[i + 1]
+                        println("  ? NOMBRE DETECTADO: '${nameMatch.groupValues[1]}'")
+                        println("    Siguiente línea: '$nextLine'")
 
-                    weightPattern.find(nextLine)?.let { weightMatch ->
-                        val weightInt = weightMatch.groupValues[1]
-                        val weightDec = weightMatch.groupValues[2]
-                        val weight = "$weightInt.$weightDec".toDoubleOrNull() ?: 1.0
-                        val priceInt = weightMatch.groupValues[3]
-                        val priceDec = weightMatch.groupValues[4]
-                        val pricePerKg = "$priceInt.$priceDec".toDoubleOrNull()
-                        val totalPrice = pricePerKg?.times(weight)
+                        weightPattern.find(nextLine)?.let { weightMatch ->
+                            val weightInt = weightMatch.groupValues[1]
+                            val weightDec = weightMatch.groupValues[2]
+                            val weight = "$weightInt.$weightDec".toDoubleOrNull() ?: 1.0
+                            val priceInt = weightMatch.groupValues[3]
+                            val priceDec = weightMatch.groupValues[4]
+                            val pricePerKg = "$priceInt.$priceDec".toDoubleOrNull()
+                            val totalPrice = pricePerKg?.times(weight)
 
-                        println("  ✓ ITEM CON PESO")
-                        println("    Peso: ${weight}kg")
-                        println("    Precio/kg: €$pricePerKg")
-                        println("    Precio total: €$totalPrice")
+                            println("  ✓ ITEM CON PESO")
+                            println("    Peso: ${weight}kg")
+                            println("    Precio/kg: €$pricePerKg")
+                            println("    Precio total: €$totalPrice")
 
-                        items.add(ParsedItem(
-                            name = "${nameMatch.groupValues[1].trim()} (${weight}kg)",
-                            quantity = 1,
-                            price = totalPrice
-                        ))
-                        i += 2
-                        return@let
+                            items.add(ParsedItem(
+                                name = "${nameMatch.groupValues[1].trim()} (${weight}kg)",
+                                quantity = 1,
+                                price = totalPrice
+                            ))
+                            matched = true
+                            i += 2
+                            return@let
+                        }
                     }
-                }
 
-                // Si no hay peso, guardar como nombre para emparejar después
-                val name = nameMatch.groupValues[1].trim()
-                // Filtrar nombres que son claramente metadata
-                if (name.length > 3 &&
-                    !name.contains("Berlin") &&
-                    !name.contains("Debit") &&
-                    !name.contains("Nr.")) {
-                    println("  ✓ NOMBRE GUARDADO: '$name'")
-                    productNames.add(name)
+                    // Si no hay peso, guardar como nombre para emparejar después
+                    val name = nameMatch.groupValues[1].trim()
+                    // Filtrar nombres que son claramente metadata
+                    if (name.length > 3 &&
+                        !name.contains("Berlin") &&
+                        !name.contains("Debit") &&
+                        !name.contains("Nr.")) {
+                        println("  ✓ NOMBRE GUARDADO: '$name'")
+                        productNames.add(name)
+                        matched = true
+                    }
                 }
             }
 
-            println("  ✗ NO COINCIDE con ningún patrón")
-            i++
+            // Si ningún patrón coincidió, guardar como no reconocida
+            if (!matched && line.length > 2) {
+                println("  ⚠ LÍNEA NO RECONOCIDA: '$line'")
+                unrecognizedLines.add(line)
+            }
+
+            if (!matched) {
+                i++
+            }
         }
 
         // Emparejar nombres con precios
@@ -346,6 +365,10 @@ class ScanVm(
             ))
             println("  ✓ ${productNames[j]} → €${productPrices[j]}")
         }
+
+        println("\n--- LÍNEAS NO RECONOCIDAS ---")
+        println("Total: ${unrecognizedLines.size}")
+        unrecognizedLines.forEach { println("  - $it") }
 
         println("\n========== RESUMEN PARSING ==========")
         println("Merchant: ${merchant ?: "N/A"}")
@@ -362,10 +385,10 @@ class ScanVm(
             date = date,
             total = total,
             currency = "EUR",
-            itemsJson = Json.encodeToString(items)
+            itemsJson = Json.encodeToString(items),
+            unrecognizedLinesJson = Json.encodeToString(unrecognizedLines)
         )
     }
-
 
 
     /**
@@ -397,6 +420,7 @@ class ScanVm(
         val date: String?,
         val currency: String,
         val total: Double?,
-        val itemsJson: String
+        val itemsJson: String,
+        val unrecognizedLinesJson: String = "[]"
     )
 }
