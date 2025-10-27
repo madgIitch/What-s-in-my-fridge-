@@ -13,6 +13,7 @@ import com.example.whatsinmyfridge.ui.home.HomeScreen
 import com.example.whatsinmyfridge.ui.scan.ScanScreen
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
+import com.example.whatsinmyfridge.ui.review.ReviewDraftScreen
 
 sealed class Route(val path: String) {
     object Home : Route("home")
@@ -49,6 +50,18 @@ fun AppNav() {
         // Nuevo: Ruta para añadir items
         composable(Route.AddItem.path) {
             AddItemScreen(nav)
+        }
+
+        composable(
+            route = Route.ReviewDraft.path,  // "review_draft/{draftId}"
+            arguments = listOf(navArgument("draftId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val draftId = backStackEntry.arguments?.getLong("draftId") ?: 0L
+            ReviewDraftScreen(
+                draftId = draftId,
+                nav = nav,
+                vm = koinViewModel { parametersOf(draftId) }
+            )
         }
     }
 }

@@ -13,4 +13,7 @@ class DraftRepository(
     fun getAllDrafts(): Flow<List<ParsedDraftEntity>> = draftDao.getAllFlow()
 
     suspend fun deleteDraft(draft: ParsedDraftEntity) = draftDao.delete(draft)
+
+    suspend fun getById(id: Long): ParsedDraftEntity? = draftDao.getById(id)
+
 }

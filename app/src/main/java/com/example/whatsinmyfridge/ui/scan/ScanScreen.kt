@@ -24,6 +24,7 @@ import java.io.File
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import com.example.whatsinmyfridge.ui.navigation.Route
 
 /**
  * Pantalla de escaneo de tickets con cámara.
@@ -44,6 +45,7 @@ fun ScanScreen(
     val capturedImageUri by vm.capturedImageUri.collectAsState()
     val ocrResult by vm.ocrResult.collectAsState()
     val errorMessage by vm.errorMessage.collectAsState()
+    val savedDraftId by vm.savedDraftId.collectAsState()
 
     var hasCameraPermission by remember { mutableStateOf(false) }
 
@@ -77,6 +79,14 @@ fun ScanScreen(
     ) { uri: Uri? ->
         uri?.let {
             vm.processImage(context, it)  // Agregar 'context' como primer parámetro
+        }
+    }
+
+    // Agregar este LaunchedEffect
+    LaunchedEffect(savedDraftId) {
+        savedDraftId?.let { draftId ->
+            nav.navigate(Route.ReviewDraft.createRoute(draftId))  // ✅ Usa createRoute()
+            vm.clearState()
         }
     }
 

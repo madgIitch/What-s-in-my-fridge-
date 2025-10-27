@@ -53,8 +53,8 @@ class ReviewDraftVm(
             try {
                 // Cargar el borrador desde el repositorio
                 // Nota: Necesitarás agregar getById() a DraftRepository
-                // val draft = draftRepository.getById(draftId)
-                // _draft.value = draft
+                val draft = draftRepository.getById(draftId)
+                _draft.value = draft
 
                 // Parsear el JSON de líneas
                 _draft.value?.let { draft ->
