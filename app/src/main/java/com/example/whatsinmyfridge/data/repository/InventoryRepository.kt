@@ -33,4 +33,7 @@ class InventoryRepository(private val dao: FoodDao) {
     suspend fun updateItem(item: FoodItemEntity) = dao.update(item)
 
     suspend fun deleteItem(id: Long) = dao.deleteById(id)
+
+    suspend fun deleteAllItems() = dao.deleteAll()
+
 }

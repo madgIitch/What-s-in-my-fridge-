@@ -66,4 +66,14 @@ class HomeVm(
     fun markAsConsumed(item: FoodItemUi) {
         deleteItem(item)
     }
+
+    fun deleteAllItems() {
+        viewModelScope.launch {
+            try {
+                inventoryRepository.deleteAllItems()
+            } catch (e: Exception) {
+                println("Error eliminando todos los items: ${e.message}")
+            }
+        }
+    }
 }

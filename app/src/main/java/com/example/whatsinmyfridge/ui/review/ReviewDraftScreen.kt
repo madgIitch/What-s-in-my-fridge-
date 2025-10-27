@@ -35,6 +35,9 @@ import org.koin.core.parameter.parametersOf
  * @param nav Controlador de navegación
  * @param vm ViewModel inyectado por Koin con el draftId como parámetro
  */
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReviewDraftScreen(
@@ -47,6 +50,23 @@ fun ReviewDraftScreen(
     val isLoading by vm.isLoading.collectAsState()
     val isSaving by vm.isSaving.collectAsState()
 
+    val showUnrecognizedDialog by vm.showUnrecognizedDialog.collectAsState()
+    val unrecognizedLines by vm.unrecognizedLines.collectAsState()
+
+    // ← NUEVO: Diálogo para líneas no reconocidas
+    if (showUnrecognizedDialog) {
+        UnrecognizedLinesDialog(
+            lines = unrecognizedLines,
+            onAddLine = { line ->
+                vm.addUnrecognizedAsItem(line)
+            },
+            onDismiss = {
+                vm.finishReview()
+                nav.popBackStack()
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -57,7 +77,6 @@ fun ReviewDraftScreen(
                     }
                 },
                 actions = {
-                    // Botón para descartar borrador
                     IconButton(
                         onClick = {
                             vm.discardDraft()
@@ -76,11 +95,10 @@ fun ReviewDraftScreen(
                         )
                     }
 
-                    // Botón para confirmar y guardar
                     IconButton(
                         onClick = {
                             vm.confirmDraft()
-                            nav.popBackStack()
+                            // ✅ NO navegar aquí, el diálogo se encargará
                         },
                         enabled = !isSaving && parsedItems.isNotEmpty()
                     ) {
@@ -127,7 +145,6 @@ fun ReviewDraftScreen(
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                // Información del ticket
                 draft?.let { draftInfo ->
                     DraftInfoCard(draftInfo)
                 }
@@ -138,11 +155,9 @@ fun ReviewDraftScreen(
                     color = MaterialTheme.colorScheme.outlineVariant
                 )
 
-                // Lista de items parseados
                 if (parsedItems.isEmpty()) {
                     EmptyItemsState()
                 } else {
-                    // Contador de items
                     Text(
                         text = "${parsedItems.size} ${if (parsedItems.size == 1) "item encontrado" else "items encontrados"}",
                         style = MaterialTheme.typography.titleSmall,
@@ -173,7 +188,6 @@ fun ReviewDraftScreen(
                     }
                 }
 
-                // Botón de confirmación inferior
                 if (parsedItems.isNotEmpty()) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
@@ -183,7 +197,6 @@ fun ReviewDraftScreen(
                         Button(
                             onClick = {
                                 vm.confirmDraft()
-                                nav.popBackStack()
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -472,6 +485,98 @@ private fun ParsedItemCard(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun UnrecognizedLinesDialog(
+    lines: List<String>,
+    onAddLine: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Líneas No Reconocidas",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Estas líneas no pudieron ser procesadas automáticamente. ¿Deseas añadir alguna manualmente?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 300.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    itemsIndexed(lines) { index, line ->
+                        UnrecognizedLineItem(
+                            line = line,
+                            onAdd = { onAddLine(line) }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Finalizar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
+}
+
+@Composable
+fun UnrecognizedLineItem(
+    line: String,
+    onAdd: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = line,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f),
+                maxLines = 2
+            )
+
+            IconButton(onClick = onAdd) {
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = "Añadir",
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

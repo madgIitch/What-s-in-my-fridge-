@@ -43,6 +43,12 @@ class ReviewDraftVm(
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
 
+    private val _showUnrecognizedDialog = MutableStateFlow(false)
+    val showUnrecognizedDialog: StateFlow<Boolean> = _showUnrecognizedDialog.asStateFlow()
+
+    private val _unrecognizedLines = MutableStateFlow<List<String>>(emptyList())
+    val unrecognizedLines: StateFlow<List<String>> = _unrecognizedLines.asStateFlow()
+
     init {
         loadDraft()
     }
@@ -51,21 +57,35 @@ class ReviewDraftVm(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Cargar el borrador desde el repositorio
-                // Nota: Necesitarás agregar getById() a DraftRepository
                 val draft = draftRepository.getById(draftId)
                 _draft.value = draft
 
-                // Parsear el JSON de líneas
-                _draft.value?.let { draft ->
-                    val items = parseLineItems(draft.linesJson)
+                // ✅ Usar 'draft' en lugar de 'it'
+                draft?.let {
+                    val items = parseLineItems(it.linesJson)
                     _parsedItems.value = items
+
+                    val unrecognized = parseUnrecognizedLines(it.unrecognizedLines)
+                    _unrecognizedLines.value = unrecognized
                 }
             } catch (e: Exception) {
                 println("Error cargando borrador: ${e.message}")
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+    // Método para parsear líneas no reconocidas
+    private fun parseUnrecognizedLines(json: String): List<String> {
+        return try {
+            if (json.isBlank() || json == "[]") {
+                emptyList()
+            } else {
+                Json.decodeFromString<List<String>>(json)
+            }
+        } catch (e: Exception) {
+            println("Error parseando líneas no reconocidas: ${e.message}")
+            emptyList()
         }
     }
 
@@ -107,18 +127,19 @@ class ReviewDraftVm(
     /**
      * Confirma el borrador y convierte los items parseados en items del inventario.
      */
+
+
     fun confirmDraft() {
         viewModelScope.launch {
             _isSaving.value = true
             try {
                 // Convertir cada ParsedItem a FoodItemEntity
                 _parsedItems.value.forEach { parsedItem ->
-                    // ✅ Ahora dateString es realmente String
                     val expiryDate = parsedItem.expiryDate?.let { dateString ->
                         try {
-                            LocalDate.parse(dateString)  // ✅ Funciona correctamente
+                            LocalDate.parse(dateString)
                         } catch (e: Exception) {
-                            LocalDate.now().plusDays(7)  // Fallback si el parsing falla
+                            LocalDate.now().plusDays(7)
                         }
                     } ?: LocalDate.now().plusDays(7)
 
@@ -133,9 +154,14 @@ class ReviewDraftVm(
                     inventoryRepository.addItem(foodItem)
                 }
 
-                // Eliminar el borrador después de confirmar
-                _draft.value?.let { draft ->
-                    draftRepository.deleteDraft(draft)
+                // ← NUEVO: Verificar si hay líneas no reconocidas
+                if (_unrecognizedLines.value.isNotEmpty()) {
+                    _showUnrecognizedDialog.value = true
+                } else {
+                    // Si no hay líneas no reconocidas, eliminar draft y finalizar
+                    _draft.value?.let { draft ->
+                        draftRepository.deleteDraft(draft)
+                    }
                 }
             } catch (e: Exception) {
                 println("Error confirmando borrador: ${e.message}")
@@ -143,7 +169,37 @@ class ReviewDraftVm(
                 _isSaving.value = false
             }
         }
-    }    /**
+    }
+
+    // ← NUEVO: Método para finalizar después del diálogo
+    fun finishReview() {
+        viewModelScope.launch {
+            try {
+                _draft.value?.let { draft ->
+                    draftRepository.deleteDraft(draft)
+                }
+            } catch (e: Exception) {
+                println("Error eliminando borrador: ${e.message}")
+            }
+        }
+    }
+
+    // ← NUEVO: Añadir línea no reconocida como item
+    fun addUnrecognizedAsItem(line: String) {
+        val newItem = ParsedItem(
+            name = line,
+            quantity = 1,
+            price = null,
+            expiryDate = null,
+            category = null
+        )
+        val currentItems = _parsedItems.value.toMutableList()
+        currentItems.add(newItem)
+        _parsedItems.value = currentItems
+    }
+
+
+    /**
      * Descarta el borrador sin guardar los items.
      */
     fun discardDraft() {

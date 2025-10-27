@@ -10,7 +10,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Camera
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.SwipeToDismissBoxState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +30,7 @@ import com.example.whatsinmyfridge.domain.model.ExpiryState
 import com.example.whatsinmyfridge.domain.model.FoodItemUi
 import com.example.whatsinmyfridge.ui.navigation.Route
 import org.koin.androidx.compose.koinViewModel
+
 
 /**
  * Pantalla principal que muestra el inventario de alimentos.
@@ -45,6 +51,7 @@ fun HomeScreen(
     vm: HomeVm = koinViewModel()
 ) {
     val items by vm.items.collectAsState()
+    var showDeleteAllDialog by remember { mutableStateOf(false) }  // ← AGREGAR ESTA LÍNEA
 
     Scaffold(
         topBar = {
@@ -55,6 +62,18 @@ fun HomeScreen(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
+                },
+                actions = {
+                    // Botón para borrar todos los elementos
+                    if (items.isNotEmpty()) {
+                        IconButton(onClick = { showDeleteAllDialog = true }) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Borrar todos los elementos",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -83,11 +102,29 @@ fun HomeScreen(
                     items = items,
                     onItemClick = { item ->
                         nav.navigate(Route.Detail.createRoute(item.entity.id))
+                    },
+                    onItemDelete = { item ->  // ← NUEVO
+                        vm.deleteItem(item)
                     }
                 )
             }
         }
+
+        // Diálogo de confirmación
+        if (showDeleteAllDialog) {
+            DeleteAllConfirmationDialog(
+                onConfirm = {
+                    vm.deleteAllItems()
+                    showDeleteAllDialog = false
+                },
+                onDismiss = {
+                    showDeleteAllDialog = false
+                }
+            )
+        }
     }
+
+
 }
 
 /**
@@ -142,10 +179,12 @@ private fun FloatingActionButtons(
  * Usa LazyColumn para renderizado eficiente de listas grandes.
  * Cada item tiene una key única basada en su ID para optimizar recomposiciones.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FoodList(
     items: List<FoodItemUi>,
     onItemClick: (FoodItemUi) -> Unit,
+    onItemDelete: (FoodItemUi) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -156,10 +195,29 @@ private fun FoodList(
             items = items,
             key = { it.entity.id }
         ) { item ->
-            FoodRow(
-                item = item,
-                onClick = { onItemClick(item) }
+            val dismissState = rememberSwipeToDismissBoxState(
+                confirmValueChange = { dismissValue ->
+                    if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
+                        onItemDelete(item)
+                        true
+                    } else {
+                        false
+                    }
+                }
             )
+
+            SwipeToDismissBox(
+                state = dismissState,
+                backgroundContent = {
+                    SwipeBackground(dismissState = dismissState)
+                }
+            ) {
+                FoodRow(
+                    item = item,
+                    onClick = { onItemClick(item) }
+                )
+            }
+
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
@@ -168,6 +226,31 @@ private fun FoodList(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeBackground(dismissState: androidx.compose.material3.SwipeToDismissBoxState) {
+    val color = when (dismissState.targetValue) {
+        SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.error
+        else -> Color.Transparent
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color)
+            .padding(horizontal = 20.dp),
+        contentAlignment = Alignment.CenterEnd
+    ) {
+        if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Eliminar",
+                tint = MaterialTheme.colorScheme.onError,
+                modifier = Modifier.size(32.dp)
+            )
+        }
+    }
+}
 /**
  * Fila individual que representa un item de comida.
  *
@@ -328,4 +411,52 @@ private fun EmptyState(modifier: Modifier = Modifier) {
             textAlign = TextAlign.Center
         )
     }
+
+
+}
+
+@Composable
+fun DeleteAllConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                Icons.Default.Delete,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(32.dp)
+            )
+        },
+        title = {
+            Text(
+                text = "¿Borrar todos los elementos?",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Text(
+                text = "Esta acción eliminará permanentemente todos los alimentos de tu inventario. No se puede deshacer.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("Borrar todo")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }

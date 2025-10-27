@@ -32,4 +32,7 @@ interface FoodDao {
 
     @Query("DELETE FROM food_items WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("DELETE FROM food_items")
+    suspend fun deleteAll()
 }
