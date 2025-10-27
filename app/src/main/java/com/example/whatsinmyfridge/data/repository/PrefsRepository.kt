@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+
 class PrefsRepository(
     private val dataStore: DataStore<Preferences>
 ) {
@@ -15,6 +16,7 @@ class PrefsRepository(
         val REMINDER_DAYS = intPreferencesKey("reminder_days")
         val IS_PRO = booleanPreferencesKey("is_pro")
         val CLOUD_CONSENT = booleanPreferencesKey("cloud_consent")
+        val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")  // ✅ AGREGAR
     }
 
     val reminderDays: Flow<Int> = dataStore.data
@@ -26,6 +28,9 @@ class PrefsRepository(
     val cloudConsent: Flow<Boolean> = dataStore.data
         .map { it[PrefsKeys.CLOUD_CONSENT] ?: false }
 
+    val notificationsEnabled: Flow<Boolean> = dataStore.data  // ✅ CORRECTO: usar dataStore
+        .map { it[PrefsKeys.NOTIFICATIONS_ENABLED] ?: true }
+
     suspend fun setReminderDays(days: Int) {
         dataStore.edit { it[PrefsKeys.REMINDER_DAYS] = days }
     }
@@ -36,5 +41,9 @@ class PrefsRepository(
 
     suspend fun setCloudConsent(consent: Boolean) {
         dataStore.edit { it[PrefsKeys.CLOUD_CONSENT] = consent }
+    }
+
+    suspend fun setNotificationsEnabled(enabled: Boolean) {  // ✅ CORRECTO: usar dataStore
+        dataStore.edit { it[PrefsKeys.NOTIFICATIONS_ENABLED] = enabled }
     }
 }
