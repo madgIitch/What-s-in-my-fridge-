@@ -7,6 +7,8 @@ plugins {
     id("com.google.devtools.ksp") version "2.0.21-1.0.28"
     kotlin("plugin.serialization") version "2.0.21"  // Agregar plugin
 
+    id("com.google.gms.google-services")
+
 }
 
 android {
@@ -87,6 +89,15 @@ dependencies {
     // Agregar después de las dependencias de ML Kit
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-functions-ktx")
+
+    // Coroutines para Firebase
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
     // Testing
     testImplementation(libs.junit)

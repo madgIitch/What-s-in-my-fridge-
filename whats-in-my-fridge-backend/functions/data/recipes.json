@@ -1,0 +1,52 @@
+{  
+  "recipes": [  
+    {  
+      "id": "pasta-carbonara",  
+      "name": "Pasta Carbonara",  
+      "ingredients": ["pasta", "huevos", "bacon", "queso", "pimienta"],  
+      "minIngredients": 4,  
+      "instructions": [  
+        "Cocinar pasta al dente",  
+        "Freír bacon en trozos",  
+        "Mezclar huevos con queso rallado",  
+        "Combinar todo y servir con pimienta"  
+      ]  
+    },  
+    {  
+      "id": "tortilla-espanola",  
+      "name": "Tortilla Española",  
+      "ingredients": ["huevos", "patatas", "cebolla", "aceite", "sal"],  
+      "minIngredients": 3,  
+      "instructions": [  
+        "Pelar y cortar patatas en rodajas finas",  
+        "Freír patatas y cebolla en aceite",  
+        "Batir huevos y mezclar con patatas",  
+        "Cocinar en sartén hasta cuajar"  
+      ]  
+    },  
+    {  
+      "id": "ensalada-cesar",  
+      "name": "Ensalada César",  
+      "ingredients": ["lechuga", "pollo", "queso", "pan", "aceite"],  
+      "minIngredients": 3,  
+      "instructions": [  
+        "Lavar y cortar lechuga",  
+        "Cocinar y cortar pollo en tiras",  
+        "Tostar pan para crutones",  
+        "Mezclar con queso rallado y aderezo"  
+      ]  
+    },  
+    {  
+      "id": "sopa-tomate",  
+      "name": "Sopa de Tomate",  
+      "ingredients": ["tomates", "cebolla", "ajo", "aceite", "sal"],  
+      "minIngredients": 3,  
+      "instructions": [  
+        "Sofreír cebolla y ajo",  
+        "Añadir tomates troceados",  
+        "Cocinar 20 minutos",  
+        "Triturar y servir caliente"  
+      ]  
+    }  
+  ]  
+}

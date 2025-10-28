@@ -1,12 +1,25 @@
-rules_version = '2';
+rules_version = '2';  
+service firebase.storage {  
+  match /b/{bucket}/o {  
+      
+    // Carpeta de tickets escaneados  
+    match /receipts/{userId}/{fileName} {  
+      // Solo el usuario puede subir sus propios tickets  
+      allow write: if request.auth != null && request.auth.uid == userId;  
+        
+      // Solo el usuario puede leer sus propios tickets  
+      allow read: if request.auth != null && request.auth.uid == userId;  
+        
+      // Validar tipo de archivo (solo imágenes)  
+      allow write: if request.resource.contentType.matches('image/.*');  
+        
+      // Limitar tamaño de archivo a 10MB  
+      allow write: if request.resource.size < 10 * 1024 * 1024;  
+    }  
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if false;
-    }
-  }
+     // Denegar acceso a cualquier otra ruta  
+    match /{allPaths=**} {  
+      allow read, write: if false;  
+    }  
+  }  
 }
