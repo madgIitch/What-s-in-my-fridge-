@@ -5,8 +5,8 @@ export interface ParsedDraftEntity {
   purchaseDate: string | null;
   currency: string;
   total: number | null;
-  linesJson: string;  // JSON serializado de ParsedItem[]
-  unrecognizedLines: string;  // JSON serializado de string[]
+  linesJson: string; // JSON serializado de ParsedItem[]
+  unrecognizedLines: string; // JSON serializado de string[]
 }
 
 // Estructura compatible con ParsedItem de Android
