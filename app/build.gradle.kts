@@ -95,6 +95,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
     implementation("com.google.firebase:firebase-functions-ktx")
+    implementation("com.google.firebase:firebase-appcheck-playintegrity")
 
     // Coroutines para Firebase
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")

@@ -14,6 +14,7 @@ import com.example.whatsinmyfridge.data.repository.PrefsRepository
 import com.example.whatsinmyfridge.ui.add.AddItemVm
 import com.example.whatsinmyfridge.ui.detail.DetailVm
 import com.example.whatsinmyfridge.ui.home.HomeVm
+import com.example.whatsinmyfridge.ui.login.LoginVm
 import com.example.whatsinmyfridge.ui.review.ReviewDraftVm
 import com.example.whatsinmyfridge.ui.scan.ScanVm
 import com.example.whatsinmyfridge.ui.settings.SettingsVm
@@ -47,7 +48,7 @@ val appModule = module {
 
     // ========== Repositories ==========
     // InventoryRepository(dao: FoodDao)
-    single { InventoryRepository(get()) }
+    single { InventoryRepository(get(), get()) }
 
     // DraftRepository(draftDao: DraftDao)
     single { DraftRepository(get()) }
@@ -81,5 +82,7 @@ val appModule = module {
 
     //Settings
     viewModel { SettingsVm(get()) }
+
+    viewModel { LoginVm() }
 
 }

@@ -16,16 +16,28 @@ import kotlinx.coroutines.launch
  * Gestiona el estado de la lista de alimentos y expone operaciones
  * para interactuar con el inventario.
  *
+ * Características:
+ * - Sincronización automática con Firestore (si cloudConsent está activado)
+ * - Observación reactiva de cambios en el inventario
+ * - Operaciones CRUD que se propagan a la nube
+ *
  * @param inventoryRepository Repositorio que provee acceso a los datos de inventario
  */
 class HomeVm(
     private val inventoryRepository: InventoryRepository
 ) : ViewModel() {
 
+    init {
+        // ✅ NUEVO: Iniciar listener de Firestore para sincronización en tiempo real
+        inventoryRepository.startFirestoreSync()
+    }
+
     /**
      * Estado reactivo de la lista de items de comida.
      *
-     * Se actualiza automáticamente cuando cambian los datos en la base de datos.
+     * Se actualiza automáticamente cuando cambian los datos en la base de datos local (Room)
+     * o cuando llegan cambios desde Firestore (otros dispositivos).
+     *
      * El StateFlow se mantiene activo mientras haya suscriptores activos (5 segundos
      * después de que el último suscriptor se desconecte).
      */
@@ -45,12 +57,13 @@ class HomeVm(
     /**
      * Elimina un item del inventario.
      *
+     * La eliminación se propaga automáticamente a Firestore si cloudConsent está activado.
+     *
      * @param item Item a eliminar
      */
     fun deleteItem(item: FoodItemUi) {
         viewModelScope.launch {
             try {
-                // Cambiar de item.entity a item.entity.id
                 inventoryRepository.deleteItem(item.entity.id)
             } catch (e: Exception) {
                 println("Error eliminando item: ${e.message}")
@@ -67,6 +80,11 @@ class HomeVm(
         deleteItem(item)
     }
 
+    /**
+     * Elimina todos los items del inventario.
+     *
+     * La eliminación se propaga automáticamente a Firestore si cloudConsent está activado.
+     */
     fun deleteAllItems() {
         viewModelScope.launch {
             try {
@@ -75,5 +93,16 @@ class HomeVm(
                 println("Error eliminando todos los items: ${e.message}")
             }
         }
+    }
+
+    /**
+     * Limpia recursos cuando el ViewModel es destruido.
+     *
+     * Detiene el listener de Firestore para evitar memory leaks.
+     */
+    override fun onCleared() {
+        super.onCleared()
+        // ✅ NUEVO: Detener listener de Firestore
+        inventoryRepository.stopFirestoreSync()
     }
 }

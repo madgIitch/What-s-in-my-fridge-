@@ -23,10 +23,17 @@ import androidx.compose.material3.Switch
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import com.example.whatsinmyfridge.ui.settings.SettingsVm
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import androidx.navigation.NavController
+import androidx.compose.material3.Button  // ✅ Reemplaza androidx.glance.Button
+import com.example.whatsinmyfridge.ui.navigation.Route
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    nav: NavController,  // ✅ NUEVO: Agregar NavController
     viewModel: SettingsVm = koinViewModel()
 ) {
     val reminderDays by viewModel.reminderDays.collectAsState()
@@ -83,6 +90,21 @@ fun SettingsScreen(
                     checked = cloudConsent,
                     onCheckedChange = { viewModel.setCloudConsent(it) }
                 )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ✅ CORRECCIÓN: Usar Button de Material3 y navegar correctamente
+            androidx.compose.material3.Button(
+                onClick = {
+                    Firebase.auth.signOut()
+                    nav.navigate(Route.Login.path) {
+                        popUpTo(0) { inclusive = true }  // Limpiar todo el back stack
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Cerrar Sesión")
             }
 
             // Estado Pro (solo lectura por ahora)

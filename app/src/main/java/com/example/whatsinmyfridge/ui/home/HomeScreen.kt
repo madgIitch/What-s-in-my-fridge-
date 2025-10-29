@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -64,6 +65,15 @@ fun HomeScreen(
                     )
                 },
                 actions = {
+                    // ✅ NUEVO: Botón para navegar a Settings
+                    IconButton(onClick = { nav.navigate(Route.Settings.path) }) {
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = "Configuración",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+
                     // Botón para borrar todos los elementos
                     if (items.isNotEmpty()) {
                         IconButton(onClick = { showDeleteAllDialog = true }) {
@@ -84,12 +94,10 @@ fun HomeScreen(
         floatingActionButton = {
             FloatingActionButtons(
                 onScanClick = { nav.navigate(Route.Scan.path) },
-                onAddClick = {
-                    nav.navigate(Route.AddItem.path)
-                }
+                onAddClick = { nav.navigate(Route.AddItem.path) }
             )
         }
-    ) { paddingValues ->
+    ){ paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
