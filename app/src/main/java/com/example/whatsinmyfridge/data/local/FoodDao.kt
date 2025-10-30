@@ -2,8 +2,10 @@ package com.example.whatsinmyfridge.data.local
 
 import androidx.room.Dao
 import androidx.room.Delete
+import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
+import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Update
 import com.example.whatsinmyfridge.data.local.db.FoodItemEntity
@@ -35,4 +37,12 @@ interface FoodDao {
 
     @Query("DELETE FROM food_items")
     suspend fun deleteAll()
+
+    @Entity(tableName = "recipe_cache")
+    data class RecipeCacheEntity(
+        @PrimaryKey val ingredientsHash: String,  // Hash de los ingredientes usados
+        val recipesJson: String,  // JSON serializado de las recetas
+        val timestamp: Long,  // Timestamp de creación
+        val ttlMinutes: Int = 60  // TTL por defecto 60 minutos
+    )
 }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
@@ -65,7 +66,16 @@ fun HomeScreen(
                     )
                 },
                 actions = {
-                    // ✅ NUEVO: Botón para navegar a Settings
+                    // ✅ NUEVO: Botón para IA Pro
+                    IconButton(onClick = { nav.navigate(Route.RecipesPro.path) }) {
+                        Icon(
+                            Icons.Default.AutoAwesome,  // O usa Icons.Default.Restaurant
+                            contentDescription = "IA Pro - Recetas",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+
+                    // Botón de Settings existente
                     IconButton(onClick = { nav.navigate(Route.Settings.path) }) {
                         Icon(
                             Icons.Default.Settings,
@@ -74,7 +84,7 @@ fun HomeScreen(
                         )
                     }
 
-                    // Botón para borrar todos los elementos
+                    // Botón de Delete All existente
                     if (items.isNotEmpty()) {
                         IconButton(onClick = { showDeleteAllDialog = true }) {
                             Icon(
@@ -89,8 +99,7 @@ fun HomeScreen(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
-            )
-        },
+            )        },
         floatingActionButton = {
             FloatingActionButtons(
                 onScanClick = { nav.navigate(Route.Scan.path) },

@@ -10,6 +10,7 @@ import com.example.whatsinmyfridge.ui.add.AddItemScreen
 import com.example.whatsinmyfridge.ui.detail.DetailScreen
 import com.example.whatsinmyfridge.ui.home.HomeScreen
 import com.example.whatsinmyfridge.ui.login.LoginScreen
+import com.example.whatsinmyfridge.ui.recipespro.RecipesProScreen
 import com.example.whatsinmyfridge.ui.scan.ScanScreen
 import com.example.whatsinmyfridge.ui.review.ReviewDraftScreen
 import com.example.whatsinmyfridge.ui.settings.SettingsScreen
@@ -35,6 +36,7 @@ sealed class Route(val path: String) {
     object ReviewDraft : Route("review_draft/{draftId}") {
         fun createRoute(draftId: Long) = "review_draft/$draftId"
     }
+    object RecipesPro : Route("recipes_pro")
 }
 
 /**
@@ -113,6 +115,10 @@ fun AppNav() {
                 nav = nav,
                 vm = koinViewModel { parametersOf(draftId) }
             )
+        }
+
+        composable(Route.RecipesPro.path) {
+            RecipesProScreen(nav = nav)
         }
     }
 }
