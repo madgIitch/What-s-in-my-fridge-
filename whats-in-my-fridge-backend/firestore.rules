@@ -41,6 +41,22 @@ service cloud.firestore {
       match /preferences/{prefId} {  
         allow read, write: if isOwner(userId);  
       }  
+        
+      // Subcolección de uso mensual  
+      match /usage/{document=**} {  
+        allow read, write: if isOwner(userId);  
+      }  
+        
+      // Subcolección de suscripción (solo lectura para cliente)  
+      match /subscription/{document=**} {  
+        allow read: if isOwner(userId);  
+        allow write: if false; // Solo Cloud Functions pueden escribir  
+      }  
+        
+      // Subcolección de caché de recetas  
+      match /recipeCache/{document=**} {  
+        allow read, write: if isOwner(userId);  
+      }  
     }  
       
     // Denegar acceso a cualquier otra ruta  
