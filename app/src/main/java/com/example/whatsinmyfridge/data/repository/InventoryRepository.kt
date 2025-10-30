@@ -2,6 +2,7 @@ package com.example.whatsinmyfridge.data.repository
 
 import com.example.whatsinmyfridge.data.local.FoodDao
 import com.example.whatsinmyfridge.data.local.db.FoodItemEntity
+import com.example.whatsinmyfridge.data.local.db.ParsedDraftEntity
 import com.example.whatsinmyfridge.domain.model.ExpiryState
 import com.example.whatsinmyfridge.domain.model.FoodItemUi
 import com.google.firebase.Firebase
@@ -208,5 +209,23 @@ class InventoryRepository(
     fun stopFirestoreSync() {
         firestoreListener?.remove()
         repositoryScope.cancel()
+    }
+
+    suspend fun saveDraftToFirestore(draft: ParsedDraftEntity) {
+        val userId = Firebase.auth.currentUser?.uid ?: return
+
+        Firebase.firestore.collection("users")
+            .document(userId)
+            .collection("scans")  // Nueva colección para historial
+            .add(mapOf(
+                "merchant" to draft.merchant,
+                "purchaseDate" to draft.purchaseDate,
+                "currency" to draft.currency,
+                "total" to draft.total,
+                "linesJson" to draft.linesJson,
+                "rawText" to draft.rawText,
+                "timestamp" to System.currentTimeMillis()
+            ))
+            .await()
     }
 }

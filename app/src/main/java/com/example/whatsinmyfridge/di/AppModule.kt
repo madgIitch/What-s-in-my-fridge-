@@ -76,7 +76,8 @@ val appModule = module {
         ReviewDraftVm(
             draftId = draftId,
             draftRepository = get(),
-            inventoryRepository = get()
+            inventoryRepository = get(),
+            prefsRepository = get()
         )
     }
 

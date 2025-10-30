@@ -11,6 +11,11 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
+import com.example.whatsinmyfridge.data.repository.PrefsRepository
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.tasks.await
 
 /**
  * ViewModel para la pantalla de revisión de borradores OCR.
@@ -28,7 +33,8 @@ import java.time.LocalDate
 class ReviewDraftVm(
     private val draftId: Long,
     private val draftRepository: DraftRepository,
-    private val inventoryRepository: InventoryRepository
+    private val inventoryRepository: InventoryRepository,
+    private val prefsRepository: PrefsRepository
 ) : ViewModel() {
 
     private val _draft = MutableStateFlow<ParsedDraftEntity?>(null)
@@ -133,7 +139,7 @@ class ReviewDraftVm(
         viewModelScope.launch {
             _isSaving.value = true
             try {
-                // Convertir cada ParsedItem a FoodItemEntity
+                // 1. Convertir cada ParsedItem a FoodItemEntity y guardar en inventario
                 _parsedItems.value.forEach { parsedItem ->
                     val expiryDate = parsedItem.expiryDate?.let { dateString ->
                         try {
@@ -154,11 +160,18 @@ class ReviewDraftVm(
                     inventoryRepository.addItem(foodItem)
                 }
 
-                // ← NUEVO: Verificar si hay líneas no reconocidas
+                // 2. Subir draft a Firestore si cloudConsent está activado
+                _draft.value?.let { draft ->
+                    if (prefsRepository.cloudConsent.first()) {
+                        saveDraftToFirestore(draft)
+                    }
+                }
+
+                // 3. Verificar si hay líneas no reconocidas
                 if (_unrecognizedLines.value.isNotEmpty()) {
                     _showUnrecognizedDialog.value = true
                 } else {
-                    // Si no hay líneas no reconocidas, eliminar draft y finalizar
+                    // Si no hay líneas no reconocidas, eliminar draft local y finalizar
                     _draft.value?.let { draft ->
                         draftRepository.deleteDraft(draft)
                     }
@@ -171,6 +184,34 @@ class ReviewDraftVm(
         }
     }
 
+    /**
+     * Sube el draft parseado a Firestore para historial de escaneos
+     */
+    private suspend fun saveDraftToFirestore(draft: ParsedDraftEntity) {
+        try {
+            val userId = Firebase.auth.currentUser?.uid ?: return
+
+            Firebase.firestore.collection("users")
+                .document(userId)
+                .collection("scans")
+                .add(mapOf(
+                    "merchant" to draft.merchant,
+                    "purchaseDate" to draft.purchaseDate,
+                    "currency" to draft.currency,
+                    "total" to draft.total,
+                    "linesJson" to draft.linesJson,
+                    "rawText" to draft.rawText,
+                    "unrecognizedLines" to draft.unrecognizedLines,
+                    "timestamp" to System.currentTimeMillis()
+                ))
+                .await()
+
+            println("✅ Draft subido a Firestore correctamente")
+        } catch (e: Exception) {
+            println("⚠️ Error subiendo draft a Firestore: ${e.message}")
+            // No lanzar excepción para no bloquear el flujo principal
+        }
+    }
     // ← NUEVO: Método para finalizar después del diálogo
     fun finishReview() {
         viewModelScope.launch {

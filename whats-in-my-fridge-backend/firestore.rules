@@ -27,7 +27,7 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);  
           
         // Validar estructura de datos en escritura  
-        allow create: if isOwner(userId)   
+        allow create: if isOwner(userId)  
           && request.resource.data.keys().hasAll(['name', 'expiryDate', 'quantity'])  
           && request.resource.data.name is string  
           && request.resource.data.quantity is number  
@@ -55,6 +55,11 @@ service cloud.firestore {
         
       // Subcolección de caché de recetas  
       match /recipeCache/{document=**} {  
+        allow read, write: if isOwner(userId);  
+      }  
+        
+      // Subcolección de historial de escaneos  
+      match /scans/{scanId} {  
         allow read, write: if isOwner(userId);  
       }  
     }  
