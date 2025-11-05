@@ -32,8 +32,8 @@ interface Progress {
 const OLLAMA_URL = 'http://localhost:11434/api/generate';  
 const MODEL = 'llama3.1:8b';  
 const TIMEOUT = 120000; // 120 segundos  
-const BATCH_SIZE = 5; // Procesamiento paralelo conservador  
-const SAVE_INTERVAL = 10; // Guardar cada 50 recetas  
+const BATCH_SIZE = 10; // Procesamiento paralelo conservador  
+const SAVE_INTERVAL = 50; // Guardar cada 50 recetas  
   
 // ========== VARIABLES GLOBALES ==========  
   
