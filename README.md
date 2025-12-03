@@ -91,25 +91,40 @@ Cloud sync is optional and governed by the `cloudConsent` DataStore preference.
 - Node.js 20.x (for Cloud Functions)
 - Firebase Project
 
-Project Structure
-Android App
-app/src/main/java/com/example/whatsinmyfridge/
-├── di/                    # Dependency injection (Koin)
+## Project Structure
+
+### Android App  
+`app/src/main/java/com/example/whatsinmyfridge/`
+
+
+├── di/ # Dependency injection (Koin)
 ├── data/
-│   ├── local/             # Room DAOs and entities
-│   └── repository/        # Repository layer
-├── ui/                    # Compose screens & ViewModels
-│   ├── home/              # Inventory
-│   ├── scan/              # OCR scanning
-│   ├── review/            # Draft review
-│   ├── recipespro/        # AI recipe suggestions
-│   └── settings/          # App settings
-└── workers/               # WorkManager tasks
-Backend
-whats-in-my-fridge-backend/functions/src/
-├── index.ts               # Cloud Functions entrypoint
-├── parseReceipt.ts        # OCR parsing logic
-├── recipeMatcher.ts       # Recipe matcher engine
-└── types/                 # TS interfaces
-Developed by Pepe Ortiz Roldán
-Active development between October–December 2025
+│ ├── local/ # Room DAOs and entities
+│ └── repository/ # Repository layer
+├── ui/ # Compose screens & ViewModels
+│ ├── home/ # Inventory
+│ ├── scan/ # OCR scanning
+│ ├── review/ # Draft review
+│ ├── recipespro/ # AI recipe suggestions
+│ └── settings/ # App settings
+└── workers/ # WorkManager background tasks
+
+
+---
+
+### Backend  
+`whats-in-my-fridge-backend/functions/src/`
+
+├── index.ts # Cloud Functions entrypoint
+├── parseReceipt.ts # OCR parsing logic
+├── recipeMatcher.ts # Recipe matcher engine
+└── types/ # TypeScript interfaces
+
+
+---
+
+### Credits
+
+Developed by **Pepe Ortiz Roldán**  
+Active development: **October–December 2025**
+
