@@ -7,6 +7,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.example.whatsinmyfridge.data.local.DraftDao
 import com.example.whatsinmyfridge.data.local.FoodDao
+import com.example.whatsinmyfridge.data.local.IngredientDao
 import com.example.whatsinmyfridge.data.local.RecipeCacheDao
 import com.example.whatsinmyfridge.data.local.db.AppDb
 import com.example.whatsinmyfridge.data.repository.DraftRepository
@@ -80,6 +81,12 @@ val appModule = module {
      * Agregado en Sprint 3 para consultas offline de recetas.
      */
     single<RecipeCacheDao> { get<AppDb>().recipeCache() }
+
+    /**
+     * DAO para acceso a la tabla ingredients (base de datos de ingredientes normalizados).
+     * Usado para fuzzy matching en clasificación de alimentos.
+     */
+    single<IngredientDao> { get<AppDb>().ingredients() }
 
     // ========== DataStore ==========
     /**

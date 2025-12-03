@@ -61,7 +61,7 @@ function extractJSON(text: string): any {
         // Ignora error y continúa con siguiente fallback  
       }  
     }  
-      
+        
     // Busca objeto JSON  
     const objectMatch = text.match(/\{[\s\S]*?\}/);  
     if (objectMatch) {  
@@ -71,14 +71,14 @@ function extractJSON(text: string): any {
         // Ignora error y continúa con siguiente fallback  
       }  
     }  
-      
+        
     // Intenta limpiar el texto de caracteres problemáticos  
     const cleaned = text  
       .replace(/```json\s*/g, '')  
       .replace(/```\s*/g, '')  
       .replace(/^\s*[\r\n]/gm, '')  
       .trim();  
-      
+        
     try {  
       return JSON.parse(cleaned);  
     } catch (e4) {  
@@ -93,15 +93,15 @@ function extractJSON(text: string): any {
 function loadProgress(): Progress {  
   if (fs.existsSync(progressPath)) {  
     const data = JSON.parse(fs.readFileSync(progressPath, 'utf-8'));  
-      
+        
     // Convertir array de IDs a Set para búsqueda rápida  
     const processedRecipeIds = new Set<string>(data.processedRecipeIds || []);  
-      
+        
     console.log(`\n📂 Progreso anterior encontrado:`);  
     console.log(`   Última receta procesada: ${data.lastProcessedIndex}`);  
     console.log(`   Exitosas: ${data.successCount} | Errores: ${data.errorCount}`);  
     console.log(`   Recetas ya procesadas: ${processedRecipeIds.size}`);  
-      
+        
     return {  
       lastProcessedIndex: data.lastProcessedIndex || -1,  
       successCount: data.successCount || 0,  
@@ -111,7 +111,7 @@ function loadProgress(): Progress {
       normalizedRecipes: data.normalizedRecipes || [],  
     };  
   }  
-    
+      
   return {  
     lastProcessedIndex: -1,  
     successCount: 0,  
@@ -127,7 +127,7 @@ function loadProgress(): Progress {
  */  
 function saveProgress(force: boolean = false): void {  
   if (!progress) return;  
-    
+      
   const data = {  
     lastProcessedIndex: progress.lastProcessedIndex,  
     successCount: progress.successCount,  
@@ -136,9 +136,9 @@ function saveProgress(force: boolean = false): void {
     processedRecipeIds: Array.from(progress.processedRecipeIds),  
     normalizedRecipes: progress.normalizedRecipes,  
   };  
-    
+      
   fs.writeFileSync(progressPath, JSON.stringify(data, null, 2));  
-    
+      
   if (force) {  
     console.log(`\n💾 Progreso guardado forzosamente`);  
   }  
@@ -152,13 +152,13 @@ async function normalizeIngredientsWithLlama(
   ingredientsWithMeasures: string[]  
 ): Promise<string[]> {  
   const prompt = `Extract ONLY the ingredient names (without quantities, measurements, brand names, or preparation instructions) from this list.  
-  
+    
 Input: ${JSON.stringify(ingredientsWithMeasures)}  
-  
+    
 Return ONLY a JSON array of ingredient names. Example: ["chicken", "rice", "onion"]  
-  
+    
 IMPORTANT: Return ONLY the JSON array, no additional text or explanation.`;  
-  
+    
   try {  
     const response = await axios.post<OllamaResponse>(  
       OLLAMA_URL,  
@@ -178,25 +178,25 @@ IMPORTANT: Return ONLY the JSON array, no additional text or explanation.`;
         },  
       }  
     );  
-  
+    
     const responseText = response.data.response.trim();  
     const parsed = extractJSON(responseText);  
-  
+    
     // Validar que sea un array  
     if (Array.isArray(parsed)) {  
       return parsed.filter((item: any) => typeof item === 'string' && item.trim().length > 0);  
     }  
-  
+    
     // Si es un objeto con propiedad 'ingredients'  
     if (parsed && typeof parsed === 'object' && Array.isArray(parsed.ingredients)) {  
       return parsed.ingredients.filter((item: any) => typeof item === 'string' && item.trim().length > 0);  
     }  
-  
+    
     // Si es un objeto con propiedad 'items'  
     if (parsed && typeof parsed === 'object' && Array.isArray(parsed.items)) {  
       return parsed.items.filter((item: any) => typeof item === 'string' && item.trim().length > 0);  
     }  
-  
+    
     throw new Error('Formato de respuesta inesperado');  
   } catch (error: any) {  
     if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {  
@@ -212,46 +212,46 @@ IMPORTANT: Return ONLY the JSON array, no additional text or explanation.`;
 async function processRecipes(): Promise<void> {  
   // Cargar progreso anterior  
   progress = loadProgress();  
-    
+      
   // Cargar recetas  
   const recipesData = JSON.parse(fs.readFileSync(recipesPath, 'utf-8'));  
   const recipes = recipesData.recipes;  
   const totalRecipes = recipes.length;  
-  
+    
   console.log(`\n📚 Procesando ${totalRecipes} recetas con Llama 3.1 8B (PARALELO CONSERVADOR)...`);  
   console.log(`🚀 Procesando ${BATCH_SIZE} recetas simultáneamente`);  
   console.log(`💾 Guardando progreso cada ${SAVE_INTERVAL} recetas`);  
-  
+    
   // Determinar desde dónde reanudar  
   const startIndex = progress!.processedRecipeIds.size;  
   console.log(`\n▶️  Reanudando desde receta ${startIndex + 1}/${totalRecipes}\n`);  
-  
+    
   // Procesar en batches paralelos  
   for (let i = startIndex; i < totalRecipes; i += BATCH_SIZE) {  
     const batch = recipes.slice(i, Math.min(i + BATCH_SIZE, totalRecipes));  
-      
+        
     // Procesar batch en paralelo  
     await Promise.all(batch.map(async (recipe: any, idx: number) => {  
       const globalIndex = i + idx;  
       const recipeId = recipe.id;  
-        
+          
       // Saltar si ya fue procesada  
       if (progress!.processedRecipeIds.has(recipeId)) {  
         return;  
       }  
-        
+          
       console.log(`[${globalIndex + 1}/${totalRecipes}] ${recipe.name}`);  
-        
+          
       try {  
         const normalized = await normalizeIngredientsWithLlama(recipe.ingredientsWithMeasures || []);  
         const originalCount = recipe.ingredientsWithMeasures?.length || 0;  
         const extractedLength = normalized.length;  
-          
+            
         console.log(`  ✅ ${extractedLength}/${originalCount} ingredientes extraídos`);  
-          
+            
         // Actualizar receta en el array principal  
         recipe.ingredients = normalized;  
-          
+            
         // Guardar en progress.normalizedRecipes  
         const normalizedRecipe: NormalizedRecipe = {  
           id: recipeId,  
@@ -259,7 +259,7 @@ async function processRecipes(): Promise<void> {
           ingredients: normalized,  
           originalIngredientsCount: originalCount,  
         };  
-          
+            
         progress!.normalizedRecipes.push(normalizedRecipe);  
         progress!.processedRecipeIds.add(recipeId);  
         progress!.successCount++;  
@@ -269,39 +269,41 @@ async function processRecipes(): Promise<void> {
         progress!.errorCount++;  
       }  
     }));  
-      
+        
     // Guardar progreso cada SAVE_INTERVAL recetas  
     if ((i + BATCH_SIZE) % SAVE_INTERVAL === 0 || i + BATCH_SIZE >= totalRecipes) {  
       saveProgress();  
-        
+          
       const elapsed = ((Date.now() - progress!.startTime) / 1000 / 60).toFixed(1);  
       const rate = ((progress!.successCount) / (Date.now() - progress!.startTime) * 1000 * 60).toFixed(1);  
       const remaining = totalRecipes - progress!.successCount - progress!.errorCount;  
       const eta = (remaining / parseFloat(rate)).toFixed(1);  
-        
+          
       console.log(`\n💾 Progreso guardado: ${progress!.successCount + progress!.errorCount}/${totalRecipes}`);  
       console.log(`   ✅ Exitosas: ${progress!.successCount} | ❌ Errores: ${progress!.errorCount}`);  
       console.log(`   ⏱️  Tiempo: ${elapsed}min | Velocidad: ${rate} recetas/min | ETA: ${eta}min`);  
       console.log(`   📊 Tasa de éxito: ${((progress!.successCount / (progress!.successCount + progress!.errorCount)) * 100).toFixed(1)}%\n`);  
     }  
-      
+        
     // Pequeña pausa entre batches para no saturar Ollama  
     await new Promise(resolve => setTimeout(resolve, 100));  
   }  
-    
+      
   // Aplicar ingredientes normalizados desde progress.json a recipes.json  
   console.log(`\n🔄 Aplicando ingredientes normalizados a recipes.json...`);  
-    
+      
   for (const normalizedRecipe of progress!.normalizedRecipes) {  
     const recipe = recipes.find((r: any) => r.id === normalizedRecipe.id);  
     if (recipe) {  
+      // PRESERVAR ingredientsWithMeasures y AGREGAR ingredients normalizado  
       recipe.ingredients = normalizedRecipe.ingredients;  
+      // No eliminar recipe.ingredientsWithMeasures - se mantiene intacto  
     }  
   }  
-    
-  // Guardar recipes.json actualizado  
+      
+  // Guardar recipes.json actualizado con ambos campos  
   fs.writeFileSync(recipesPath, JSON.stringify(recipesData, null, 2));  
-    
+      
   const totalTime = ((Date.now() - progress!.startTime) / 1000 / 60).toFixed(1);  
   const totalHours = (parseFloat(totalTime) / 60).toFixed(1);  
   console.log(`\n✅ Proceso completado en ${totalTime} minutos (${totalHours} horas)!`);  

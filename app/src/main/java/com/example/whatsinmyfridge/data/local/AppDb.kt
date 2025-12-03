@@ -6,6 +6,8 @@ import androidx.room.TypeConverters
 import com.example.whatsinmyfridge.data.local.Converters
 import com.example.whatsinmyfridge.data.local.DraftDao
 import com.example.whatsinmyfridge.data.local.FoodDao
+import com.example.whatsinmyfridge.data.local.IngredientDao
+import com.example.whatsinmyfridge.data.local.IngredientEntity
 import com.example.whatsinmyfridge.data.local.RecipeCacheDao
 import com.example.whatsinmyfridge.data.local.RecipeCacheEntity
 
@@ -23,14 +25,16 @@ import com.example.whatsinmyfridge.data.local.RecipeCacheEntity
     entities = [
         FoodItemEntity::class,
         ParsedDraftEntity::class,
-        RecipeCacheEntity::class
+        RecipeCacheEntity::class,
+        IngredientEntity::class  // ← NUEVO
     ],
-    version = 4,
+    version = 5,  // ← Incrementar versión
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDb : RoomDatabase() {
     abstract fun food(): FoodDao
     abstract fun drafts(): DraftDao
-    abstract fun recipeCache(): RecipeCacheDao  // ✅ Debe estar aquí
+    abstract fun recipeCache(): RecipeCacheDao
+    abstract fun ingredients(): IngredientDao  // ← NUEVO
 }
