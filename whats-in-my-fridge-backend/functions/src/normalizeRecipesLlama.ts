@@ -1,7 +1,7 @@
-// whats-in-my-fridge-backend/functions/src/normalizeRecipesLlama.ts  
-import * as fs from 'fs';  
-import * as path from 'path';  
-import axios from 'axios';  
+﻿// whats-in-my-fridge-backend/functions/src/normalizeRecipesLlama.ts  
+import * as fs from "fs";  
+import * as path from "path";  
+import axios from "axios";  
   
 // ========== INTERFACES ==========  
   
@@ -27,10 +27,10 @@ interface Progress {
   normalizedRecipes: NormalizedRecipe[];  
 }  
   
-// ========== CONFIGURACIÓN ==========  
+// ========== CONFIGURACI├ôN ==========  
   
-const OLLAMA_URL = 'http://localhost:11434/api/generate';  
-const MODEL = 'llama3.1:8b';  
+const OLLAMA_URL = "http://localhost:11434/api/generate";  
+const MODEL = "llama3.1:8b";  
 const TIMEOUT = 120000; // 120 segundos  
 const BATCH_SIZE = 10; // Procesamiento paralelo conservador  
 const SAVE_INTERVAL = 50; // Guardar cada 50 recetas  
@@ -38,14 +38,14 @@ const SAVE_INTERVAL = 50; // Guardar cada 50 recetas
 // ========== VARIABLES GLOBALES ==========  
   
 let progress: Progress | null = null;  
-const recipesPath = path.join(__dirname, '../data/recipes.json');  
-const progressPath = path.join(__dirname, '../data/progress.json');  
+const recipesPath = path.join(__dirname, "../data/recipes.json");  
+const progressPath = path.join(__dirname, "../data/progress.json");  
   
 // ========== FUNCIONES AUXILIARES ==========  
   
 /**  
  * Extrae JSON de texto que puede contener contenido adicional  
- * Maneja múltiples formatos de respuesta de Llama  
+ * Maneja m├║ltiples formatos de respuesta de Llama  
  */  
 function extractJSON(text: string): any {  
   // Intenta parsear directamente  
@@ -58,7 +58,7 @@ function extractJSON(text: string): any {
       try {  
         return JSON.parse(arrayMatch[0]);  
       } catch (e2) {  
-        // Ignora error y continúa con siguiente fallback  
+        // Ignora error y contin├║a con siguiente fallback  
       }  
     }  
         
@@ -68,21 +68,21 @@ function extractJSON(text: string): any {
       try {  
         return JSON.parse(objectMatch[0]);  
       } catch (e3) {  
-        // Ignora error y continúa con siguiente fallback  
+        // Ignora error y contin├║a con siguiente fallback  
       }  
     }  
         
-    // Intenta limpiar el texto de caracteres problemáticos  
+    // Intenta limpiar el texto de caracteres problem├íticos  
     const cleaned = text  
-      .replace(/```json\s*/g, '')  
-      .replace(/```\s*/g, '')  
-      .replace(/^\s*[\r\n]/gm, '')  
+      .replace(/```json\s*/g, "")  
+      .replace(/```\s*/g, "")  
+      .replace(/^\s*[\r\n]/gm, "")  
       .trim();  
         
     try {  
       return JSON.parse(cleaned);  
     } catch (e4) {  
-      throw new Error('Formato de respuesta inesperado');  
+      throw new Error("Formato de respuesta inesperado");  
     }  
   }  
 }  
@@ -92,13 +92,13 @@ function extractJSON(text: string): any {
  */  
 function loadProgress(): Progress {  
   if (fs.existsSync(progressPath)) {  
-    const data = JSON.parse(fs.readFileSync(progressPath, 'utf-8'));  
+    const data = JSON.parse(fs.readFileSync(progressPath, "utf-8"));  
         
-    // Convertir array de IDs a Set para búsqueda rápida  
+    // Convertir array de IDs a Set para b├║squeda r├ípida  
     const processedRecipeIds = new Set<string>(data.processedRecipeIds || []);  
         
-    console.log(`\n📂 Progreso anterior encontrado:`);  
-    console.log(`   Última receta procesada: ${data.lastProcessedIndex}`);  
+    console.log("\n📂 Progreso anterior encontrado:");
+    console.log(`   ├Ültima receta procesada: ${data.lastProcessedIndex}`);  
     console.log(`   Exitosas: ${data.successCount} | Errores: ${data.errorCount}`);  
     console.log(`   Recetas ya procesadas: ${processedRecipeIds.size}`);  
         
@@ -140,13 +140,13 @@ function saveProgress(force: boolean = false): void {
   fs.writeFileSync(progressPath, JSON.stringify(data, null, 2));  
       
   if (force) {  
-    console.log(`\n💾 Progreso guardado forzosamente`);  
+    console.log("\n💾 Progreso guardado forzosamente");
   }  
 }  
   
 /**  
  * Normaliza ingredientes usando Llama 3.1 8B  
- * Maneja múltiples formatos de respuesta JSON con fallback robusto  
+ * Maneja m├║ltiples formatos de respuesta JSON con fallback robusto  
  */  
 async function normalizeIngredientsWithLlama(  
   ingredientsWithMeasures: string[]  
@@ -174,7 +174,7 @@ IMPORTANT: Return ONLY the JSON array, no additional text or explanation.`;
       {  
         timeout: TIMEOUT,  
         headers: {  
-          'Content-Type': 'application/json',  
+          "Content-Type": "application/json",  
         },  
       }  
     );  
@@ -184,23 +184,23 @@ IMPORTANT: Return ONLY the JSON array, no additional text or explanation.`;
     
     // Validar que sea un array  
     if (Array.isArray(parsed)) {  
-      return parsed.filter((item: any) => typeof item === 'string' && item.trim().length > 0);  
+      return parsed.filter((item: any) => typeof item === "string" && item.trim().length > 0);  
     }  
     
-    // Si es un objeto con propiedad 'ingredients'  
-    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.ingredients)) {  
-      return parsed.ingredients.filter((item: any) => typeof item === 'string' && item.trim().length > 0);  
+    // Si es un objeto con propiedad "ingredients"  
+    if (parsed && typeof parsed === "object" && Array.isArray(parsed.ingredients)) {  
+      return parsed.ingredients.filter((item: any) => typeof item === "string" && item.trim().length > 0);  
     }  
     
-    // Si es un objeto con propiedad 'items'  
-    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.items)) {  
-      return parsed.items.filter((item: any) => typeof item === 'string' && item.trim().length > 0);  
+    // Si es un objeto con propiedad "items"  
+    if (parsed && typeof parsed === "object" && Array.isArray(parsed.items)) {  
+      return parsed.items.filter((item: any) => typeof item === "string" && item.trim().length > 0);  
     }  
     
-    throw new Error('Formato de respuesta inesperado');  
+    throw new Error("Formato de respuesta inesperado");  
   } catch (error: any) {  
-    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {  
-      console.log(`  ⏱️  Timeout: Llama tardó más de ${TIMEOUT / 1000} segundos`);  
+    if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {  
+      console.log(`  ÔÅ▒´©Å  Timeout: Llama tard├│ m├ís de ${TIMEOUT / 1000} segundos`);  
     }  
     throw error;  
   }  
@@ -214,17 +214,17 @@ async function processRecipes(): Promise<void> {
   progress = loadProgress();  
       
   // Cargar recetas  
-  const recipesData = JSON.parse(fs.readFileSync(recipesPath, 'utf-8'));  
+  const recipesData = JSON.parse(fs.readFileSync(recipesPath, "utf-8"));  
   const recipes = recipesData.recipes;  
   const totalRecipes = recipes.length;  
     
-  console.log(`\n📚 Procesando ${totalRecipes} recetas con Llama 3.1 8B (PARALELO CONSERVADOR)...`);  
-  console.log(`🚀 Procesando ${BATCH_SIZE} recetas simultáneamente`);  
-  console.log(`💾 Guardando progreso cada ${SAVE_INTERVAL} recetas`);  
+  console.log(`\n­ƒôÜ Procesando ${totalRecipes} recetas con Llama 3.1 8B (PARALELO CONSERVADOR)...`);  
+  console.log(`­ƒÜÇ Procesando ${BATCH_SIZE} recetas simult├íneamente`);  
+  console.log(`­ƒÆ¥ Guardando progreso cada ${SAVE_INTERVAL} recetas`);  
     
-  // Determinar desde dónde reanudar  
+  // Determinar desde d├│nde reanudar  
   const startIndex = progress!.processedRecipeIds.size;  
-  console.log(`\n▶️  Reanudando desde receta ${startIndex + 1}/${totalRecipes}\n`);  
+  console.log(`\nÔûÂ´©Å  Reanudando desde receta ${startIndex + 1}/${totalRecipes}\n`);  
     
   // Procesar en batches paralelos  
   for (let i = startIndex; i < totalRecipes; i += BATCH_SIZE) {  
@@ -247,7 +247,7 @@ async function processRecipes(): Promise<void> {
         const originalCount = recipe.ingredientsWithMeasures?.length || 0;  
         const extractedLength = normalized.length;  
             
-        console.log(`  ✅ ${extractedLength}/${originalCount} ingredientes extraídos`);  
+        console.log(`  Ô£à ${extractedLength}/${originalCount} ingredientes extra├¡dos`);  
             
         // Actualizar receta en el array principal  
         recipe.ingredients = normalized;  
@@ -265,7 +265,7 @@ async function processRecipes(): Promise<void> {
         progress!.successCount++;  
         progress!.lastProcessedIndex = globalIndex;  
       } catch (error: any) {  
-        console.log(`  ❌ Error: ${error.message}`);  
+        console.log(`  ÔØî Error: ${error.message}`);  
         progress!.errorCount++;  
       }  
     }));  
@@ -279,18 +279,18 @@ async function processRecipes(): Promise<void> {
       const remaining = totalRecipes - progress!.successCount - progress!.errorCount;  
       const eta = (remaining / parseFloat(rate)).toFixed(1);  
           
-      console.log(`\n💾 Progreso guardado: ${progress!.successCount + progress!.errorCount}/${totalRecipes}`);  
-      console.log(`   ✅ Exitosas: ${progress!.successCount} | ❌ Errores: ${progress!.errorCount}`);  
-      console.log(`   ⏱️  Tiempo: ${elapsed}min | Velocidad: ${rate} recetas/min | ETA: ${eta}min`);  
-      console.log(`   📊 Tasa de éxito: ${((progress!.successCount / (progress!.successCount + progress!.errorCount)) * 100).toFixed(1)}%\n`);  
+      console.log(`\n­ƒÆ¥ Progreso guardado: ${progress!.successCount + progress!.errorCount}/${totalRecipes}`);  
+      console.log(`   Ô£à Exitosas: ${progress!.successCount} | ÔØî Errores: ${progress!.errorCount}`);  
+      console.log(`   ÔÅ▒´©Å  Tiempo: ${elapsed}min | Velocidad: ${rate} recetas/min | ETA: ${eta}min`);  
+      console.log(`   ­ƒôè Tasa de ├®xito: ${((progress!.successCount / (progress!.successCount + progress!.errorCount)) * 100).toFixed(1)}%\n`);  
     }  
         
-    // Pequeña pausa entre batches para no saturar Ollama  
-    await new Promise(resolve => setTimeout(resolve, 100));  
+    // Peque├▒a pausa entre batches para no saturar Ollama  
+    await new Promise((resolve) => setTimeout(resolve, 100));  
   }  
       
   // Aplicar ingredientes normalizados desde progress.json a recipes.json  
-  console.log(`\n🔄 Aplicando ingredientes normalizados a recipes.json...`);  
+  console.log("\n🔄 Aplicando ingredientes normalizados a recipes.json...");
       
   for (const normalizedRecipe of progress!.normalizedRecipes) {  
     const recipe = recipes.find((r: any) => r.id === normalizedRecipe.id);  
@@ -306,35 +306,35 @@ async function processRecipes(): Promise<void> {
       
   const totalTime = ((Date.now() - progress!.startTime) / 1000 / 60).toFixed(1);  
   const totalHours = (parseFloat(totalTime) / 60).toFixed(1);  
-  console.log(`\n✅ Proceso completado en ${totalTime} minutos (${totalHours} horas)!`);  
+  console.log(`\nÔ£à Proceso completado en ${totalTime} minutos (${totalHours} horas)!`);  
   console.log(`   Total exitosas: ${progress!.successCount}`);  
   console.log(`   Total errores: ${progress!.errorCount}`);  
-  console.log(`   Tasa de éxito: ${((progress!.successCount / totalRecipes) * 100).toFixed(1)}%`);  
+  console.log(`   Tasa de ├®xito: ${((progress!.successCount / totalRecipes) * 100).toFixed(1)}%`);  
 }  
   
-// ========== MANEJO DE SEÑALES ==========  
+// ========== MANEJO DE SE├æALES ==========  
   
 // Guardar progreso al recibir Ctrl+C  
-process.on('SIGINT', () => {  
-  console.log('\n\n⚠️  Interrupción detectada (Ctrl+C)');  
-  console.log('💾 Guardando progreso antes de salir...');  
+process.on("SIGINT", () => {  
+  console.log("\n\nÔÜá´©Å  Interrupci├│n detectada (Ctrl+C)");  
+  console.log("­ƒÆ¥ Guardando progreso antes de salir...");  
   saveProgress(true);  
   process.exit(0);  
 });  
   
-// Guardar progreso al recibir señal de terminación  
-process.on('SIGTERM', () => {  
-  console.log('\n\n⚠️  Señal de terminación recibida');  
-  console.log('💾 Guardando progreso antes de salir...');  
+// Guardar progreso al recibir se├▒al de terminaci├│n  
+process.on("SIGTERM", () => {  
+  console.log("\n\nÔÜá´©Å  Se├▒al de terminaci├│n recibida");  
+  console.log("­ƒÆ¥ Guardando progreso antes de salir...");  
   saveProgress(true);  
   process.exit(0);  
 });  
   
-// ========== EJECUCIÓN ==========  
+// ========== EJECUCI├ôN ==========  
   
 if (require.main === module) {  
-  processRecipes().catch(error => {  
-    console.error('\n❌ Error fatal:', error);  
+  processRecipes().catch((error) => {  
+    console.error("\nÔØî Error fatal:", error);  
     saveProgress(true);  
     process.exit(1);  
   });  
