@@ -1,183 +1,351 @@
-<<<<<<< HEAD
-# What's in my fridge
+# What's In My Fridge - React Native
 
-## Estado actual del proyecto
-- Android app en Kotlin + Jetpack Compose con navegacion y pantallas: login, home (inventario), add item, detail, scan, review draft, settings, recipes pro.
-- Datos locales con Room (food_items, parsed_drafts, recipe_cache, ingredients) y preferencias con DataStore.
-- OCR en dispositivo con ML Kit; parser heuristico genera borradores que se revisan antes de confirmar.
-- Sync opcional con Firebase Auth/Firestore (consentimiento de nube) para inventario.
-- Recetas Pro via Cloud Functions con cache local, limites mensuales (Free/Pro) y preferencias de cocina.
-- Notificaciones de caducidad con WorkManager + widget de resumen.
-- Backend Firebase Functions (TS): parseReceipt (Vision API), uploadReceipt, storage trigger, getRecipeSuggestions, syncInventoryToDevice (FCM).
-- Seguridad con Firebase App Check (Play Integrity).
+Aplicación móvil multiplataforma (iOS + Android) para gestión de inventario de alimentos con OCR, sugerencias de recetas con IA y sincronización en la nube.
 
-## Arquitectura y componentes
-- App Android: `app/` (Compose UI, Koin DI, Room, DataStore, WorkManager).
-- Backend: `whats-in-my-fridge-backend/` (Firebase Functions + reglas de Firestore/Storage).
-- Datos de recetas: `app/src/main/assets/recipes.json` y `whats-in-my-fridge-backend/functions/data/recipes.json`.
-
-## Trabajo realizado (sprints completados)
-### Sprint 1 - Base app e inventario
-- Estructura del proyecto Android, Compose UI, Koin DI y navegacion base.
-- Login/registro con Firebase Auth.
-- CRUD de inventario local con Room y pantalla de detalle.
-
-### Sprint 2 - OCR y borradores
-- Flujo de escaneo con ML Kit (OCR local).
-- Parser heuristico y guardado de borradores en Room.
-- Pantalla de revision para convertir borradores en items confirmados.
-- Preferencias de usuario (notificaciones, cloud consent).
-
-### Sprint 3 - Recetas Pro y experiencia extendida
-- Cloud Functions para sugerencias de recetas con fuzzy matching.
-- Cache local de recetas y limites mensuales Free/Pro.
-- Carga de ingredientes desde assets para clasificacion.
-- Worker de caducidad + widget y App Check.
-
-## Trabajo por realizar (sprints propuestos)
-### Sprint 4 - Cierre de flujo recetas y clasificacion
-- Implementar navegacion pendiente en Recipes Pro (detalle de receta y lista de compra).
-- Integrar FoodClassifierRepository en el flujo de alta (auto-categoria).
-- Unificar flujo OCR app + backend (usar uploadReceipt/parseReceipt desde la app).
-
-### Sprint 5 - Sincronizacion y robustez
-- Manejar FCM en la app (registro de token y recepcion de eventos INVENTORY_SYNC).
-- Resolver conflictos y reintentos de sync (offline-first real).
-- Mejorar parsing de tickets con mas formatos y pruebas de regresion.
-
-### Sprint 6 - Calidad y release
-- Tests unitarios/instrumentados para repositorios y ViewModels clave.
-- CI basico (lint + tests) y build de release.
-- Documentacion de despliegue Firebase y configuracion de entornos.
-=======
-# What's In My Fridge — Project Overview
-
-**What's In My Fridge** is an Android food-inventory management application that uses **OCR recognition**, **local database storage**, and **AI-powered recipe suggestions** to help users track groceries, expiration dates, and meal possibilities seamlessly.
+**Migrada de:** Android nativo (Kotlin + Jetpack Compose)
+**Stack:** React Native + Expo
 
 ---
 
-## 1. Overview
+## Características
 
-What's In My Fridge is an **offline-first Android app**. It automatically scans grocery receipts with OCR (optimized for German markets), extracts items, tracks expiration dates, and generates AI-based recipe ideas based on the user's inventory.
-
----
-
-## 2. Key Features
-
-### 🎯 OCR Receipt Scanning
-- Local OCR with **ML Kit Text Recognition**  
-  _Reference: `ScanVm.kt:10-12`_
-- Parsing optimized for German receipts:  
-  E-Center, Kaiserin-Augusta  
-  _Reference: `parseReceipt.ts:112-115`_
-- Draft review system before confirmation of scanned items.
-
-### 📦 Inventory Management
-- Local **Room** database with optional Firestore sync  
-  _Reference: `AppModule.kt:58-66`_
-- Expiration date tracking and **automatic notifications**  
-  _Reference: `FridgeApp.kt:232-243`_
-- Multi-device synchronization via **Firebase Cloud Messaging**  
-  _Reference: `InventoryRepository.kt:181-204`_
-
-### 🍳 AI Recipe Suggestions
-- 120.5 MB corpus with **~100K normalized recipes** (Llama 3.1 8B)
-- Local recipe cache with **60-minute TTL**  
-  _Reference: `AppModule.kt:136-144`_
-- Freemium model with monthly usage limits.
+- **Inventario inteligente**: Gestiona alimentos con fechas de caducidad y notificaciones
+- **Escaneo OCR**: Digitaliza recibos automáticamente con ML Kit
+- **Recetas con IA**: Sugerencias personalizadas basadas en tu inventario (Firebase Functions)
+- **Sincronización**: Datos sincronizados entre dispositivos con Firestore
+- **Notificaciones**: Alertas cuando los alimentos están por expirar
+- **Multiplataforma**: iOS y Android desde una sola base de código
 
 ---
 
-## 3. Tech Stack
+## Stack Tecnológico
 
-### Android (Frontend)
-- **UI:** Jetpack Compose + Material 3  
-- **Architecture:** MVVM · Koin DI  
-  _Reference: `AppModule.kt:50`_
-- **Database:** Room v5 (4 tables)  
-  - `food_items`  
-  - `parsed_drafts`  
-  - `recipe_cache`  
-  - `ingredients`  
-  _Reference: `AppModule.kt:72-89`_
-- **Preferences:** DataStore  
-  _Reference: `AppModule.kt:97`_
-- **OCR:** ML Kit Text Recognition 16.0.0  
-  _Reference: `ScanVm.kt:10-12`_
-- **Background:** WorkManager for periodic tasks  
-  _Reference: `FridgeApp.kt:5-7`_
+### Frontend
+- **React Native**: Framework multiplataforma
+- **Expo**: Tooling y servicios (SDK 54)
+- **TypeScript**: Type safety
+- **React Navigation**: Navegación entre pantallas
+- **Zustand**: State management (simple y reactivo)
 
-### Backend (Firebase)
-- Firebase Auth + App Check (Play Integrity)  
-  _Reference: `FridgeApp.kt:190-198`_
-- Firestore (region: eur3)  
-- Cloud Functions (us-central1, europe-west1)  
-- Cloud Storage for receipt images
+### Base de Datos Local
+- **WatermelonDB**: SQLite reactivo y performante
+  - `food_items`: Inventario principal
+  - `parsed_drafts`: Borradores de OCR
+  - `recipe_cache`: Caché de recetas
+  - `ingredients`: Base de referencia
 
-### Recipe Infrastructure
-- Offline normalization pipeline using **Ollama + Llama 3.1 8B**  
-  _Reference: `FridgeApp.kt:118-120`_
-- Ingredient matching via **Levenshtein similarity**
+### Backend (Reutilizado)
+- **Firebase Auth**: Autenticación de usuarios
+- **Firestore**: Sincronización en tiempo real
+- **Cloud Functions**: Lógica serverless (parseReceipt, getRecipeSuggestions)
+- **Firebase Storage**: Almacenamiento de imágenes
+
+### Funcionalidades
+- **react-native-text-recognition**: OCR local con ML Kit
+- **expo-notifications**: Notificaciones push y locales
+- **expo-task-manager**: Tareas en background
+- **date-fns**: Manejo de fechas
 
 ---
 
-## 4. Architecture
+## Estructura del Proyecto
 
-### Data Flow
-User → UI (Compose) → ViewModel → Repository → Room DB
-↓ (optional)
-Firestore ← Cloud Functions
-
-
-### Offline-First Pattern
-The application is **fully functional offline**.  
-Cloud sync is optional and governed by the `cloudConsent` DataStore preference.
-
----
-
-## 5. Project Setup
-
-### Requirements
-- Android Studio Hedgehog+
-- JDK 17+
-- Node.js 20.x (for Cloud Functions)
-- Firebase Project
-
-## Project Structure
-
-### Android App  
-`app/src/main/java/com/example/whatsinmyfridge/`
-
-
-├── di/ # Dependency injection (Koin)
-├── data/
-│ ├── local/ # Room DAOs and entities
-│ └── repository/ # Repository layer
-├── ui/ # Compose screens & ViewModels
-│ ├── home/ # Inventory
-│ ├── scan/ # OCR scanning
-│ ├── review/ # Draft review
-│ ├── recipespro/ # AI recipe suggestions
-│ └── settings/ # App settings
-└── workers/ # WorkManager background tasks
-
-
----
-
-### Backend  
-`whats-in-my-fridge-backend/functions/src/`
-
-├── index.ts # Cloud Functions entrypoint
-├── parseReceipt.ts # OCR parsing logic
-├── recipeMatcher.ts # Recipe matcher engine
-└── types/ # TypeScript interfaces
-
+```
+whats-in-my-fridge-rn/
+├── src/
+│   ├── components/          # Componentes UI reutilizables
+│   │   ├── common/          # Botones, Cards, Inputs
+│   │   ├── inventory/       # FoodItemCard, ExpiryBadge
+│   │   └── recipes/         # RecipeCard, IngredientList
+│   ├── screens/             # Pantallas principales
+│   │   ├── LoginScreen.tsx
+│   │   ├── HomeScreen.tsx
+│   │   ├── ScanScreen.tsx
+│   │   ├── ReviewDraftScreen.tsx
+│   │   ├── DetailScreen.tsx
+│   │   ├── AddItemScreen.tsx
+│   │   ├── RecipesProScreen.tsx
+│   │   └── SettingsScreen.tsx
+│   ├── navigation/          # React Navigation setup
+│   ├── database/            # WatermelonDB
+│   │   ├── schema.ts        # Esquema de DB (4 tablas)
+│   │   ├── models/          # Modelos (FoodItem, ParsedDraft, etc.)
+│   │   └── index.ts         # Inicialización
+│   ├── stores/              # Zustand state management
+│   │   ├── useAuthStore.ts
+│   │   ├── useInventoryStore.ts
+│   │   ├── useDraftStore.ts
+│   │   ├── useRecipeStore.ts
+│   │   └── usePreferencesStore.ts
+│   ├── services/            # Lógica de negocio
+│   │   ├── firebase/        # Auth, Firestore, Functions
+│   │   ├── ocr/             # OCR + parsing de tickets
+│   │   ├── notifications.ts
+│   │   └── backgroundTasks.ts
+│   ├── hooks/               # Custom React hooks
+│   ├── utils/               # Utilidades
+│   ├── theme/               # Colores, tipografía, spacing
+│   └── types/               # TypeScript types
+├── assets/
+│   ├── recipes.json         # Base de datos de recetas
+│   └── images/
+├── App.tsx                  # Entry point
+├── app.json                 # Expo config
+└── package.json
+```
 
 ---
 
-### Credits
+## Instalación y Setup
 
-Developed by **Pepe Ortiz Roldán**  
-Active development: **October–December 2025**
+### Prerrequisitos
 
->>>>>>> 47b1bc7c354658d5b55ae34082b923b6e54ef1e7
+- Node.js 18+ y npm
+- Expo CLI: `npm install -g expo-cli`
+- Para iOS: macOS con Xcode (o usar Expo Go)
+- Para Android: Android Studio + SDK
+
+### 1. Instalar dependencias
+
+```bash
+cd whats-in-my-fridge-rn
+npm install
+```
+
+### 2. Configurar Firebase
+
+#### Descargar archivos de configuración:
+
+**Android:**
+1. Ir a Firebase Console
+2. Descargar `google-services.json`
+3. Colocar en raíz del proyecto
+
+**iOS:**
+1. Descargar `GoogleService-Info.plist`
+2. Colocar en raíz del proyecto
+
+#### Actualizar `app.json`:
+
+```json
+{
+  "expo": {
+    "android": {
+      "googleServicesFile": "./google-services.json"
+    },
+    "ios": {
+      "googleServicesFile": "./GoogleService-Info.plist"
+    }
+  }
+}
+```
+
+### 3. Instalar dependencias nativas (si usas bare workflow)
+
+```bash
+npx expo install expo-dev-client
+npx expo prebuild
+```
+
+### 4. Ejecutar la app
+
+**Expo Go (más rápido, limitado):**
+```bash
+npm start
+# Escanear QR con Expo Go app
+```
+
+**Development Build (recomendado para OCR):**
+```bash
+# Android
+npm run android
+
+# iOS (requiere macOS)
+npm run ios
+```
+
+---
+
+## Dependencias Principales
+
+```json
+{
+  "dependencies": {
+    "expo": "^54.0.0",
+    "react": "18.3.1",
+    "react-native": "0.76.0",
+
+    "@react-navigation/native": "^6.1.9",
+    "@react-navigation/stack": "^6.3.20",
+
+    "zustand": "^4.4.7",
+
+    "@nozbe/watermelondb": "^0.27.1",
+
+    "@react-native-firebase/app": "^19.0.1",
+    "@react-native-firebase/auth": "^19.0.1",
+    "@react-native-firebase/firestore": "^19.0.1",
+    "@react-native-firebase/functions": "^19.0.1",
+
+    "react-native-text-recognition": "^0.3.0",
+
+    "@react-native-async-storage/async-storage": "1.21.0",
+    "expo-notifications": "~0.27.6",
+    "expo-task-manager": "~11.7.2",
+    "expo-background-fetch": "~12.0.1",
+
+    "date-fns": "^3.0.6"
+  }
+}
+```
+
+---
+
+## Configuración de Firebase Functions
+
+Las Cloud Functions ya están implementadas en el backend existente:
+
+### Funciones disponibles:
+
+1. **parseReceipt** (Vision API OCR)
+   - Input: imagen de recibo
+   - Output: texto extraído
+
+2. **getRecipeSuggestions** (Recetas IA)
+   - Input: lista de ingredientes, preferencias
+   - Output: recetas con porcentaje de match
+
+3. **syncInventoryToDevice** (Sync FCM)
+   - Notifica a dispositivos sobre cambios en inventario
+
+**No se requieren cambios en el backend**, solo usar el SDK de React Native Firebase.
+
+---
+
+## Migrando desde Android
+
+### Equivalencias de componentes:
+
+| Android (Kotlin) | React Native |
+|-----------------|--------------|
+| `@Composable` | Componente React (JSX) |
+| `StateFlow` | `useState` + Zustand |
+| `LazyColumn` | `FlatList` |
+| `Room Database` | WatermelonDB |
+| `DataStore` | AsyncStorage + Zustand persist |
+| `ViewModel` | Zustand store + hooks |
+| `Koin DI` | React Context/hooks (built-in) |
+| `ML Kit OCR` | react-native-text-recognition |
+| `WorkManager` | expo-task-manager |
+
+### Flujos migrados:
+
+✅ **Login con Firebase Auth**
+✅ **Inventario con sincronización Firestore bidireccional**
+✅ **OCR de recibos con ML Kit + parsing heurístico**
+✅ **Revisión de drafts antes de confirmar**
+✅ **Sugerencias de recetas con cache local**
+✅ **Notificaciones de caducidad**
+✅ **Background tasks cada 24h**
+✅ **Preferencias de usuario persistidas**
+
+---
+
+## Scripts disponibles
+
+```bash
+# Desarrollo
+npm start          # Iniciar Expo dev server
+npm run android    # Ejecutar en Android
+npm run ios        # Ejecutar en iOS
+
+# Build (requiere EAS CLI)
+npm install -g eas-cli
+eas login
+eas build --platform android
+eas build --platform ios
+
+# Linting
+npm run lint
+
+# Tests (próximamente)
+npm test
+```
+
+---
+
+## Estado del Proyecto
+
+### ✅ Completado
+
+- [x] Proyecto Expo creado con TypeScript
+- [x] WatermelonDB configurado (4 tablas)
+- [x] Stores de Zustand (auth, inventory, drafts, recipes, preferences)
+- [x] Sistema de tema (Material Design 3)
+- [x] Estructura de carpetas
+
+### 🚧 En Progreso
+
+- [ ] Navegación con React Navigation
+- [ ] Servicios de Firebase (Auth, Firestore, Functions)
+- [ ] Pantallas principales (Login, Home, Scan, etc.)
+- [ ] Componentes UI reutilizables
+- [ ] OCR con react-native-text-recognition
+- [ ] Notificaciones y background tasks
+
+### 📋 Pendiente
+
+- [ ] Testing (unit + integration)
+- [ ] Builds de producción (EAS)
+- [ ] Documentación completa
+- [ ] App Store / Play Store deployment
+
+---
+
+## Próximos Pasos
+
+1. **Instalar Firebase React Native:**
+   ```bash
+   npm install @react-native-firebase/app @react-native-firebase/auth
+   npm install @react-native-firebase/firestore @react-native-firebase/functions
+   ```
+
+2. **Implementar navegación:**
+   - Crear `AppNavigator.tsx` con Stack Navigator
+   - Definir 8 rutas (Login, Home, Scan, etc.)
+
+3. **Migrar pantallas:**
+   - Comenzar con `LoginScreen` y `HomeScreen`
+   - Implementar sincronización Firestore bidireccional
+   - Añadir flujo OCR (Scan → ReviewDraft)
+
+4. **Testing:**
+   - Unit tests para stores
+   - Integration tests para flujos críticos
+
+5. **Deployment:**
+   - Configurar EAS Build
+   - Generar builds para iOS/Android
+   - Subir a stores
+
+---
+
+## Recursos
+
+- [Expo Documentation](https://docs.expo.dev)
+- [React Navigation](https://reactnavigation.org)
+- [WatermelonDB Docs](https://watermelondb.dev)
+- [React Native Firebase](https://rnfirebase.io)
+- [Zustand](https://zustand-demo.pmnd.rs)
+
+---
+
+## Licencia
+
+MIT
+
+---
+
+## Soporte
+
+Para issues y preguntas, contactar al equipo de desarrollo.
