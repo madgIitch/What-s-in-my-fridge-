@@ -1,0 +1,372 @@
+import { ParsedItem } from '../../database/models/ParsedDraft';
+
+/**
+ * Receipt Parser Service
+ * Migrated from Android ScanVm.kt
+ * Parses OCR text to extract structured information (items, prices, merchant, date, total)
+ */
+
+export interface ParsedReceiptInfo {
+  items: ParsedItem[];
+  merchant: string | null;
+  purchaseDate: string | null;
+  total: number | null;
+  currency: string;
+  unrecognizedLines: string[];
+}
+
+/**
+ * Parse receipt text to extract structured information
+ * Supports multiple supermarket formats (E-Center, Kaiserin-Augusta, Mercadona, etc.)
+ */
+export const parseReceiptText = (text: string): ParsedReceiptInfo => {
+  console.log('========== INICIO PARSING OCR ==========');
+  console.log(`Texto completo recibido (${text.length} caracteres):`);
+  console.log(text);
+  console.log('========================================');
+
+  const lines = text.split('\n');
+  console.log(`\nTotal de líneas detectadas: ${lines.length}`);
+
+  // Extract merchant
+  console.log('\n--- BUSCANDO MERCHANT ---');
+  const merchant = findMerchant(lines);
+  console.log(`Merchant final: ${merchant || 'NO ENCONTRADO'}`);
+
+  // Extract date
+  console.log('\n--- BUSCANDO FECHA ---');
+  const purchaseDate = findDate(text);
+  console.log(`Fecha encontrada: ${purchaseDate || 'NO ENCONTRADA'}`);
+
+  // Extract total
+  console.log('\n--- BUSCANDO TOTAL ---');
+  const total = findTotal(lines);
+  console.log(`Total: ${total ? '€' + total : 'NO ENCONTRADO'}`);
+
+  // Extract items
+  console.log('\n--- BUSCANDO ITEMS ---');
+  const { items, unrecognizedLines } = parseItems(lines);
+  console.log(`Items encontrados: ${items.length}`);
+  console.log(`Líneas no reconocidas: ${unrecognizedLines.length}`);
+
+  console.log('\n========== RESUMEN PARSING ==========');
+  console.log(`Merchant: ${merchant}`);
+  console.log(`Fecha: ${purchaseDate}`);
+  console.log(`Total: €${total}`);
+  console.log(`Items: ${items.length}`);
+  items.forEach((item, idx) => {
+    console.log(`  ${idx + 1}. ${item.name} - €${item.price}`);
+  });
+  console.log('=====================================\n');
+
+  return {
+    items,
+    merchant,
+    purchaseDate,
+    total,
+    currency: 'EUR',
+    unrecognizedLines,
+  };
+};
+
+/**
+ * Find merchant/store name from receipt
+ */
+const findMerchant = (lines: string[]): string | null => {
+  const merchantLine = lines.find((line) => {
+    const lower = line.toLowerCase();
+    return (
+      lower.includes('center') ||
+      lower.includes('mercadona') ||
+      lower.includes('carrefour') ||
+      lower.includes('lidl') ||
+      lower.includes('aldi') ||
+      lower.includes('dia') ||
+      line.includes('Str.') ||
+      line.includes('Damm') ||
+      lower.includes('kaiserin')
+    );
+  });
+
+  return merchantLine ? merchantLine.trim() : null;
+};
+
+/**
+ * Find purchase date from receipt
+ */
+const findDate = (text: string): string | null => {
+  // Pattern: DD/MM/YYYY or DD.MM.YYYY or YYYY-MM-DD
+  const dateRegex = /(\d{2}[./]\d{2}[./]\d{4})|(\d{4}-\d{2}-\d{2})/;
+  const match = dateRegex.exec(text);
+
+  if (match) {
+    return match[0].substring(0, 10);
+  }
+
+  return null;
+};
+
+/**
+ * Find total amount from receipt
+ */
+const findTotal = (lines: string[]): number | null => {
+  const summeIndex = lines.findIndex((line) =>
+    line.trim().toUpperCase().startsWith('SUMME') ||
+    line.trim().toUpperCase().startsWith('TOTAL') ||
+    line.trim().toUpperCase().includes('GESAMT')
+  );
+
+  if (summeIndex >= 0) {
+    // Look for amount in next few lines
+    for (let i = summeIndex + 1; i < Math.min(summeIndex + 30, lines.length); i++) {
+      const amountRegex = /^(\d+),(\d{2})$/;
+      const match = amountRegex.exec(lines[i].trim());
+
+      if (match) {
+        const euros = match[1];
+        const cents = match[2];
+        const total = parseFloat(`${euros}.${cents}`);
+        console.log(`✓ Total encontrado en línea ${i}: '${lines[i]}' → €${total}`);
+        return total;
+      }
+    }
+  }
+
+  // Alternative: look for "TOTAL" with amount on same line
+  for (const line of lines) {
+    if (line.toUpperCase().includes('TOTAL')) {
+      const amountRegex = /(\d+)[,.](\d{2})/;
+      const match = amountRegex.exec(line);
+      if (match) {
+        const total = parseFloat(`${match[1]}.${match[2]}`);
+        console.log(`✓ Total encontrado en línea: '${line}' → €${total}`);
+        return total;
+      }
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Parse items from receipt lines
+ */
+const parseItems = (
+  lines: string[]
+): { items: ParsedItem[]; unrecognizedLines: string[] } => {
+  const items: ParsedItem[] = [];
+  const unrecognizedLines: string[] = [];
+
+  // Temporary storage for E-Center format (separate name and price lines)
+  const productNames: string[] = [];
+  const productPrices: number[] = [];
+
+  // Patterns
+  const namePattern = /^([A-ZÄÖÜ&][A-ZÄÖÜa-zäöü&.\s-]+)$/;
+  const pricePatternA = /^(\d+),(\d{2})\s+A$/; // E-Center: "X,XX A"
+  const pricePatternB = /^(\d+),?\s*(\d{2})\s+B$/; // Kaiserin-Augusta: "X,XX B"
+  const weightPattern = /^\s*(\d+),?\s*(\d+)\s*kg\s*x\s*(\d+),(\d{2})\s*EUR\/kg/; // Weight-based items
+
+  // Inline item pattern (name + price on same line)
+  const inlinePattern = /^(.+?)\s+(\d+)[,.](\d{2})\s*€?$/;
+
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    console.log(`\nLínea ${i}: '${line}'`);
+
+    // Skip empty lines and metadata
+    if (shouldSkipLine(line)) {
+      console.log('  → IGNORADA (metadata)');
+      i++;
+      continue;
+    }
+
+    let matched = false;
+
+    // Try E-Center price pattern (X,XX A)
+    const matchPriceA = pricePatternA.exec(line);
+    if (matchPriceA) {
+      const price = parseFloat(`${matchPriceA[1]}.${matchPriceA[2]}`);
+      console.log(`  ✓ PRECIO E-CENTER: €${price}`);
+      productPrices.push(price);
+      matched = true;
+      i++;
+      continue;
+    }
+
+    // Try Kaiserin-Augusta price pattern (X,XX B)
+    const matchPriceB = pricePatternB.exec(line);
+    if (matchPriceB) {
+      const price = parseFloat(`${matchPriceB[1]}.${matchPriceB[2]}`);
+      console.log(`  ✓ PRECIO KAISERIN: €${price}`);
+      productPrices.push(price);
+      matched = true;
+      i++;
+      continue;
+    }
+
+    // Try inline pattern (name + price on same line)
+    const matchInline = inlinePattern.exec(line);
+    if (matchInline && !line.includes('SUMME') && !line.includes('TOTAL')) {
+      const name = matchInline[1].trim();
+      const price = parseFloat(`${matchInline[2]}.${matchInline[3]}`);
+
+      if (name.length > 2 && price > 0 && price < 1000) {
+        console.log(`  ✓ ITEM INLINE: '${name}' - €${price}`);
+        items.push({
+          name,
+          quantity: 1,
+          price,
+        });
+        matched = true;
+        i++;
+        continue;
+      }
+    }
+
+    // Try name pattern
+    const matchName = namePattern.exec(line);
+    if (matchName && !matched) {
+      console.log(`  ? NOMBRE DETECTADO: '${matchName[1]}'`);
+
+      // Check if next line has weight info
+      if (i + 1 < lines.length) {
+        const nextLine = lines[i + 1];
+        console.log(`    Siguiente línea: '${nextLine}'`);
+
+        const matchWeight = weightPattern.exec(nextLine);
+        if (matchWeight) {
+          const weight = parseFloat(`${matchWeight[1]}.${matchWeight[2]}`) || 1.0;
+          const pricePerKg = parseFloat(`${matchWeight[3]}.${matchWeight[4]}`);
+          const totalPrice = pricePerKg * weight;
+
+          console.log(`  ✓ ITEM CON PESO`);
+          console.log(`    Peso: ${weight}kg`);
+          console.log(`    Precio/kg: €${pricePerKg}`);
+          console.log(`    Precio total: €${totalPrice}`);
+
+          items.push({
+            name: `${matchName[1].trim()} (${weight}kg)`,
+            quantity: 1,
+            price: totalPrice,
+          });
+          matched = true;
+          i += 2; // Skip name + weight lines
+          continue;
+        }
+      }
+
+      // No weight, save as product name to pair later
+      const name = matchName[1].trim();
+      if (
+        name.length > 3 &&
+        !name.includes('Berlin') &&
+        !name.includes('Debit') &&
+        !name.includes('Nr.')
+      ) {
+        console.log(`  ✓ NOMBRE GUARDADO: '${name}'`);
+        productNames.push(name);
+        matched = true;
+        i++;
+        continue;
+      }
+    }
+
+    // If not matched, add to unrecognized
+    if (!matched && line.length > 1) {
+      console.log(`  → No reconocida`);
+      unrecognizedLines.push(line);
+    }
+
+    i++;
+  }
+
+  // Pair names with prices for E-Center format
+  console.log(`\n--- EMPAREJANDO NOMBRES Y PRECIOS ---`);
+  console.log(`Nombres: ${productNames.length}, Precios: ${productPrices.length}`);
+
+  const minLength = Math.min(productNames.length, productPrices.length);
+  for (let j = 0; j < minLength; j++) {
+    const name = productNames[j];
+    const price = productPrices[j];
+    console.log(`  ${j + 1}. '${name}' → €${price}`);
+
+    items.push({
+      name,
+      quantity: 1,
+      price,
+    });
+  }
+
+  return { items, unrecognizedLines };
+};
+
+/**
+ * Check if line should be skipped (metadata, headers, footers, etc.)
+ */
+const shouldSkipLine = (line: string): boolean => {
+  if (line.length === 0) return true;
+
+  const skipKeywords = [
+    'Tel',
+    'UID',
+    'Steuer',
+    'Geg.',
+    'TSE-',
+    'Zahlung',
+    'Beleg',
+    'Bitte',
+    'Netto',
+    'Brutto',
+    'Gesamtbetrag',
+    'Posten:',
+    'SUMME',
+    'Visa',
+    'Contactless',
+    'Datum:',
+    'Uhrzeit:',
+    'Beleg-Nr',
+    'Trace-Nr',
+    'Terminal',
+    'Pos-Info',
+    'AS-',
+    'Capt.',
+    'AID',
+    'EMV-',
+    'ProC-Code',
+    'Betrag',
+    'Bezahlung',
+    'erfolgt',
+    'aufbewahren',
+    'Kundenbeleg',
+    'CIF:',
+    'IVA',
+    'Gracias',
+    'TICKET:',
+  ];
+
+  if (skipKeywords.some((keyword) => line.includes(keyword))) {
+    return true;
+  }
+
+  // Skip time patterns (HH:MM)
+  if (/\d{2}:\d{2}/.test(line)) return true;
+
+  // Skip long numbers (likely IDs)
+  if (/^\d{5,}$/.test(line)) return true;
+
+  // Skip separator lines
+  if (/^[#*]+/.test(line)) return true;
+
+  // Skip date-only lines (already extracted)
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(line)) return true;
+
+  // Skip codes like "AA-B"
+  if (/^[A-Z]{2,}-[A-Z]/.test(line)) return true;
+
+  // Skip just "EUR"
+  if (line === 'EUR') return true;
+
+  return false;
+};

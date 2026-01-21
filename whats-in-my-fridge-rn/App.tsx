@@ -4,9 +4,12 @@ import { DatabaseProvider } from '@nozbe/watermelondb/react';
 import { database } from './src/database';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { onAuthStateChanged } from './src/services/firebase/auth';
+import { ensureFirebaseApp } from './src/services/firebase/app';
 import { useAuthStore } from './src/stores/useAuthStore';
 
 export default function App() {
+  ensureFirebaseApp();
+
   useEffect(() => {
     // Listen to auth state changes
     const unsubscribe = onAuthStateChanged((user) => {
