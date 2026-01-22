@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# large local backups
+whats-in-my-fridge-backend/data/recipes.json.backup
