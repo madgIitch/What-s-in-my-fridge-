@@ -10,7 +10,7 @@ import { useRecipeStore } from '../stores/useRecipeStore';
  * Generate cache key from sorted ingredients list
  */
 export function generateInventoryHash(ingredients: string[]): string {
-  return ingredients.sort().join(',');
+  return [...ingredients].sort().join(',');
 }
 
 /**
@@ -156,7 +156,10 @@ export function useRecipes() {
       }
 
       // Call Cloud Function with normalized ingredients
-      const getRecipeSuggestionsCallable = functions().httpsCallable('getRecipeSuggestions');
+      // Use httpsCallableFromUrl for europe-west1 region
+      const projectId = 'what-s-in-my-fridge-a2a07';
+      const functionUrl = `https://europe-west1-${projectId}.cloudfunctions.net/getRecipeSuggestions`;
+      const getRecipeSuggestionsCallable = functions().httpsCallableFromUrl(functionUrl);
 
       const result = await getRecipeSuggestionsCallable({
         ingredients: ingredientsList,

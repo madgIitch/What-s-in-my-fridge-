@@ -1,4 +1,5 @@
 import functions from '@react-native-firebase/functions';
+import auth from '@react-native-firebase/auth';
 import { ensureFirebaseApp } from './app';
 import { RecipeUi } from '../../database/models/RecipeCache';
 
@@ -7,6 +8,62 @@ import { RecipeUi } from '../../database/models/RecipeCache';
  * Calls existing Cloud Functions from whats-in-my-fridge-backend
  */
 ensureFirebaseApp();
+
+const getProjectId = () => {
+  return functions().app?.options?.projectId || 'what-s-in-my-fridge-a2a07';
+};
+
+const getCallableUrl = (region: string, name: string) => {
+  const projectId = getProjectId();
+  return `https://${region}-${projectId}.cloudfunctions.net/${name}`;
+};
+
+const getAuthToken = async () => {
+  const user = auth().currentUser;
+  if (!user) {
+    throw new Error('Debes iniciar sesión');
+  }
+
+  return user.getIdToken(true);
+};
+
+const callCallableUrl = async <T>(
+  region: string,
+  name: string,
+  data: Record<string, unknown>
+): Promise<T> => {
+  const token = await getAuthToken();
+  const url = getCallableUrl(region, name);
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ data }),
+  });
+
+  const rawText = await response.text();
+  let payload: any = null;
+  try {
+    payload = rawText ? JSON.parse(rawText) : null;
+  } catch (parseError) {
+    throw new Error(
+      `HTTP ${response.status} ${response.statusText}: ${rawText.slice(0, 200)}`
+    );
+  }
+
+  if (!response.ok || payload?.error) {
+    const message =
+      payload?.error?.message ||
+      payload?.error?.status ||
+      `Error llamando a ${name}`;
+    throw new Error(message);
+  }
+
+  return (payload?.data ?? payload?.result) as T;
+};
 
 /**
  * Parameters for getRecipeSuggestions Cloud Function
@@ -25,7 +82,9 @@ export const getRecipeSuggestions = async (
   params: GetRecipeSuggestionsParams
 ): Promise<RecipeUi[]> => {
   try {
-    const callable = functions().httpsCallable('getRecipeSuggestions');
+    const callable = functions().httpsCallableFromUrl(
+      getCallableUrl('europe-west1', 'getRecipeSuggestions')
+    );
     const result = await callable(params);
 
     if (!result.data || !result.data.recipes) {
@@ -53,7 +112,9 @@ export const getRecipeSuggestions = async (
  */
 export const parseReceipt = async (imageUri: string): Promise<string> => {
   try {
-    const callable = functions().httpsCallable('parseReceipt');
+    const callable = functions().httpsCallableFromUrl(
+      getCallableUrl('us-central1', 'parseReceipt')
+    );
     const result = await callable({ imageUri });
 
     if (!result.data || !result.data.text) {
@@ -79,7 +140,9 @@ export const parseReceipt = async (imageUri: string): Promise<string> => {
  */
 export const uploadReceipt = async (imageUri: string): Promise<{ uploadUrl: string }> => {
   try {
-    const callable = functions().httpsCallable('uploadReceipt');
+    const callable = functions().httpsCallableFromUrl(
+      getCallableUrl('us-central1', 'uploadReceipt')
+    );
     const result = await callable({ imageUri });
 
     if (!result.data || !result.data.uploadUrl) {
@@ -120,14 +183,17 @@ export const normalizeScannedIngredient = async (
   useLlmFallback: boolean = false
 ): Promise<NormalizationResult> => {
   try {
-    const callable = functions().httpsCallable('normalizeScannedIngredient');
-    const result = await callable({ ingredientName, useLlmFallback });
+    const result = await callCallableUrl<{ result: NormalizationResult }>(
+      'europe-west1',
+      'normalizeScannedIngredient',
+      { ingredientName, useLlmFallback }
+    );
 
-    if (!result.data || !result.data.result) {
+    if (!result || !result.result) {
       throw new Error('Invalid response from Cloud Function');
     }
 
-    return result.data.result;
+    return result.result;
   } catch (error: any) {
     console.error('Error calling normalizeScannedIngredient:', error);
 
@@ -151,14 +217,17 @@ export const normalizeScannedIngredientsBatch = async (
   useLlmFallback: boolean = false
 ): Promise<NormalizationResult[]> => {
   try {
-    const callable = functions().httpsCallable('normalizeScannedIngredientsBatch');
-    const result = await callable({ ingredients, useLlmFallback });
+    const result = await callCallableUrl<{ results: NormalizationResult[] }>(
+      'europe-west1',
+      'normalizeScannedIngredientsBatch',
+      { ingredients, useLlmFallback }
+    );
 
-    if (!result.data || !result.data.results) {
+    if (!result || !result.results) {
       throw new Error('Invalid response from Cloud Function');
     }
 
-    return result.data.results;
+    return result.results;
   } catch (error: any) {
     console.error('Error calling normalizeScannedIngredientsBatch:', error);
 

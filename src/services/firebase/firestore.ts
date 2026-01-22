@@ -29,6 +29,7 @@ export const syncToFirestore = async (item: FoodItem) => {
       .doc(item.id)
       .set({
         name: item.name,
+        normalizedName: item.normalizedName || null,
         expiryDate: item.expiryDate,
         category: item.category,
         quantity: item.quantity,

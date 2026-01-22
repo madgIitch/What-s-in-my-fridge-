@@ -205,6 +205,50 @@ export const useInventory = () => {
     return items.filter((item) => item.isExpired);
   };
 
+  /**
+   * Force re-sync all items to Firestore with normalized names
+   * Useful when items were added before normalizedName was synced to Firestore
+   */
+  const forceSyncAllToFirestore = async () => {
+    store.setLoading(true);
+    try {
+      const allItems = await collections.foodItems.query().fetch();
+      console.log(`🔄 Force syncing ${allItems.length} items to Firestore...`);
+
+      for (const item of allItems) {
+        // If item doesn't have normalizedName, try to normalize it first
+        if (!item.normalizedName) {
+          try {
+            const normalizationResult = await normalizeIngredient(item.name, false);
+            if (normalizationResult.normalizedName) {
+              await database.write(async () => {
+                await item.update(() => {
+                  item.normalizedName = normalizationResult.normalizedName || undefined;
+                });
+              });
+              console.log(`🍎 Normalized "${item.name}" → "${normalizationResult.normalizedName}"`);
+            }
+          } catch (error) {
+            console.error(`Error normalizing "${item.name}":`, error);
+          }
+        }
+
+        // Sync to Firestore (now with normalizedName)
+        await syncToFirestore(item);
+        console.log(`✅ Synced "${item.name}" (normalized: ${item.normalizedName || 'none'})`);
+      }
+
+      console.log('🎉 Force sync completed!');
+      store.setError(null);
+    } catch (error: any) {
+      console.error('Error force syncing:', error);
+      store.setError(error.message);
+      throw error;
+    } finally {
+      store.setLoading(false);
+    }
+  };
+
   return {
     items,
     loading: store.loading,
@@ -216,5 +260,6 @@ export const useInventory = () => {
     markAsConsumed,
     getExpiringSoonItems,
     getExpiredItems,
+    forceSyncAllToFirestore,
   };
 };

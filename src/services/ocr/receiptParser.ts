@@ -392,6 +392,17 @@ const shouldSkipLine = (line: string): boolean => {
     'PASEO',
     'PLAZA',
     'C/',
+    // German receipt footer/promotional text
+    'Noch kein',
+    'REWE',
+    'Book',
+    'anmelden',
+    'sammeln',
+    'mmeln',
+    'Kasse:',
+    'Bed.',
+    'Bon-Nr',
+    'Markt:',
   ];
 
   if (skipKeywords.some((keyword) => line.includes(keyword))) {

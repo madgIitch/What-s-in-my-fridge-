@@ -1,6 +1,7 @@
 import TextRecognition from 'react-native-text-recognition';
 import storage from '@react-native-firebase/storage';
 import auth from '@react-native-firebase/auth';
+import functions from '@react-native-firebase/functions';
 import { ensureFirebaseApp } from '../firebase/app';
 
 /**
@@ -108,7 +109,6 @@ export const recognizeTextCloud = async (imageUri: string): Promise<OCRResult> =
     console.log('☁️ Image uploaded. URL:', downloadURL.substring(0, 100) + '...');
 
     // Call Cloud Function to process with Vision API
-    const functions = require('@react-native-firebase/functions').default;
     const parseReceiptCallable = functions().httpsCallable('parseReceipt');
 
     console.log('☁️ Calling parseReceipt Cloud Function...');

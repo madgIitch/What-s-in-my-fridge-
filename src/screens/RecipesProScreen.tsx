@@ -13,6 +13,7 @@ import { colors, typography, spacing } from '../theme';
 import { useInventoryStore } from '../stores/useInventoryStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
 import { useRecipes } from '../hooks/useRecipes';
+import { useInventory } from '../hooks/useInventory';
 import { RecipeUi } from '../database/models/RecipeCache';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
@@ -41,8 +42,10 @@ const RecipesProScreen = () => {
   } = usePreferencesStore();
 
   const { recipes, loading, error, getRecipeSuggestions, clearAllCaches } = useRecipes();
+  const { forceSyncAllToFirestore } = useInventory();
 
   const [selectedUtensils, setSelectedUtensils] = useState<string[]>(availableUtensils);
+  const [syncing, setSyncing] = useState(false);
   const [localCookingTime, setLocalCookingTime] = useState<number>(cookingTime);
 
   // Debug: Log recipes state
@@ -102,6 +105,19 @@ const RecipesProScreen = () => {
   const handleClearCache = async () => {
     await clearAllCaches();
     Alert.alert('Caché limpiado', 'Ahora puedes obtener nuevas recetas');
+  };
+
+  const handleForceSync = async () => {
+    setSyncing(true);
+    try {
+      await forceSyncAllToFirestore();
+      await clearAllCaches();
+      Alert.alert('Sincronización completada', 'Items sincronizados con nombres normalizados. Caché limpiado.');
+    } catch (err) {
+      Alert.alert('Error', 'No se pudo sincronizar los items');
+    } finally {
+      setSyncing(false);
+    }
   };
 
   return (
@@ -218,10 +234,21 @@ const RecipesProScreen = () => {
         style={styles.getRecipesButton}
       />
 
-      {/* Clear Cache Button (for debugging) */}
-      <TouchableOpacity onPress={handleClearCache} style={styles.clearCacheButton}>
-        <Text style={styles.clearCacheText}>🗑️ Limpiar Caché</Text>
-      </TouchableOpacity>
+      {/* Debug Buttons */}
+      <View style={styles.debugButtonsContainer}>
+        <TouchableOpacity onPress={handleClearCache} style={styles.clearCacheButton}>
+          <Text style={styles.clearCacheText}>🗑️ Limpiar Caché</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleForceSync}
+          style={styles.clearCacheButton}
+          disabled={syncing}
+        >
+          <Text style={styles.clearCacheText}>
+            {syncing ? '⏳ Sincronizando...' : '🔄 Forzar Sync Firestore'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Error Message */}
       {error && (
@@ -271,6 +298,16 @@ interface RecipeCardProps {
 
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
   const [expanded, setExpanded] = useState(false);
+  const matchedIngredients = Array.isArray(recipe.matchedIngredients)
+    ? recipe.matchedIngredients
+    : [];
+  const missingIngredients = Array.isArray(recipe.missingIngredients)
+    ? recipe.missingIngredients
+    : [];
+  const ingredientsWithMeasures = Array.isArray(recipe.ingredientsWithMeasures)
+    ? recipe.ingredientsWithMeasures
+    : [];
+  const instructions = recipe.instructions || '';
 
   return (
     <Card style={styles.recipeCard}>
@@ -284,10 +321,10 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
 
         <View style={styles.ingredientsRow}>
           <Text style={styles.ingredientLabel}>
-            ✓ Tienes: {recipe.matchedIngredients.length}
+            ✓ Tienes: {matchedIngredients.length}
           </Text>
           <Text style={styles.ingredientLabel}>
-            ✗ Faltan: {recipe.missingIngredients.length}
+            ✗ Faltan: {missingIngredients.length}
           </Text>
         </View>
 
@@ -296,7 +333,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
             {/* Matched Ingredients */}
             <View style={styles.detailSection}>
               <Text style={styles.detailTitle}>Ingredientes disponibles:</Text>
-              {recipe.matchedIngredients.map((ing, index) => (
+              {matchedIngredients.map((ing, index) => (
                 <Text key={index} style={styles.detailItem}>
                   • {ing}
                 </Text>
@@ -304,10 +341,10 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
             </View>
 
             {/* Missing Ingredients */}
-            {recipe.missingIngredients.length > 0 && (
+            {missingIngredients.length > 0 && (
               <View style={styles.detailSection}>
                 <Text style={styles.detailTitle}>Ingredientes faltantes:</Text>
-                {recipe.missingIngredients.map((ing, index) => (
+                {missingIngredients.map((ing, index) => (
                   <Text key={index} style={[styles.detailItem, styles.missingItem]}>
                     • {ing}
                   </Text>
@@ -318,7 +355,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
             {/* Full Ingredients with Measures */}
             <View style={styles.detailSection}>
               <Text style={styles.detailTitle}>Ingredientes completos:</Text>
-              {recipe.ingredientsWithMeasures.map((ing, index) => (
+              {ingredientsWithMeasures.map((ing, index) => (
                 <Text key={index} style={styles.detailItem}>
                   • {ing}
                 </Text>
@@ -328,7 +365,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
             {/* Instructions */}
             <View style={styles.detailSection}>
               <Text style={styles.detailTitle}>Instrucciones:</Text>
-              <Text style={styles.instructionsText}>{recipe.instructions}</Text>
+              <Text style={styles.instructionsText}>{instructions}</Text>
             </View>
           </View>
         )}
@@ -452,10 +489,15 @@ const styles = StyleSheet.create({
   getRecipesButton: {
     marginBottom: spacing.sm,
   },
+  debugButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
   clearCacheButton: {
     alignItems: 'center',
     padding: spacing.sm,
-    marginBottom: spacing.md,
   },
   clearCacheText: {
     ...typography.labelMedium,

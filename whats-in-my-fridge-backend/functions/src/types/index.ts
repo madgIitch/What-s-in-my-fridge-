@@ -23,6 +23,8 @@ export interface Recipe {
   id: string;
   name: string;
   ingredients: string[];
+  ingredientsNormalized?: string[];
+  ingredientsWithMeasures?: string[];
   minIngredients: number;
   instructions?: string[];
 }
@@ -32,4 +34,5 @@ export interface RecipeMatch {
   recipe: Recipe;
   matchedIngredients: string[];
   matchPercentage: number;
+  missingCount: number;
 }

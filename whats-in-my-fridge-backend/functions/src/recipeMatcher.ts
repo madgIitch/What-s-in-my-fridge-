@@ -31,12 +31,32 @@ function getRecipes(): Recipe[] {
  * Normaliza un string para comparación (lowercase, sin acentos, sin espacios extra)
  */
 function normalizeString(str: string): string {
+  const singularizeToken = (token: string): string => {
+    if (token.length <= 3) return token;
+    if (token.endsWith("ies")) {
+      return `${token.slice(0, -3)}y`;
+    }
+    if (token.endsWith("sses") || token.endsWith("ss")) {
+      return token;
+    }
+    if (token.endsWith("es")) {
+      return token.slice(0, -2);
+    }
+    if (token.endsWith("s")) {
+      return token.slice(0, -1);
+    }
+    return token;
+  };
+
   return str
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "") // Eliminar acentos
     .replace(/\s+/g, " ")
-    .trim();
+    .trim()
+    .split(" ")
+    .map((token) => singularizeToken(token))
+    .join(" ");
 }
 
 /**
@@ -118,8 +138,11 @@ export function findMatchingRecipes(
   for (const recipe of recipes) {
     const matchedIngredients: string[] = [];
 
+    // Usar ingredientsNormalized si existe, sino usar ingredients
+    const recipeIngredients = recipe.ingredientsNormalized || recipe.ingredients;
+
     // Verificar cada ingrediente de la receta
-    for (const ingredient of recipe.ingredients) {
+    for (const ingredient of recipeIngredients) {
       const match = matchIngredient(ingredient, inventoryItems);
       if (match) {
         matchedIngredients.push(match);
@@ -127,7 +150,8 @@ export function findMatchingRecipes(
     }
 
     // Calcular porcentaje de match
-    const matchPercentage = matchedIngredients.length / recipe.ingredients.length;
+    const matchPercentage = matchedIngredients.length / recipeIngredients.length;
+    const missingCount = recipeIngredients.length - matchedIngredients.length;
 
     // Verificar si cumple requisitos mínimos
     if (
@@ -138,12 +162,18 @@ export function findMatchingRecipes(
         recipe,
         matchedIngredients,
         matchPercentage,
+        missingCount,
       });
     }
   }
 
   // Ordenar por porcentaje de match descendente
-  matches.sort((a, b) => b.matchPercentage - a.matchPercentage);
+  matches.sort((a, b) => {
+    if (a.missingCount !== b.missingCount) {
+      return a.missingCount - b.missingCount;
+    }
+    return b.matchPercentage - a.matchPercentage;
+  });
 
   return matches;
 }
@@ -154,7 +184,10 @@ export function findMatchingRecipes(
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
-export const getRecipeSuggestions = functions.https.onCall(async (data, context) => {
+export const getRecipeSuggestions = functions
+  .region("europe-west1")
+  .runWith({ memory: "1GB", timeoutSeconds: 60 })
+  .https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Usuario debe estar autenticado");
   }
@@ -170,10 +203,19 @@ export const getRecipeSuggestions = functions.https.onCall(async (data, context)
       .collection("inventory")
       .get();
 
-    const inventoryItems = inventorySnapshot.docs.map((doc) => doc.data().name as string);
+    // Usar normalizedName si existe, sino usar name como fallback
+    const inventoryItems = inventorySnapshot.docs
+      .map((doc) => {
+        const data = doc.data();
+        return (data.normalizedName || data.name) as string;
+      })
+      .filter((name) => name && name.trim().length > 0);
+
+    console.log(`📦 Inventory items (normalized): ${inventoryItems.join(", ")}`);
 
     // Encontrar recetas que coincidan
-    const matches = findMatchingRecipes(inventoryItems, 0.6); // 60% mínimo
+    const matches = findMatchingRecipes(inventoryItems, 0.5); // 50% mínimo para más resultados
+    console.log(`🍳 Found ${matches.length} matching recipes`);
 
     return {
       success: true,
@@ -182,9 +224,20 @@ export const getRecipeSuggestions = functions.https.onCall(async (data, context)
         name: match.recipe.name,
         matchPercentage: Math.round(match.matchPercentage * 100),
         matchedIngredients: match.matchedIngredients,
-        missingIngredients: match.recipe.ingredients.filter(
-          (ing) => !match.matchedIngredients.includes(ing)
-        ),
+        missingIngredients: (() => {
+          const normalizedMatches = new Set(
+            match.matchedIngredients.map((item) => normalizeString(item))
+          );
+          const recipeIngredients = match.recipe.ingredients;
+          const normalizedRecipeIngredients =
+            match.recipe.ingredientsNormalized || match.recipe.ingredients;
+
+          return recipeIngredients.filter((ingredient, index) => {
+            const normalized =
+              normalizedRecipeIngredients[index] || ingredient;
+            return !normalizedMatches.has(normalizeString(normalized));
+          });
+        })(),
         instructions: match.recipe.instructions,
       })),
     };
