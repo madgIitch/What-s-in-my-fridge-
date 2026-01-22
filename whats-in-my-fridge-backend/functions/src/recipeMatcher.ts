@@ -2,10 +2,30 @@ import * as fs from "fs";
 import * as path from "path";
 import { Recipe, RecipeMatch } from "./types";
 
-// Cargar recetas desde JSON
-const recipesPath = path.join(__dirname, "../data/recipes.json");
-const recipesData = JSON.parse(fs.readFileSync(recipesPath, "utf-8"));
-const recipes: Recipe[] = recipesData.recipes;
+let cachedRecipes: Recipe[] | null = null;
+
+function getRecipes(): Recipe[] {
+  if (cachedRecipes) {
+    return cachedRecipes;
+  }
+
+  const recipesPath = path.join(__dirname, "../data/recipes.json");
+  if (!fs.existsSync(recipesPath)) {
+    console.warn(`recipes.json not found at ${recipesPath}.`);
+    cachedRecipes = [];
+    return cachedRecipes;
+  }
+
+  try {
+    const recipesData = JSON.parse(fs.readFileSync(recipesPath, "utf-8"));
+    cachedRecipes = Array.isArray(recipesData?.recipes) ? recipesData.recipes : [];
+  } catch (error) {
+    console.error("Failed to load recipes.json:", error);
+    cachedRecipes = [];
+  }
+
+  return cachedRecipes ?? [];
+}
 
 /**
  * Normaliza un string para comparación (lowercase, sin acentos, sin espacios extra)
@@ -93,6 +113,7 @@ export function findMatchingRecipes(
   minMatchPercentage: number = 0.75
 ): RecipeMatch[] {
   const matches: RecipeMatch[] = [];
+  const recipes = getRecipes();
 
   for (const recipe of recipes) {
     const matchedIngredients: string[] = [];

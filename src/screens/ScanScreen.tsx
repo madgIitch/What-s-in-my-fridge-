@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
-import * as ImagePicker from 'expo-image-picker';
+import ImagePicker from 'react-native-image-crop-picker';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { colors, typography, spacing } from '../theme';
@@ -31,39 +31,20 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [ocrText, setOcrText] = useState<string | null>(null);
-
-  /**
-   * Request camera permission
-   */
-  const requestCameraPermission = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(
-        'Permiso Denegado',
-        'Necesitamos acceso a la cámara para escanear recibos'
-      );
-      return false;
-    }
-    return true;
-  };
-
   /**
    * Take photo with camera
    */
   const takePhoto = async () => {
-    const hasPermission = await requestCameraPermission();
-    if (!hasPermission) return;
-
     try {
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [3, 4],
-        quality: 0.8,
+      const image = await ImagePicker.openCamera({
+        mediaType: 'photo',
+        cropping: true,
+        freeStyleCropEnabled: true,
+        compressImageQuality: 0.8,
       });
 
-      if (!result.canceled && result.assets[0]) {
-        setImageUri(result.assets[0].uri);
+      if (image?.path) {
+        setImageUri(image.path);
         setOcrText(null);
       }
     } catch (error: any) {
@@ -77,15 +58,15 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
    */
   const pickImage = async () => {
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [3, 4],
-        quality: 0.8,
+      const image = await ImagePicker.openPicker({
+        mediaType: 'photo',
+        cropping: true,
+        freeStyleCropEnabled: true,
+        compressImageQuality: 0.8,
       });
 
-      if (!result.canceled && result.assets[0]) {
-        setImageUri(result.assets[0].uri);
+      if (image?.path) {
+        setImageUri(image.path);
         setOcrText(null);
       }
     } catch (error: any) {

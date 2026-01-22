@@ -109,10 +109,17 @@ function parseReceiptText(text: string): {
   const lines = text.split("\n");
 
   // Buscar merchant (tiendas conocidas)
+  const merchantCandidates = lines
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
   const merchant =
-    lines
-      .find((line) => line.includes("Center") || line.includes("Str.") || line.includes("Damm"))
-      ?.trim() || null;
+    merchantCandidates.find(
+      (line) =>
+        (line.includes("Center") || line.includes("Market") || line.includes("E-")) &&
+        !/\d/.test(line)
+    ) ||
+    merchantCandidates.find((line) => !/\d/.test(line)) ||
+    null;
 
   // Buscar fecha con regex
   const dateRegex = /(\d{2}[./]\d{2}[./]\d{4})|(\d{4}-\d{2}-\d{2})/;
@@ -144,9 +151,60 @@ function parseReceiptText(text: string): {
   const pricePatternB = /^(\d+),?\s*(\d{2})\s+B$/;
   const weightPattern = /^\s*(\d+),?\s*(\d+)\s*kg\s*x\s*(\d+),(\d{2})\s*EUR\/kg/;
 
+  const isMetadataLine = (line: string): boolean => {
+    const normalized = line.trim();
+    if (!normalized) {
+      return true;
+    }
+
+    if (merchant && normalized === merchant) {
+      return true;
+    }
+
+    if (
+      normalized.includes("Tel") ||
+      normalized.includes("UID") ||
+      normalized.includes("Steuer") ||
+      normalized.includes("SUMME") ||
+      normalized.includes("MwSt") ||
+      normalized.includes("Vielen Dank") ||
+      normalized.includes("Posten") ||
+      normalized === "EUR" ||
+      normalized.includes("Visa") ||
+      normalized.includes("Beleg") ||
+      normalized.includes("Datum") ||
+      normalized.includes("Uhrzeit") ||
+      normalized.includes("Trace") ||
+      normalized.includes("Bezahlung") ||
+      normalized.includes("Contactless") ||
+      normalized.includes("Debit")
+    ) {
+      return true;
+    }
+
+    if (/^\d{5}\b/.test(normalized)) {
+      return true;
+    }
+
+    if (/^\d{1,2}:\d{2}:\d{2}/.test(normalized)) {
+      return true;
+    }
+
+    if (/(str\.?|strasse|damm|weg|platz|allee|gasse)\b/i.test(normalized)) {
+      return true;
+    }
+
+    return false;
+  };
+
   let i = 0;
   while (i < lines.length) {
     const line = lines[i].trim();
+
+    if (isMetadataLine(line)) {
+      i++;
+      continue;
+    }
 
     // Ignorar líneas vacías y metadata
     if (

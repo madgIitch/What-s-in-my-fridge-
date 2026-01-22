@@ -9,6 +9,7 @@ export default class FoodItem extends Model {
   static table = 'food_items';
 
   @field('name') name!: string;
+  @field('normalized_name') normalizedName?: string; // Generic ingredient name for recipe matching
   @field('expiry_date') expiryDate!: number; // Epoch timestamp
   @field('category') category?: string;
   @field('quantity') quantity!: number;

@@ -1,59 +1,97 @@
 /**
  * Color palette for What's In My Fridge app
- * Following Material Design 3 color system
+ * Supporting light and dark modes
  */
 
-export const colors = {
-  // Primary colors
-  primary: '#6750A4',
-  onPrimary: '#FFFFFF',
-  primaryContainer: '#EADDFF',
-  onPrimaryContainer: '#21005D',
+export const Colors = {
+  light: {
+    // Base colors
+    background: '#e2f4e4',
+    surface: '#acf2b5',
+    primary: '#164c6e',
+    accent: '#1664af',
+    text: '#000408',
+    muted: '#3e4952',
 
-  // Secondary colors
-  secondary: '#625B71',
-  onSecondary: '#FFFFFF',
-  secondaryContainer: '#E8DEF8',
-  onSecondaryContainer: '#1D192B',
+    // Derived colors for compatibility
+    onPrimary: '#FFFFFF',
+    primaryContainer: '#d4e8f0',
+    onPrimaryContainer: '#0a2433',
 
-  // Tertiary colors
-  tertiary: '#7D5260',
-  onTertiary: '#FFFFFF',
-  tertiaryContainer: '#FFD8E4',
-  onTertiaryContainer: '#31111D',
+    onSurface: '#000408',
+    onBackground: '#000408',
+    surfaceVariant: '#c8e8ce',
+    onSurfaceVariant: '#2a4a3a',
 
-  // Error colors
-  error: '#B3261E',
-  onError: '#FFFFFF',
-  errorContainer: '#F9DEDC',
-  onErrorContainer: '#410E0B',
+    // Error colors
+    error: '#B3261E',
+    onError: '#FFFFFF',
+    errorContainer: '#F9DEDC',
+    onErrorContainer: '#410E0B',
 
-  // Background colors
-  background: '#FFFBFE',
-  onBackground: '#1C1B1F',
+    // Outline
+    outline: '#5a7a6a',
+    outlineVariant: '#a8c8b8',
 
-  // Surface colors
-  surface: '#FFFBFE',
-  onSurface: '#1C1B1F',
-  surfaceVariant: '#E7E0EC',
-  onSurfaceVariant: '#49454F',
+    // Expiry state colors
+    expiryOk: '#4CAF50',
+    expirySoon: '#FF9800',
+    expiryExpired: '#F44336',
 
-  // Outline
-  outline: '#79747E',
-  outlineVariant: '#CAC4D0',
+    // Source badge colors
+    sourceManual: '#2196F3',
+    sourceOcr: '#9C27B0',
 
-  // Expiry state colors
-  expiryOk: '#4CAF50', // Green
-  expirySoon: '#FF9800', // Orange
-  expiryExpired: '#F44336', // Red
+    // Shadow
+    shadow: '#000000',
+    scrim: '#000000',
+  },
+  dark: {
+    // Base colors
+    background: '#000100',
+    surface: '#000800',
+    primary: '#76a5c6',
+    accent: '#3978bd',
+    text: '#d4e0e9',
+    muted: '#77828a',
 
-  // Source badge colors
-  sourceManual: '#2196F3', // Blue
-  sourceOcr: '#9C27B0', // Purple
+    // Derived colors for compatibility
+    onPrimary: '#002030',
+    primaryContainer: '#0d3d5a',
+    onPrimaryContainer: '#cfe5f3',
 
-  // Shadow
-  shadow: '#000000',
-  scrim: '#000000',
+    onSurface: '#d4e0e9',
+    onBackground: '#d4e0e9',
+    surfaceVariant: '#1a2a2a',
+    onSurfaceVariant: '#b8c8d8',
+
+    // Error colors
+    error: '#F2B8B5',
+    onError: '#601410',
+    errorContainer: '#8C1D18',
+    onErrorContainer: '#F9DEDC',
+
+    // Outline
+    outline: '#5a7a8a',
+    outlineVariant: '#2a4a5a',
+
+    // Expiry state colors
+    expiryOk: '#66BB6A',
+    expirySoon: '#FFA726',
+    expiryExpired: '#EF5350',
+
+    // Source badge colors
+    sourceManual: '#42A5F5',
+    sourceOcr: '#AB47BC',
+
+    // Shadow
+    shadow: '#000000',
+    scrim: '#000000',
+  },
 };
 
-export type ColorKeys = keyof typeof colors;
+// Export current color scheme (will be replaced with dynamic theme hook)
+export const colors = Colors.light;
+
+export type ColorScheme = keyof typeof Colors;
+export type ColorKeys = keyof typeof Colors.light;

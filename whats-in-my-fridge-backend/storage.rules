@@ -1,25 +1,29 @@
-rules_version = '2';  
-service firebase.storage {  
-  match /b/{bucket}/o {  
-      
-    // Carpeta de tickets escaneados  
-    match /receipts/{userId}/{fileName} {  
-      // Solo el usuario puede subir sus propios tickets  
-      allow write: if request.auth != null && request.auth.uid == userId;  
-        
-      // Solo el usuario puede leer sus propios tickets  
-      allow read: if request.auth != null && request.auth.uid == userId;  
-        
-      // Validar tipo de archivo (solo imágenes)  
-      allow write: if request.resource.contentType.matches('image/.*');  
-        
-      // Limitar tamaño de archivo a 10MB  
-      allow write: if request.resource.size < 10 * 1024 * 1024;  
-    }  
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
 
-     // Denegar acceso a cualquier otra ruta  
-    match /{allPaths=**} {  
-      allow read, write: if false;  
-    }  
-  }  
+    // Carpeta de tickets escaneados
+    match /receipts/{userId}/{fileName} {
+      // Usuario autenticado puede subir sus propios tickets
+      // Validar: usuario correcto, tipo imagen, tamaño < 10MB
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.contentType.matches('image/.*')
+                   && request.resource.size < 10 * 1024 * 1024;
+
+      // Solo el usuario puede leer sus propios tickets
+      allow read: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Vocabulario normalizado (solo lectura para Cloud Functions)
+    match /normalized-ingredients.json {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Denegar acceso a cualquier otra ruta
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
 }

@@ -45,7 +45,7 @@ export const parseReceiptText = (text: string): ParsedReceiptInfo => {
 
   // Extract items
   console.log('\n--- BUSCANDO ITEMS ---');
-  const { items, unrecognizedLines } = parseItems(lines);
+  const { items, unrecognizedLines } = parseItems(lines, merchant);
   console.log(`Items encontrados: ${items.length}`);
   console.log(`Líneas no reconocidas: ${unrecognizedLines.length}`);
 
@@ -73,10 +73,14 @@ export const parseReceiptText = (text: string): ParsedReceiptInfo => {
  * Find merchant/store name from receipt
  */
 const findMerchant = (lines: string[]): string | null => {
-  const merchantLine = lines.find((line) => {
+  const merchantLines = lines.filter((line) => {
     const lower = line.toLowerCase();
     return (
       lower.includes('center') ||
+      lower.includes('rewe') ||
+      lower.includes('edeka') ||
+      lower.includes('ahorra') ||
+      lower.includes('ahorramas') ||
       lower.includes('mercadona') ||
       lower.includes('carrefour') ||
       lower.includes('lidl') ||
@@ -88,6 +92,9 @@ const findMerchant = (lines: string[]): string | null => {
     );
   });
 
+  const merchantLine =
+    merchantLines.sort((a, b) => b.trim().length - a.trim().length)[0] || null;
+
   return merchantLine ? merchantLine.trim() : null;
 };
 
@@ -95,8 +102,8 @@ const findMerchant = (lines: string[]): string | null => {
  * Find purchase date from receipt
  */
 const findDate = (text: string): string | null => {
-  // Pattern: DD/MM/YYYY or DD.MM.YYYY or YYYY-MM-DD
-  const dateRegex = /(\d{2}[./]\d{2}[./]\d{4})|(\d{4}-\d{2}-\d{2})/;
+  // Pattern: DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY or YYYY-MM-DD
+  const dateRegex = /(\d{2}[./-]\d{2}[./-]\d{4})|(\d{4}-\d{2}-\d{2})/;
   const match = dateRegex.exec(text);
 
   if (match) {
@@ -152,7 +159,8 @@ const findTotal = (lines: string[]): number | null => {
  * Parse items from receipt lines
  */
 const parseItems = (
-  lines: string[]
+  lines: string[],
+  merchant: string | null
 ): { items: ParsedItem[]; unrecognizedLines: string[] } => {
   const items: ParsedItem[] = [];
   const unrecognizedLines: string[] = [];
@@ -173,11 +181,17 @@ const parseItems = (
   let i = 0;
   while (i < lines.length) {
     const line = lines[i].trim();
-    console.log(`\nLínea ${i}: '${line}'`);
+
+    if (merchant && line.toLowerCase() === merchant.toLowerCase()) {
+      console.log('  IGNORADA (merchant)');
+      i++;
+      continue;
+    }
+    console.log(`\nLinea ${i}: '${line}'`);
 
     // Skip empty lines and metadata
     if (shouldSkipLine(line)) {
-      console.log('  → IGNORADA (metadata)');
+      console.log('  IGNORADA (metadata)');
       i++;
       continue;
     }
@@ -232,7 +246,7 @@ const parseItems = (
 
       // Check if next line has weight info
       if (i + 1 < lines.length) {
-        const nextLine = lines[i + 1];
+        const nextLine = lines[i + 1].trim();
         console.log(`    Siguiente línea: '${nextLine}'`);
 
         const matchWeight = weightPattern.exec(nextLine);
@@ -253,6 +267,13 @@ const parseItems = (
           });
           matched = true;
           i += 2; // Skip name + weight lines
+          continue;
+        }
+
+        if (/\b\d{5}\b/.test(nextLine)) {
+          console.log('  IGNORADA (address line)');
+          matched = true;
+          i++;
           continue;
         }
       }
@@ -299,6 +320,15 @@ const parseItems = (
     });
   }
 
+  if (items.length === 0 && productNames.length > 0 && productPrices.length === 0) {
+    productNames.forEach((name) => {
+      items.push({
+        name,
+        quantity: 1,
+      });
+    });
+  }
+
   return { items, unrecognizedLines };
 };
 
@@ -322,6 +352,7 @@ const shouldSkipLine = (line: string): boolean => {
     'Gesamtbetrag',
     'Posten:',
     'SUMME',
+    'TOTAL',
     'Visa',
     'Contactless',
     'Datum:',
@@ -344,6 +375,23 @@ const shouldSkipLine = (line: string): boolean => {
     'IVA',
     'Gracias',
     'TICKET:',
+    'TOTAL ENTREGADO',
+    'CAMBIO',
+    'ATENCION',
+    'CLIENTE',
+    'CAJA',
+    'TIQUE',
+    'S.A.',
+    'S.L.',
+    'NIF',
+    'FACTURA',
+    'ALBARAN',
+    'CALLE',
+    'AVENIDA',
+    'AVDA',
+    'PASEO',
+    'PLAZA',
+    'C/',
   ];
 
   if (skipKeywords.some((keyword) => line.includes(keyword))) {
@@ -352,6 +400,9 @@ const shouldSkipLine = (line: string): boolean => {
 
   // Skip time patterns (HH:MM)
   if (/\d{2}:\d{2}/.test(line)) return true;
+
+  // Skip postal code lines with city
+  if (/\b\d{5}\b/.test(line) && /[A-Z]/i.test(line)) return true;
 
   // Skip long numbers (likely IDs)
   if (/^\d{5,}$/.test(line)) return true;
@@ -362,8 +413,8 @@ const shouldSkipLine = (line: string): boolean => {
   // Skip date-only lines (already extracted)
   if (/^\d{2}\.\d{2}\.\d{4}$/.test(line)) return true;
 
-  // Skip codes like "AA-B"
-  if (/^[A-Z]{2,}-[A-Z]/.test(line)) return true;
+  // Skip codes like "AA-123"
+  if (/^[A-Z]{2,}-\d/.test(line)) return true;
 
   // Skip just "EUR"
   if (line === 'EUR') return true;

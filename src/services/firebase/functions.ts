@@ -92,3 +92,80 @@ export const uploadReceipt = async (imageUri: string): Promise<{ uploadUrl: stri
     throw new Error('Error al subir el recibo');
   }
 };
+
+/**
+ * Response from normalizeScannedIngredient Cloud Function
+ */
+export interface NormalizationResult {
+  scannedName: string;
+  normalizedName: string | null;
+  confidence: number;
+  method: 'exact' | 'synonym' | 'partial' | 'fuzzy' | 'llm' | 'none';
+}
+
+/**
+ * Normalize a scanned ingredient name to its generic form
+ * Uses hybrid strategy: exact → synonym → partial → fuzzy → LLM
+ *
+ * @param ingredientName - The scanned ingredient name (e.g., "Bio EHL Champignon")
+ * @param useLlmFallback - Whether to use LLM fallback for low-confidence matches (default: false)
+ * @returns Normalized ingredient name and confidence score
+ *
+ * @example
+ * const result = await normalizeScannedIngredient("Bio EHL Champignon");
+ * // { scannedName: "Bio EHL Champignon", normalizedName: "mushroom", confidence: 0.8, method: "partial" }
+ */
+export const normalizeScannedIngredient = async (
+  ingredientName: string,
+  useLlmFallback: boolean = false
+): Promise<NormalizationResult> => {
+  try {
+    const callable = functions().httpsCallable('normalizeScannedIngredient');
+    const result = await callable({ ingredientName, useLlmFallback });
+
+    if (!result.data || !result.data.result) {
+      throw new Error('Invalid response from Cloud Function');
+    }
+
+    return result.data.result;
+  } catch (error: any) {
+    console.error('Error calling normalizeScannedIngredient:', error);
+
+    if (error.code === 'functions/invalid-argument') {
+      throw new Error('Nombre de ingrediente inválido');
+    }
+
+    throw new Error('Error al normalizar ingrediente');
+  }
+};
+
+/**
+ * Normalize multiple scanned ingredients in batch
+ *
+ * @param ingredients - Array of scanned ingredient names
+ * @param useLlmFallback - Whether to use LLM fallback for low-confidence matches (default: false)
+ * @returns Array of normalization results
+ */
+export const normalizeScannedIngredientsBatch = async (
+  ingredients: string[],
+  useLlmFallback: boolean = false
+): Promise<NormalizationResult[]> => {
+  try {
+    const callable = functions().httpsCallable('normalizeScannedIngredientsBatch');
+    const result = await callable({ ingredients, useLlmFallback });
+
+    if (!result.data || !result.data.results) {
+      throw new Error('Invalid response from Cloud Function');
+    }
+
+    return result.data.results;
+  } catch (error: any) {
+    console.error('Error calling normalizeScannedIngredientsBatch:', error);
+
+    if (error.code === 'functions/invalid-argument') {
+      throw new Error('Lista de ingredientes inválida');
+    }
+
+    throw new Error('Error al normalizar ingredientes');
+  }
+};

@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { database } from '../database';
 import RecipeCache, { RecipeUi } from '../database/models/RecipeCache';
 import { Q } from '@nozbe/watermelondb';
-import { getFunctions, httpsCallable } from '../services/firebase/functions';
+import functions from '@react-native-firebase/functions';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
+import { useRecipeStore } from '../stores/useRecipeStore';
 
 /**
  * Generate cache key from sorted ingredients list
@@ -16,9 +17,7 @@ export function generateInventoryHash(ingredients: string[]): string {
  * Hook to manage recipe suggestions with caching
  */
 export function useRecipes() {
-  const [recipes, setRecipes] = useState<RecipeUi[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { recipes, loading, error, setRecipes, setLoading, setError } = useRecipeStore();
 
   const {
     isPro,
@@ -150,19 +149,17 @@ export function useRecipes() {
       // Check cache first
       const cachedRecipes = await getCachedRecipes(ingredientsList);
       if (cachedRecipes) {
+        console.log('Setting recipes from cache:', cachedRecipes.length, 'recipes');
         setRecipes(cachedRecipes);
         setLoading(false);
         return;
       }
 
-      // Call Cloud Function
-      const functions = getFunctions();
-      const getRecipeSuggestionsCallable = httpsCallable<
-        { cookingTime: number; utensils: string[] },
-        { success: boolean; recipes: RecipeUi[] }
-      >(functions, 'getRecipeSuggestions');
+      // Call Cloud Function with normalized ingredients
+      const getRecipeSuggestionsCallable = functions().httpsCallable('getRecipeSuggestions');
 
       const result = await getRecipeSuggestionsCallable({
+        ingredients: ingredientsList,
         cookingTime,
         utensils,
       });

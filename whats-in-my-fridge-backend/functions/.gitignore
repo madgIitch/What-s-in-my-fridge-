@@ -8,3 +8,10 @@ typings/
 # Node.js dependency directory
 node_modules/
 *.local
+
+# Large data files (no desplegar a Cloud Functions)
+data/recipes.json
+data/recipes.json.backup
+data/recipes-with-normalized.json
+data/ingredient-normalization-progress.json
+data/ingredients-not-found.json

@@ -40,16 +40,24 @@ const RecipesProScreen = () => {
     setAvailableUtensils,
   } = usePreferencesStore();
 
-  const { recipes, loading, error, getRecipeSuggestions } = useRecipes();
+  const { recipes, loading, error, getRecipeSuggestions, clearAllCaches } = useRecipes();
 
   const [selectedUtensils, setSelectedUtensils] = useState<string[]>(availableUtensils);
   const [localCookingTime, setLocalCookingTime] = useState<number>(cookingTime);
 
+  // Debug: Log recipes state
+  useEffect(() => {
+    console.log('Recipes state updated:', recipes.length, 'recipes');
+  }, [recipes]);
+
   const maxCalls = isPro ? 100 : 10;
   const remainingCalls = maxCalls - monthlyRecipeCallsUsed;
 
-  // Get ingredient names from inventory
-  const ingredientNames = items.map((item) => item.name);
+  // Get normalized ingredient names from inventory for recipe matching
+  // Falls back to original name if normalization hasn't been done yet
+  const ingredientNames = items
+    .map((item) => item.normalizedName || item.name)
+    .filter((name) => name && name.trim() !== ''); // Remove empty/null names
 
   useEffect(() => {
     setSelectedUtensils(availableUtensils);
@@ -89,6 +97,11 @@ const RecipesProScreen = () => {
         { text: 'Actualizar', onPress: () => console.log('Upgrade to Pro') },
       ]
     );
+  };
+
+  const handleClearCache = async () => {
+    await clearAllCaches();
+    Alert.alert('Caché limpiado', 'Ahora puedes obtener nuevas recetas');
   };
 
   return (
@@ -204,6 +217,11 @@ const RecipesProScreen = () => {
         disabled={loading || remainingCalls <= 0}
         style={styles.getRecipesButton}
       />
+
+      {/* Clear Cache Button (for debugging) */}
+      <TouchableOpacity onPress={handleClearCache} style={styles.clearCacheButton}>
+        <Text style={styles.clearCacheText}>🗑️ Limpiar Caché</Text>
+      </TouchableOpacity>
 
       {/* Error Message */}
       {error && (
@@ -432,7 +450,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   getRecipesButton: {
+    marginBottom: spacing.sm,
+  },
+  clearCacheButton: {
+    alignItems: 'center',
+    padding: spacing.sm,
     marginBottom: spacing.md,
+  },
+  clearCacheText: {
+    ...typography.labelMedium,
+    color: colors.muted,
   },
   errorContainer: {
     padding: spacing.md,

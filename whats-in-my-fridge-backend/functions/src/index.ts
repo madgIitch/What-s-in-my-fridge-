@@ -1,18 +1,22 @@
-import * as admin from "firebase-admin";  
-import * as functions from "firebase-functions";  
-import {parseReceipt} from "./parseReceipt";  
-import {getRecipeSuggestions} from "./recipeMatcher";  
-  
-// Inicializar Firebase Admin  
-admin.initializeApp();  
-  
-// ========== Exportar Cloud Functions ==========  
-  
-// Función principal de parsing OCR  
-export {parseReceipt};  
-  
-// Función de sugerencias de recetas  
-export {getRecipeSuggestions};  
+import * as admin from "firebase-admin";
+import * as functions from "firebase-functions";
+import {parseReceipt} from "./parseReceipt";
+import {getRecipeSuggestions} from "./recipeMatcher";
+import {normalizeScannedIngredient, normalizeScannedIngredientsBatch} from "./normalizeScannedIngredient";
+
+// Inicializar Firebase Admin
+admin.initializeApp();
+
+// ========== Exportar Cloud Functions ==========
+
+// Función principal de parsing OCR
+export {parseReceipt};
+
+// Función de sugerencias de recetas
+export {getRecipeSuggestions};
+
+// Funciones de normalización de ingredientes
+export {normalizeScannedIngredient, normalizeScannedIngredientsBatch};  
   
 // HTTP endpoint para subir imagen - us-central1 (cerca del Storage)  
 export const uploadReceipt = functions  

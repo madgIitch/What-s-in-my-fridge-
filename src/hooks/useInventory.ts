@@ -3,6 +3,7 @@ import { database, collections } from '../database';
 import FoodItem from '../database/models/FoodItem';
 import { useInventoryStore } from '../stores/useInventoryStore';
 import { syncToFirestore, deleteFromFirestore } from '../services/firebase/firestore';
+import { useIngredientNormalizer } from './useIngredientNormalizer';
 
 /**
  * Custom hook for inventory management
@@ -12,6 +13,7 @@ import { syncToFirestore, deleteFromFirestore } from '../services/firebase/fires
 export const useInventory = () => {
   const [items, setItems] = useState<FoodItem[]>([]);
   const store = useInventoryStore();
+  const { normalizeIngredient } = useIngredientNormalizer();
 
   // Subscribe to WatermelonDB changes
   useEffect(() => {
@@ -31,6 +33,7 @@ export const useInventory = () => {
 
   /**
    * Add a new food item
+   * Automatically normalizes ingredient name for recipe matching
    */
   const addItem = async (itemData: {
     name: string;
@@ -43,9 +46,21 @@ export const useInventory = () => {
   }) => {
     store.setLoading(true);
     try {
+      // Normalize ingredient name for recipe matching
+      let normalizedName: string | null = null;
+      try {
+        const normalizationResult = await normalizeIngredient(itemData.name, false);
+        normalizedName = normalizationResult.normalizedName;
+        console.log(`🔄 Normalized "${itemData.name}" → "${normalizedName}" (${normalizationResult.method}, confidence: ${normalizationResult.confidence})`);
+      } catch (error) {
+        console.error('Error normalizing ingredient:', error);
+        // Continue without normalization if it fails
+      }
+
       await database.write(async () => {
         const newItem = await collections.foodItems.create((item) => {
           item.name = itemData.name;
+          item.normalizedName = normalizedName || undefined;
           item.expiryDate = itemData.expiryDate;
           item.category = itemData.category;
           item.quantity = itemData.quantity;
