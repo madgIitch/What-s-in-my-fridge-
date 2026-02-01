@@ -15,7 +15,6 @@ export default class FoodItem extends Model {
   @field('quantity') quantity!: number;
   @field('notes') notes?: string;
   @field('unit') unit!: string;
-  @field('expiry_at') expiryAt!: number;
   @field('added_at') addedAt!: number;
   @field('source') source!: 'manual' | 'ocr';
 

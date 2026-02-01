@@ -125,6 +125,18 @@ npm install
 1. Descargar `GoogleService-Info.plist`
 2. Colocar en raíz del proyecto
 
+#### Variables de entorno (recomendado)
+
+Crea un archivo `.env` en la raíz con tus credenciales (ver `.env.example`):
+
+```
+EXPO_PUBLIC_FIREBASE_API_KEY=...
+EXPO_PUBLIC_FIREBASE_APP_ID=...
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=...
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+```
+
 #### Actualizar `app.json`:
 
 ```json

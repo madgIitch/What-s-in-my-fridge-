@@ -14,7 +14,7 @@ import { appSchema, tableSchema } from '@nozbe/watermelondb';
  */
 
 export const schema = appSchema({
-  version: 8,
+  version: 9,
   tables: [
     // FoodItemEntity - Main inventory table
     tableSchema({
@@ -27,7 +27,6 @@ export const schema = appSchema({
         { name: 'quantity', type: 'number' },
         { name: 'notes', type: 'string', isOptional: true },
         { name: 'unit', type: 'string' }, // 'unidad', 'kg', 'litros', etc.
-        { name: 'expiry_at', type: 'number' }, // Epoch timestamp
         { name: 'added_at', type: 'number' }, // Epoch timestamp
         { name: 'source', type: 'string' }, // 'manual' | 'ocr'
         { name: 'created_at', type: 'number' },

@@ -35,7 +35,6 @@ export const syncToFirestore = async (item: FoodItem) => {
         quantity: item.quantity,
         notes: item.notes,
         unit: item.unit,
-        expiryAt: item.expiryAt,
         addedAt: item.addedAt,
         source: item.source,
       });
@@ -87,6 +86,12 @@ export const startFirestoreSync = (userId: string) => {
           for (const change of snapshot.docChanges()) {
             const data = change.doc.data();
             const itemId = change.doc.id;
+            const expiryDate =
+              typeof data.expiryDate === 'number'
+                ? data.expiryDate
+                : typeof data.expiryAt === 'number'
+                  ? data.expiryAt
+                  : undefined;
 
             if (change.type === 'added' || change.type === 'modified') {
               try {
@@ -98,14 +103,35 @@ export const startFirestoreSync = (userId: string) => {
                 if (existingItem) {
                   // Update existing item
                   await existingItem.update(() => {
-                    Object.assign(existingItem, data);
+                    if (data.name !== undefined) existingItem.name = data.name;
+                    if (data.normalizedName !== undefined) {
+                      existingItem.normalizedName = data.normalizedName || undefined;
+                    }
+                    if (expiryDate !== undefined) existingItem.expiryDate = expiryDate;
+                    if (data.category !== undefined) existingItem.category = data.category;
+                    if (data.quantity !== undefined) existingItem.quantity = data.quantity;
+                    if (data.notes !== undefined) existingItem.notes = data.notes;
+                    if (data.unit !== undefined) existingItem.unit = data.unit;
+                    if (data.addedAt !== undefined) existingItem.addedAt = data.addedAt;
+                    if (data.source !== undefined) existingItem.source = data.source;
                   });
                   console.log('Updated item from Firestore:', itemId);
                 } else {
                   // Create new item
                   await collections.foodItems.create((item) => {
+                    if (expiryDate === undefined) {
+                      console.warn('Missing expiryDate in Firestore item, defaulting to now:', itemId);
+                    }
                     (item as any)._raw.id = itemId;
-                    Object.assign(item, data);
+                    item.name = data.name;
+                    item.normalizedName = data.normalizedName || undefined;
+                    item.expiryDate = expiryDate ?? Date.now();
+                    item.category = data.category;
+                    item.quantity = data.quantity;
+                    item.notes = data.notes;
+                    item.unit = data.unit;
+                    item.addedAt = data.addedAt ?? Date.now();
+                    item.source = data.source;
                   });
                   console.log('Created item from Firestore:', itemId);
                 }

@@ -66,7 +66,6 @@ export const useInventory = () => {
           item.quantity = itemData.quantity;
           item.notes = itemData.notes;
           item.unit = itemData.unit;
-          item.expiryAt = itemData.expiryDate; // Same as expiryDate
           item.addedAt = Date.now();
           item.source = itemData.source;
         });
@@ -108,7 +107,6 @@ export const useInventory = () => {
           if (updates.name !== undefined) item.name = updates.name;
           if (updates.expiryDate !== undefined) {
             item.expiryDate = updates.expiryDate;
-            item.expiryAt = updates.expiryDate;
           }
           if (updates.category !== undefined) item.category = updates.category;
           if (updates.quantity !== undefined) item.quantity = updates.quantity;
