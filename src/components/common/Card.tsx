@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { colors, spacing } from '../../theme';
 import { borderRadius } from '../../theme/spacing';
 
 interface CardProps {
   children: React.ReactNode;
   variant?: 'elevated' | 'outlined';
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
 export const Card: React.FC<CardProps> = ({

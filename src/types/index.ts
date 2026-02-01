@@ -60,13 +60,14 @@ export const FOOD_CATEGORIES = [
   'Salsas',
   'Postres',
   'Pan',
+  'Platos preparados',
   'Otros',
 ] as const;
 
 export type FoodCategory = typeof FOOD_CATEGORIES[number];
 
 // Units
-export const FOOD_UNITS = ['unidad', 'kg', 'g', 'litros', 'ml', 'paquete'] as const;
+export const FOOD_UNITS = ['unidad', 'kg', 'g', 'litros', 'ml', 'paquete', 'porción'] as const;
 
 export type FoodUnit = typeof FOOD_UNITS[number];
 

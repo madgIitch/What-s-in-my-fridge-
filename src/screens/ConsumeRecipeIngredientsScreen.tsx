@@ -5,6 +5,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Pressable,
+  Modal,
   Alert,
   StatusBar,
   TextInput,
@@ -13,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { ArrowLeft, Minus, Plus, Check } from 'lucide-react-native';
-import { RootStackParamList } from '../types';
+import { RootStackParamList, FOOD_UNITS, FoodUnit } from '../types';
 import { colors, typography, spacing } from '../theme';
 import { borderRadius } from '../theme/spacing';
 import { Card } from '../components/common/Card';
@@ -37,13 +39,38 @@ interface IngredientConsumption {
   measure: string;
   inventoryItem: FoodItem | null;
   consumedAmount: number;
+  selectedUnit: FoodUnit;
 }
+
+// Convert amount from one unit to another
+const convertUnits = (amount: number, fromUnit: FoodUnit, toUnit: FoodUnit): number => {
+  if (fromUnit === toUnit) return amount;
+
+  // kg <-> g conversions
+  if (fromUnit === 'kg' && toUnit === 'g') return amount * 1000;
+  if (fromUnit === 'g' && toUnit === 'kg') return amount / 1000;
+
+  // litros <-> ml conversions
+  if (fromUnit === 'litros' && toUnit === 'ml') return amount * 1000;
+  if (fromUnit === 'ml' && toUnit === 'litros') return amount / 1000;
+
+  // If units are incompatible, return the amount as-is
+  // (user is responsible for correct conversion)
+  return amount;
+};
 
 const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { recipeName, matchedIngredients, ingredientsWithMeasures } = route.params;
-  const { items, updateItem, deleteItem } = useInventory();
+  const { items, updateItem, deleteItem, addItem } = useInventory();
   const [consumptions, setConsumptions] = useState<IngredientConsumption[]>([]);
   const [saving, setSaving] = useState(false);
+  const [addCookedDish, setAddCookedDish] = useState(true); // Default checked
+  const [portions, setPortions] = useState('4'); // Default 4 portions
+  const [selectedUnit, setSelectedUnit] = useState<FoodUnit>('porción'); // Default unit
+  const [unitPickerVisible, setUnitPickerVisible] = useState(false);
+  const [unitPickerTarget, setUnitPickerTarget] = useState<
+    { type: 'dish' } | { type: 'ingredient'; index: number } | null
+  >(null);
 
   // Initialize consumptions with matched ingredients
   useEffect(() => {
@@ -65,6 +92,7 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
         measure,
         inventoryItem,
         consumedAmount: 0,
+        selectedUnit: (inventoryItem?.unit as FoodUnit) || 'unidad',
       };
     });
 
@@ -101,6 +129,36 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
     }
   };
 
+  const handleUnitSelection = () => {
+    setUnitPickerTarget({ type: 'dish' });
+    setUnitPickerVisible(true);
+  };
+
+  const handleIngredientUnitSelection = (index: number) => {
+    setUnitPickerTarget({ type: 'ingredient', index });
+    setUnitPickerVisible(true);
+  };
+
+  const handleUnitPick = (unit: FoodUnit) => {
+    if (!unitPickerTarget) return;
+
+    if (unitPickerTarget.type === 'dish') {
+      setSelectedUnit(unit);
+    } else {
+      const newConsumptions = [...consumptions];
+      newConsumptions[unitPickerTarget.index].selectedUnit = unit;
+      setConsumptions(newConsumptions);
+    }
+
+    setUnitPickerVisible(false);
+    setUnitPickerTarget(null);
+  };
+
+  const closeUnitPicker = () => {
+    setUnitPickerVisible(false);
+    setUnitPickerTarget(null);
+  };
+
   const handleSave = async () => {
     const itemsToUpdate = consumptions.filter(
       (c) => c.consumedAmount > 0 && c.inventoryItem
@@ -113,11 +171,19 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
 
     setSaving(true);
     try {
-      // Update all items
+      // 1. Update all consumed ingredients
       for (const consumption of itemsToUpdate) {
         if (!consumption.inventoryItem) continue;
 
-        const newQuantity = consumption.inventoryItem.quantity - consumption.consumedAmount;
+        // Convert consumed amount to inventory unit if needed
+        const inventoryUnit = consumption.inventoryItem.unit as FoodUnit;
+        const amountInInventoryUnit = convertUnits(
+          consumption.consumedAmount,
+          consumption.selectedUnit,
+          inventoryUnit
+        );
+
+        const newQuantity = consumption.inventoryItem.quantity - amountInInventoryUnit;
 
         if (newQuantity <= 0) {
           // Delete item if fully consumed
@@ -128,9 +194,29 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
         }
       }
 
+      // 2. Add cooked dish to inventory if checkbox is checked
+      if (addCookedDish) {
+        const portionsNum = parseInt(portions) || 4;
+        const expiryDate = Date.now() + (3 * 24 * 60 * 60 * 1000); // +3 days
+
+        await addItem({
+          name: recipeName,
+          quantity: portionsNum,
+          unit: selectedUnit,
+          expiryDate,
+          category: 'Platos preparados',
+          notes: 'Cocinado desde receta',
+          source: 'manual',
+        });
+      }
+
+      const message = addCookedDish
+        ? `Se actualizaron ${itemsToUpdate.length} ingrediente(s) y se añadió "${recipeName}" a tu nevera`
+        : `Se actualizaron ${itemsToUpdate.length} ingrediente(s)`;
+
       Alert.alert(
-        '¡Listo!',
-        `Se actualizaron ${itemsToUpdate.length} ingrediente(s)`,
+        '¡Listo! 🎉',
+        message,
         [
           {
             text: 'OK',
@@ -189,6 +275,78 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
           </Text>
         </Card>
 
+        {/* Add Cooked Dish Card */}
+        <Card style={styles.cookedDishCard}>
+          <TouchableOpacity
+            style={styles.checkboxRow}
+            onPress={() => setAddCookedDish(!addCookedDish)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.checkbox, addCookedDish && styles.checkboxChecked]}>
+              {addCookedDish && <Check size={18} color={colors.onPrimary} />}
+            </View>
+            <Text style={styles.checkboxLabel}>Añadir plato cocinado a mi nevera</Text>
+          </TouchableOpacity>
+
+          {addCookedDish && (
+            <>
+              <View style={styles.portionsRow}>
+                <Text style={styles.portionsLabel}>Cantidad:</Text>
+                <View style={styles.portionsInputContainer}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      const current = parseInt(portions) || 1;
+                      if (current > 1) setPortions((current - 1).toString());
+                    }}
+                    style={styles.portionsButton}
+                    activeOpacity={0.7}
+                  >
+                    <Minus size={16} color={colors.onPrimary} />
+                  </TouchableOpacity>
+                  <TextInput
+                    style={styles.portionsInput}
+                    value={portions}
+                    onChangeText={(value) => {
+                      const num = parseInt(value) || 0;
+                      if (num >= 0 && num <= 99) {
+                        setPortions(value);
+                      }
+                    }}
+                    keyboardType="number-pad"
+                    selectTextOnFocus
+                  />
+                  <TouchableOpacity
+                    onPress={() => {
+                      const current = parseInt(portions) || 0;
+                      if (current < 99) setPortions((current + 1).toString());
+                    }}
+                    style={styles.portionsButton}
+                    activeOpacity={0.7}
+                  >
+                    <Plus size={16} color={colors.onPrimary} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View style={styles.unitSelectorRow}>
+                <Text style={styles.portionsLabel}>Unidad:</Text>
+                <TouchableOpacity
+                  onPress={handleUnitSelection}
+                  style={styles.unitSelector}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.unitSelectorText}>{selectedUnit}</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+
+          {addCookedDish && (
+            <Text style={styles.cookedDishNote}>
+              🍽️ "{recipeName}" se añadirá con {portions} {selectedUnit}, caducidad: {new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+            </Text>
+          )}
+        </Card>
+
         {/* Ingredients List */}
         <View style={styles.itemsList}>
           {consumptions.map((consumption, index) => (
@@ -198,6 +356,7 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
               onIncrement={() => handleIncrement(index)}
               onDecrement={() => handleDecrement(index)}
               onCustomAmount={(value) => handleCustomAmount(index, value)}
+              onUnitPress={() => handleIngredientUnitSelection(index)}
             />
           ))}
         </View>
@@ -210,10 +369,67 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
             title={saving ? 'Guardando...' : 'Guardar Cambios'}
             onPress={handleSave}
             disabled={saving}
-            icon={<Check size={20} color="#000000" />}
           />
         </View>
       )}
+
+      {/* Unit Picker Modal */}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={unitPickerVisible}
+        onRequestClose={closeUnitPicker}
+      >
+        <Pressable
+          style={styles.unitModalOverlay}
+          onPress={closeUnitPicker}
+        >
+          <Pressable style={styles.unitModalSheet} onPress={() => {}}>
+            <View style={styles.unitModalHandle} />
+            <Text style={styles.unitModalTitle}>Seleccionar unidad</Text>
+            <Text style={styles.unitModalSubtitle}>
+              {unitPickerTarget?.type === 'dish'
+                ? 'Elige la unidad para el plato cocinado'
+                : 'Elige la unidad para este ingrediente'}
+            </Text>
+
+            <View style={styles.unitOptions}>
+              {FOOD_UNITS.map((unit) => {
+                const isSelected =
+                  unitPickerTarget?.type === 'dish'
+                    ? unit === selectedUnit
+                    : unit === consumptions[unitPickerTarget?.index ?? 0]?.selectedUnit;
+
+                return (
+                  <TouchableOpacity
+                    key={unit}
+                    onPress={() => handleUnitPick(unit)}
+                    activeOpacity={0.8}
+                    style={[styles.unitChip, isSelected && styles.unitChipSelected]}
+                  >
+                    <Text
+                      style={[
+                        styles.unitChipText,
+                        isSelected && styles.unitChipTextSelected,
+                      ]}
+                    >
+                      {unit}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <TouchableOpacity
+              onPress={closeUnitPicker}
+              style={styles.unitModalCancel}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.unitModalCancelText}>Cancelar</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -226,6 +442,7 @@ interface IngredientCardProps {
   onIncrement: () => void;
   onDecrement: () => void;
   onCustomAmount: (value: string) => void;
+  onUnitPress: () => void;
 }
 
 const IngredientCard: React.FC<IngredientCardProps> = ({
@@ -233,12 +450,13 @@ const IngredientCard: React.FC<IngredientCardProps> = ({
   onIncrement,
   onDecrement,
   onCustomAmount,
+  onUnitPress,
 }) => {
-  const { ingredientName, measure, inventoryItem, consumedAmount } = consumption;
+  const { ingredientName, measure, inventoryItem, consumedAmount, selectedUnit } = consumption;
 
   if (!inventoryItem) {
     return (
-      <Card style={[styles.itemCard, styles.itemCardUnavailable]}>
+      <Card style={StyleSheet.flatten([styles.itemCard, styles.itemCardUnavailable])}>
         <View style={styles.itemHeader}>
           <View style={styles.itemInfo}>
             <Text style={styles.itemName}>{ingredientName}</Text>
@@ -250,7 +468,10 @@ const IngredientCard: React.FC<IngredientCardProps> = ({
     );
   }
 
-  const remainingQuantity = inventoryItem.quantity - consumedAmount;
+  // Convert consumed amount to inventory unit for accurate remaining calculation
+  const inventoryUnit = inventoryItem.unit as FoodUnit;
+  const amountInInventoryUnit = convertUnits(consumedAmount, selectedUnit, inventoryUnit);
+  const remainingQuantity = inventoryItem.quantity - amountInInventoryUnit;
   const isFullyConsumed = remainingQuantity <= 0;
 
   return (
@@ -290,13 +511,18 @@ const IngredientCard: React.FC<IngredientCardProps> = ({
           <Minus size={20} color={consumedAmount === 0 ? colors.outline : colors.onPrimary} />
         </TouchableOpacity>
 
-        <TextInput
-          style={styles.amountInput}
-          value={consumedAmount.toString()}
-          onChangeText={onCustomAmount}
-          keyboardType="decimal-pad"
-          selectTextOnFocus
-        />
+        <View style={styles.amountInputContainer}>
+          <TextInput
+            style={styles.amountInput}
+            value={consumedAmount.toString()}
+            onChangeText={onCustomAmount}
+            keyboardType="decimal-pad"
+            selectTextOnFocus
+          />
+          <TouchableOpacity onPress={onUnitPress} activeOpacity={0.7}>
+            <Text style={styles.unitLabel}>{selectedUnit}</Text>
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           onPress={onIncrement}
@@ -313,6 +539,15 @@ const IngredientCard: React.FC<IngredientCardProps> = ({
           />
         </TouchableOpacity>
       </View>
+
+      {/* Unit conversion indicator */}
+      {selectedUnit !== inventoryUnit && consumedAmount > 0 && (
+        <View style={styles.conversionNote}>
+          <Text style={styles.conversionNoteText}>
+            ↔️ {consumedAmount} {selectedUnit} = {amountInInventoryUnit.toFixed(2)} {inventoryUnit}
+          </Text>
+        </View>
+      )}
 
       {isFullyConsumed && (
         <View style={styles.fullyConsumedBadge}>
@@ -402,6 +637,111 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.onSurface,
   },
+  cookedDishCard: {
+    marginBottom: spacing.md,
+    backgroundColor: '#E8F5E9',
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: colors.outline,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  checkboxLabel: {
+    ...typography.bodyMedium,
+    color: colors.onSurface,
+    fontWeight: '600',
+    flex: 1,
+  },
+  portionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  portionsLabel: {
+    ...typography.bodySmall,
+    color: colors.onSurfaceVariant,
+  },
+  portionsInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  portionsButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  portionsInput: {
+    ...typography.titleMedium,
+    color: colors.onSurface,
+    fontWeight: '700',
+    textAlign: 'center',
+    width: 50,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.sm,
+    borderWidth: 2,
+    borderColor: colors.outline,
+  },
+  cookedDishNote: {
+    ...typography.bodySmall,
+    color: colors.onSurfaceVariant,
+    fontStyle: 'italic',
+  },
+  unitSelectorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  unitSelector: {
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  unitSelectorText: {
+    ...typography.bodyMedium,
+    color: colors.onSurface,
+    fontWeight: '600',
+  },
+  conversionNote: {
+    marginTop: spacing.xs,
+    backgroundColor: '#E3F2FD',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.sm,
+    alignSelf: 'center',
+  },
+  conversionNoteText: {
+    ...typography.labelSmall,
+    color: '#1976D2',
+    fontWeight: '600',
+  },
   itemsList: {
     gap: spacing.md,
   },
@@ -490,18 +830,28 @@ const styles = StyleSheet.create({
   controlButtonDisabled: {
     backgroundColor: colors.surfaceVariant,
   },
+  amountInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    borderWidth: 2,
+    borderColor: colors.outline,
+    paddingHorizontal: spacing.sm,
+  },
   amountInput: {
     ...typography.titleLarge,
     color: colors.onSurface,
     fontWeight: '700',
     textAlign: 'center',
-    minWidth: 80,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    borderWidth: 2,
-    borderColor: colors.outline,
+    minWidth: 60,
+    padding: spacing.sm,
+  },
+  unitLabel: {
+    ...typography.bodyMedium,
+    color: colors.onSurfaceVariant,
+    fontWeight: '600',
   },
   fullyConsumedBadge: {
     marginTop: spacing.sm,
@@ -533,6 +883,81 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
+  },
+  unitModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    justifyContent: 'flex-end',
+  },
+  unitModalSheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  unitModalHandle: {
+    alignSelf: 'center',
+    width: 44,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.outlineVariant,
+    marginBottom: spacing.md,
+  },
+  unitModalTitle: {
+    ...typography.titleLarge,
+    color: colors.onSurface,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  unitModalSubtitle: {
+    ...typography.bodySmall,
+    color: colors.onSurfaceVariant,
+    marginBottom: spacing.md,
+  },
+  unitOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  unitChip: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surfaceVariant,
+    borderWidth: 2,
+    borderColor: colors.outlineVariant,
+  },
+  unitChipSelected: {
+    backgroundColor: colors.primaryContainer,
+    borderColor: colors.primary,
+  },
+  unitChipText: {
+    ...typography.bodySmall,
+    color: colors.onSurfaceVariant,
+    fontWeight: '600',
+  },
+  unitChipTextSelected: {
+    color: colors.onPrimaryContainer,
+  },
+  unitModalCancel: {
+    marginTop: spacing.lg,
+    alignSelf: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surfaceVariant,
+  },
+  unitModalCancelText: {
+    ...typography.labelMedium,
+    color: colors.onSurface,
+    fontWeight: '600',
   },
 });
 
