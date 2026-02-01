@@ -9,15 +9,24 @@ export type ExpiryState = 'OK' | 'SOON' | 'EXPIRED';
 export type FoodItemSource = 'manual' | 'ocr';
 
 // Navigation types
+// Root stack navigator types (navegación con FABs)
 export type RootStackParamList = {
   Login: undefined;
-  Home: undefined;
-  Scan: undefined;
+  HomeTab: undefined;
+  ScanTab: undefined;
+  RecipesTab: undefined;
+  SettingsTab: undefined;
   ReviewDraft: { draftId: string };
   Detail: { itemId: string };
   AddItem: undefined;
-  RecipesPro: undefined;
-  Settings: undefined;
+};
+
+// Mantener para compatibilidad con componentes existentes
+export type MainTabParamList = {
+  HomeTab: undefined;
+  ScanTab: undefined;
+  RecipesTab: undefined;
+  SettingsTab: undefined;
 };
 
 // Food categories
@@ -31,6 +40,16 @@ export const FOOD_CATEGORIES = [
   'Bebidas',
   'Snacks',
   'Condimentos',
+  'Aceites',
+  'Harinas',
+  'Huevos',
+  'Frutos Secos',
+  'Embutidos',
+  'Congelados',
+  'Conservas',
+  'Salsas',
+  'Postres',
+  'Pan',
   'Otros',
 ] as const;
 

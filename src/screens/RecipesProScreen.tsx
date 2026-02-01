@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Animated,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import { colors, typography, spacing } from '../theme';
+import { borderRadius } from '../theme/spacing';
 import { useInventoryStore } from '../stores/useInventoryStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
 import { useRecipes } from '../hooks/useRecipes';
@@ -47,6 +51,31 @@ const RecipesProScreen = () => {
   const [selectedUtensils, setSelectedUtensils] = useState<string[]>(availableUtensils);
   const [syncing, setSyncing] = useState(false);
   const [localCookingTime, setLocalCookingTime] = useState<number>(cookingTime);
+  const wiggleAnim = useRef(new Animated.Value(0)).current;
+
+  // Wiggle animation for emoji
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(wiggleAnim, {
+          toValue: -3,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(wiggleAnim, {
+          toValue: 3,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(wiggleAnim, {
+          toValue: 0,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.delay(2000),
+      ])
+    ).start();
+  }, [wiggleAnim]);
 
   // Debug: Log recipes state
   useEffect(() => {
@@ -121,14 +150,35 @@ const RecipesProScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      {/* Header */}
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
+      {/* Header Kawaii */}
       <View style={styles.header}>
-        <Text style={styles.title}>Recetas IA</Text>
-        <Text style={styles.subtitle}>
-          Obtén sugerencias de recetas basadas en tus ingredientes
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Recetas IA</Text>
+          <Animated.Text
+            style={[
+              styles.headerEmoji,
+              {
+                transform: [{
+                  rotate: wiggleAnim.interpolate({
+                    inputRange: [-3, 3],
+                    outputRange: ['-3deg', '3deg']
+                  })
+                }]
+              }
+            ]}
+          >
+            👨‍🍳
+          </Animated.Text>
+        </View>
+        <Text style={styles.headerSubtitle}>
+          {recipes.length} {recipes.length === 1 ? 'receta' : 'recetas'} disponibles ♡
         </Text>
       </View>
+
+      <ScrollView contentContainerStyle={styles.contentContainer}>
 
       {/* Usage Stats */}
       <Card style={styles.statsCard}>
@@ -285,7 +335,8 @@ const RecipesProScreen = () => {
           </Text>
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -383,18 +434,44 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: spacing.md,
+    paddingBottom: spacing.xxl,
   },
   header: {
+    backgroundColor: '#FFFFFF',
+    paddingTop: 16,
+    paddingBottom: 24,
+    paddingHorizontal: spacing.lg,
+    borderBottomLeftRadius: 48,
+    borderBottomRightRadius: 48,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
     marginBottom: spacing.lg,
   },
-  title: {
-    ...typography.headlineMedium,
-    color: colors.onSurface,
-    marginBottom: spacing.xs,
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
   },
-  subtitle: {
+  headerTitle: {
+    ...typography.headlineLarge,
+    fontSize: 32,
+    fontWeight: '800',
+    color: colors.onSurface,
+  },
+  headerEmoji: {
+    fontSize: 28,
+  },
+  headerSubtitle: {
     ...typography.bodyMedium,
     color: colors.onSurfaceVariant,
+    opacity: 0.9,
   },
   statsCard: {
     marginBottom: spacing.md,
@@ -415,15 +492,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   progressBarContainer: {
-    height: 8,
+    height: 10,
     backgroundColor: colors.surfaceVariant,
-    borderRadius: 4,
+    borderRadius: borderRadius.full,
     overflow: 'hidden',
     marginBottom: spacing.sm,
   },
   progressBar: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: borderRadius.full,
   },
   statsSubtext: {
     ...typography.bodySmall,
@@ -469,8 +546,8 @@ const styles = StyleSheet.create({
   utensilChip: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: 16,
-    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
     borderColor: colors.outline,
     backgroundColor: colors.surface,
   },
@@ -506,7 +583,7 @@ const styles = StyleSheet.create({
   errorContainer: {
     padding: spacing.md,
     backgroundColor: colors.errorContainer,
-    borderRadius: 8,
+    borderRadius: borderRadius.lg,
     marginBottom: spacing.md,
   },
   errorText: {
@@ -548,7 +625,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryContainer,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: borderRadius.md,
     marginLeft: spacing.sm,
   },
   matchText: {
@@ -574,8 +651,8 @@ const styles = StyleSheet.create({
   recipeDetails: {
     marginTop: spacing.md,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.outline,
+    borderTopWidth: 2,
+    borderTopColor: colors.surfaceVariant,
   },
   detailSection: {
     marginBottom: spacing.md,

@@ -16,15 +16,16 @@ export const spacing = {
 export type SpacingKeys = keyof typeof spacing;
 
 /**
- * Border radius values
+ * Border radius values (Kawaii style - más redondeados 🌸)
  */
 export const borderRadius = {
   none: 0,
-  sm: 4,
-  md: 8,
-  lg: 12,
-  xl: 16,
-  full: 9999,
+  sm: 8,      // Más redondeado
+  md: 16,     // Botones kawaii
+  lg: 20,     // Componentes kawaii
+  xl: 24,     // Cards kawaii
+  xxl: 28,    // Extra kawaii
+  full: 9999, // Completamente redondo
 };
 
 export type BorderRadiusKeys = keyof typeof borderRadius;

@@ -1,13 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   FlatList,
   StyleSheet,
-  TouchableOpacity,
   Alert,
   RefreshControl,
+  Animated,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import { useInventory } from '../hooks/useInventory';
@@ -15,11 +17,13 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { signOut } from '../services/firebase/auth';
 import { startFirestoreSync } from '../services/firebase/firestore';
 import FoodItem from '../database/models/FoodItem';
-import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
+import { KawaiiFAB, FABGroup } from '../components/common/KawaiiFAB';
+import { FoodItemCard } from '../components/food/FoodItemCard';
+import { Plus, Camera, ChefHat } from 'lucide-react-native';
 import { colors, typography, spacing } from '../theme';
 
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'HomeTab'>;
 
 interface Props {
   navigation: HomeScreenNavigationProp;
@@ -28,6 +32,31 @@ interface Props {
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const { items, loading, error, deleteItem } = useInventory();
   const user = useAuthStore((state) => state.user);
+  const wiggleAnim = useRef(new Animated.Value(0)).current;
+
+  // Wiggle animation for emoji
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(wiggleAnim, {
+          toValue: -3,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(wiggleAnim, {
+          toValue: 3,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(wiggleAnim, {
+          toValue: 0,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.delay(2000),
+      ])
+    ).start();
+  }, [wiggleAnim]);
 
   // Start Firestore sync when user is logged in
   useEffect(() => {
@@ -36,20 +65,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       return () => unsubscribe();
     }
   }, [user?.uid]);
-
-  // Set header right button (Settings)
-  useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={styles.headerButton}
-          onPress={() => navigation.navigate('Settings')}
-        >
-          <Text style={styles.headerButtonText}>⚙️</Text>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
 
   const handleDeleteItem = (item: FoodItem) => {
     Alert.alert(
@@ -73,51 +88,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const renderItem = ({ item }: { item: FoodItem }) => {
-    const expiryColor =
-      item.expiryState === 'EXPIRED'
-        ? colors.expiryExpired
-        : item.expiryState === 'SOON'
-        ? colors.expirySoon
-        : colors.expiryOk;
-
     return (
-      <TouchableOpacity
+      <FoodItemCard
+        item={item}
         onPress={() => navigation.navigate('Detail', { itemId: item.id })}
-        onLongPress={() => handleDeleteItem(item)}
-      >
-        <Card>
-          <View style={styles.itemHeader}>
-            <Text style={styles.itemName}>{item.name}</Text>
-            <View style={[styles.expiryBadge, { backgroundColor: expiryColor }]}>
-              <Text style={styles.expiryText}>
-                {item.expiryState === 'EXPIRED'
-                  ? 'EXPIRADO'
-                  : item.expiryState === 'SOON'
-                  ? `${item.daysLeft}d`
-                  : 'OK'}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.itemDetails}>
-            <Text style={styles.detailText}>
-              📅 {item.expiryDateFormatted}
-            </Text>
-            <Text style={styles.detailText}>
-              📦 {item.quantity} {item.unit}
-            </Text>
-            {item.category && (
-              <Text style={styles.detailText}>🏷️ {item.category}</Text>
-            )}
-          </View>
-
-          {item.source === 'ocr' && (
-            <View style={styles.sourceBadge}>
-              <Text style={styles.sourceBadgeText}>📸 OCR</Text>
-            </View>
-          )}
-        </Card>
-      </TouchableOpacity>
+        onDelete={() => handleDeleteItem(item)}
+      />
     );
   };
 
@@ -135,7 +111,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         />
         <Button
           title="Escanear Recibo"
-          onPress={() => navigation.navigate('Scan')}
+          onPress={() => navigation.navigate('ScanTab')}
           variant="secondary"
           style={styles.emptyButton}
         />
@@ -144,7 +120,29 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      {/* Header Kawaii */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Mi Nevera</Text>
+          <Animated.Text
+            style={[
+              styles.headerEmoji,
+              { transform: [{ rotate: wiggleAnim.interpolate({
+                inputRange: [-3, 3],
+                outputRange: ['-3deg', '3deg']
+              })}] }
+            ]}
+          >
+            🧊
+          </Animated.Text>
+        </View>
+        <Text style={styles.headerSubtitle}>
+          {items.length} items guardados ♡
+        </Text>
+      </View>
+
       {error && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>⚠️ {error}</Text>
@@ -162,29 +160,26 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         }
       />
 
-      {items.length > 0 && (
-        <View style={styles.fabContainer}>
-          <TouchableOpacity
-            style={[styles.fab, styles.fabSecondary]}
-            onPress={() => navigation.navigate('RecipesPro')}
-          >
-            <Text style={styles.fabText}>🍳</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.fab, styles.fabPrimary]}
-            onPress={() => navigation.navigate('Scan')}
-          >
-            <Text style={styles.fabText}>📸</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.fab, styles.fabPrimary]}
-            onPress={() => navigation.navigate('AddItem')}
-          >
-            <Text style={styles.fabText}>➕</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
+      {/* Floating Action Buttons */}
+      <FABGroup>
+        <KawaiiFAB
+          icon={<ChefHat size={28} color="#000000" />}
+          onPress={() => navigation.navigate('RecipesTab')}
+          variant="secondary"
+        />
+        <KawaiiFAB
+          icon={<Plus size={36} color="#000000" />}
+          onPress={() => navigation.navigate('AddItem')}
+          size="large"
+          pulse
+        />
+        <KawaiiFAB
+          icon={<Camera size={28} color="#000000" />}
+          onPress={() => navigation.navigate('ScanTab')}
+          variant="secondary"
+        />
+      </FABGroup>
+    </SafeAreaView>
   );
 };
 
@@ -193,11 +188,41 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  headerButton: {
-    marginRight: spacing.md,
+  header: {
+    backgroundColor: '#FFFFFF',
+    paddingTop: 16,
+    paddingBottom: 24,
+    paddingHorizontal: spacing.lg,
+    borderBottomLeftRadius: 48,
+    borderBottomRightRadius: 48,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  headerButtonText: {
-    fontSize: 24,
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  headerTitle: {
+    ...typography.headlineLarge,
+    fontSize: 32,
+    fontWeight: '800',
+    color: colors.onSurface,
+  },
+  headerEmoji: {
+    fontSize: 28,
+  },
+  headerSubtitle: {
+    ...typography.bodyMedium,
+    color: colors.onSurfaceVariant,
+    opacity: 0.9,
   },
   errorBanner: {
     backgroundColor: colors.errorContainer,
@@ -210,44 +235,6 @@ const styles = StyleSheet.create({
   listContent: {
     padding: spacing.md,
     flexGrow: 1,
-  },
-  itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  itemName: {
-    ...typography.titleMedium,
-    color: colors.onSurface,
-    flex: 1,
-  },
-  expiryBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  expiryText: {
-    ...typography.labelSmall,
-    color: colors.onPrimary,
-    fontWeight: 'bold',
-  },
-  itemDetails: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  detailText: {
-    ...typography.bodySmall,
-    color: colors.onSurfaceVariant,
-  },
-  sourceBadge: {
-    marginTop: spacing.sm,
-    alignSelf: 'flex-start',
-  },
-  sourceBadgeText: {
-    ...typography.labelSmall,
-    color: colors.onSurfaceVariant,
   },
   emptyContainer: {
     flex: 1,
@@ -272,36 +259,6 @@ const styles = StyleSheet.create({
   },
   emptyButton: {
     width: '100%',
-  },
-  fabContainer: {
-    position: 'absolute',
-    right: spacing.md,
-    bottom: spacing.md,
-    gap: spacing.md,
-  },
-  fab: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: colors.shadow,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  fabPrimary: {
-    backgroundColor: colors.primary,
-  },
-  fabSecondary: {
-    backgroundColor: colors.secondary,
-  },
-  fabText: {
-    fontSize: 24,
   },
 });
 

@@ -1,92 +1,98 @@
 /**
- * Color palette for What's In My Fridge app
- * Supporting light and dark modes
+ * Kawaii Pastel Color Palette 🌸
+ * Supporting light and dark modes with cute pastel colors
  */
 
 export const Colors = {
   light: {
-    // Base colors
-    background: '#e2f4e4',
-    surface: '#acf2b5',
-    primary: '#164c6e',
-    accent: '#1664af',
-    text: '#000408',
-    muted: '#3e4952',
+    // Base kawaii colors
+    background: '#FFF0F5', // Rosa pastel suave
+    surface: '#FFFBF7', // Blanco cremoso
+    primary: '#FF9AA2', // Rosa coral kawaii
+    secondary: '#B5EAD7', // Mint pastel
+    accent: '#FFDAC1', // Amarillo mantequilla
+    text: '#5A4A5E', // Púrpura suave
+    muted: '#FFE5EC', // Rosa muy claro
 
-    // Derived colors for compatibility
+    // Derived colors
     onPrimary: '#FFFFFF',
-    primaryContainer: '#d4e8f0',
-    onPrimaryContainer: '#0a2433',
+    primaryContainer: '#FFE5EC',
+    onPrimaryContainer: '#5A4A5E',
+    secondaryContainer: '#E8F8F3',
+    onSecondaryContainer: '#5A4A5E',
 
-    onSurface: '#000408',
-    onBackground: '#000408',
-    surfaceVariant: '#c8e8ce',
-    onSurfaceVariant: '#2a4a3a',
+    onSurface: '#5A4A5E',
+    onBackground: '#5A4A5E',
+    surfaceVariant: '#FFFBF7',
+    onSurfaceVariant: '#8B7C8E',
 
-    // Error colors
-    error: '#B3261E',
+    // Error colors (kawaii style)
+    error: '#FF6B9D',
     onError: '#FFFFFF',
-    errorContainer: '#F9DEDC',
-    onErrorContainer: '#410E0B',
+    errorContainer: '#FFE5EC',
+    onErrorContainer: '#5A4A5E',
 
     // Outline
-    outline: '#5a7a6a',
-    outlineVariant: '#a8c8b8',
+    outline: 'rgba(255, 154, 162, 0.3)',
+    outlineVariant: 'rgba(255, 154, 162, 0.15)',
 
-    // Expiry state colors
-    expiryOk: '#4CAF50',
-    expirySoon: '#FF9800',
-    expiryExpired: '#F44336',
+    // Expiry state colors (kawaii pastels)
+    expiryOk: '#B5EAD7', // Verde menta pastel
+    expirySoon: '#FFD4A3', // Naranja melocotón suave
+    expiryExpired: '#FF9AA2', // Rosa coral
 
-    // Source badge colors
-    sourceManual: '#2196F3',
-    sourceOcr: '#9C27B0',
+    // Source badge colors (kawaii)
+    sourceManual: '#C7CEEA', // Lavanda pastel
+    sourceOcr: '#FFB6C1', // Rosa claro
 
-    // Shadow
-    shadow: '#000000',
-    scrim: '#000000',
+    // Shadow & Effects
+    shadow: 'rgba(255, 154, 162, 0.2)',
+    scrim: 'rgba(90, 74, 94, 0.5)',
   },
   dark: {
-    // Base colors
-    background: '#000100',
-    surface: '#000800',
-    primary: '#76a5c6',
-    accent: '#3978bd',
-    text: '#d4e0e9',
-    muted: '#77828a',
+    // Base kawaii dark colors
+    background: '#2A2438', // Púrpura oscuro suave
+    surface: '#362F42', // Púrpura medio
+    primary: '#FF9AA2', // Rosa coral (mismo que light)
+    secondary: '#6B9B8E', // Verde menta oscuro
+    accent: '#D4A574', // Amarillo oscuro
+    text: '#FFE5EC', // Rosa muy claro
+    muted: '#423A50', // Púrpura oscuro medio
 
-    // Derived colors for compatibility
-    onPrimary: '#002030',
-    primaryContainer: '#0d3d5a',
-    onPrimaryContainer: '#cfe5f3',
+    // Derived colors
+    onPrimary: '#FFFFFF',
+    primaryContainer: '#423A50',
+    onPrimaryContainer: '#FFE5EC',
+    secondaryContainer: '#423A50',
+    onSecondaryContainer: '#FFE5EC',
 
-    onSurface: '#d4e0e9',
-    onBackground: '#d4e0e9',
-    surfaceVariant: '#1a2a2a',
-    onSurfaceVariant: '#b8c8d8',
+    onSurface: '#FFE5EC',
+    onBackground: '#FFE5EC',
+    surfaceVariant: '#423A50',
+    onSurfaceVariant: '#B5A8BA',
 
-    // Error colors
-    error: '#F2B8B5',
-    onError: '#601410',
-    errorContainer: '#8C1D18',
-    onErrorContainer: '#F9DEDC',
+    // Error colors (dark mode)
+    error: '#FF6B9D',
+    onError: '#FFFFFF',
+    errorContainer: '#5A2A42',
+    onErrorContainer: '#FFE5EC',
 
     // Outline
-    outline: '#5a7a8a',
-    outlineVariant: '#2a4a5a',
+    outline: 'rgba(255, 154, 162, 0.4)',
+    outlineVariant: 'rgba(255, 154, 162, 0.2)',
 
-    // Expiry state colors
-    expiryOk: '#66BB6A',
-    expirySoon: '#FFA726',
-    expiryExpired: '#EF5350',
+    // Expiry state colors (dark mode pastels)
+    expiryOk: '#6B9B8E', // Verde oscuro
+    expirySoon: '#D4A574', // Naranja oscuro
+    expiryExpired: '#FF9AA2', // Rosa coral
 
-    // Source badge colors
-    sourceManual: '#42A5F5',
-    sourceOcr: '#AB47BC',
+    // Source badge colors (dark)
+    sourceManual: '#9B94B8', // Lavanda oscuro
+    sourceOcr: '#FFB6C1', // Rosa claro
 
-    // Shadow
-    shadow: '#000000',
-    scrim: '#000000',
+    // Shadow & Effects
+    shadow: 'rgba(0, 0, 0, 0.4)',
+    scrim: 'rgba(0, 0, 0, 0.6)',
   },
 };
 

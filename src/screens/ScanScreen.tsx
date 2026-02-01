@@ -19,7 +19,7 @@ import { recognizeText } from '../services/ocr/textRecognition';
 import { parseReceiptText } from '../services/ocr/receiptParser';
 import { useDrafts } from '../hooks/useDrafts';
 
-type ScanScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Scan'>;
+type ScanScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ScanTab'>;
 
 interface Props {
   navigation: ScanScreenNavigationProp;

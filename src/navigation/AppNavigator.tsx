@@ -9,11 +9,11 @@ import { colors } from '../theme';
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ScanScreen from '../screens/ScanScreen';
+import RecipesProScreen from '../screens/RecipesProScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import ReviewDraftScreen from '../screens/ReviewDraftScreen';
 import DetailScreen from '../screens/DetailScreen';
 import AddItemScreen from '../screens/AddItemScreen';
-import RecipesProScreen from '../screens/RecipesProScreen';
-import SettingsScreen from '../screens/SettingsScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -23,7 +23,7 @@ export const AppNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName={user ? 'Home' : 'Login'}
+        initialRouteName={user ? 'HomeTab' : 'Login'}
         screenOptions={{
           headerStyle: {
             backgroundColor: colors.primary,
@@ -42,42 +42,51 @@ export const AppNavigator = () => {
             options={{ headerShown: false }}
           />
         ) : (
-          // Main app stack
+          // Main app stack (navegación con FABs)
           <>
             <Stack.Screen
-              name="Home"
+              name="HomeTab"
               component={HomeScreen}
-              options={{ title: 'Mi Inventario' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
-              name="Scan"
+              name="ScanTab"
               component={ScanScreen}
-              options={{ title: 'Escanear Recibo' }}
+              options={{ title: 'Escanear' }}
+            />
+            <Stack.Screen
+              name="RecipesTab"
+              component={RecipesProScreen}
+              options={{ title: 'Recetas' }}
+            />
+            <Stack.Screen
+              name="SettingsTab"
+              component={SettingsScreen}
+              options={{ title: 'Ajustes' }}
             />
             <Stack.Screen
               name="ReviewDraft"
               component={ReviewDraftScreen}
-              options={{ title: 'Revisar Items' }}
+              options={{
+                title: 'Revisar Items',
+                presentation: 'modal'
+              }}
             />
             <Stack.Screen
               name="Detail"
               component={DetailScreen}
-              options={{ title: 'Detalle del Item' }}
+              options={{
+                title: 'Detalle del Item',
+                presentation: 'card'
+              }}
             />
             <Stack.Screen
               name="AddItem"
               component={AddItemScreen}
-              options={{ title: 'Añadir Item' }}
-            />
-            <Stack.Screen
-              name="RecipesPro"
-              component={RecipesProScreen}
-              options={{ title: 'Recetas Sugeridas' }}
-            />
-            <Stack.Screen
-              name="Settings"
-              component={SettingsScreen}
-              options={{ title: 'Configuración' }}
+              options={{
+                title: 'Añadir Item',
+                presentation: 'modal'
+              }}
             />
           </>
         )}
