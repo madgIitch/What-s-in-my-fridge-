@@ -295,15 +295,15 @@ npm test
 - [x] Stores de Zustand (auth, inventory, drafts, recipes, preferences)
 - [x] Sistema de tema (Material Design 3)
 - [x] Estructura de carpetas
+- [x] Navegación con React Navigation
+- [x] Servicios de Firebase (Auth, Firestore, Functions)
+- [x] Pantallas principales (Login, Home, Scan, etc.)
+- [x] OCR con react-native-text-recognition
+- [x] Notificaciones y background tasks
 
 ### 🚧 En Progreso
 
-- [ ] Navegación con React Navigation
-- [ ] Servicios de Firebase (Auth, Firestore, Functions)
-- [ ] Pantallas principales (Login, Home, Scan, etc.)
 - [ ] Componentes UI reutilizables
-- [ ] OCR con react-native-text-recognition
-- [ ] Notificaciones y background tasks
 
 ### 📋 Pendiente
 

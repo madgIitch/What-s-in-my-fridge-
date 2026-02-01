@@ -9,6 +9,7 @@ import {
   Animated,
   StatusBar,
   Image,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -21,7 +22,7 @@ import FoodItem from '../database/models/FoodItem';
 import { Button } from '../components/common/Button';
 import { KawaiiFAB, FABGroup } from '../components/common/KawaiiFAB';
 import { FoodItemCard } from '../components/food/FoodItemCard';
-import { Plus, Camera, ChefHat } from 'lucide-react-native';
+import { Plus, Camera, ChefHat, Calendar } from 'lucide-react-native';
 import { colors, typography, spacing } from '../theme';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'HomeTab'>;
@@ -126,8 +127,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       {/* Header Kawaii */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Mi Nevera</Text>
-          <Animated.Image
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerTitle}>Mi Nevera</Text>
+            <Animated.Image
             source={require('../../assets/neveritoNevera.png')}
             style={[
               styles.headerImage,
@@ -141,7 +143,15 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               }
             ]}
             resizeMode="contain"
-          />
+            />
+          </View>
+          <TouchableOpacity
+            style={styles.headerCalendarButton}
+            onPress={() => navigation.navigate('CalendarTab')}
+            activeOpacity={0.8}
+          >
+            <Calendar size={20} color={colors.onSurface} />
+          </TouchableOpacity>
         </View>
         <Text style={styles.headerSubtitle}>
           {items.length} items guardados ♡
@@ -212,8 +222,13 @@ const styles = StyleSheet.create({
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
     marginBottom: 4,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   headerTitle: {
     ...typography.headlineLarge,
@@ -224,6 +239,16 @@ const styles = StyleSheet.create({
   headerImage: {
     width: 40,
     height: 40,
+  },
+  headerCalendarButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.outlineVariant,
   },
   headerSubtitle: {
     ...typography.bodyMedium,

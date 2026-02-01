@@ -101,10 +101,21 @@ const ConsumeIngredientsScreen: React.FC<Props> = ({ navigation }) => {
         }
       }
 
+      const consumedIds = updates.map((update) => update.item.id);
+
       Alert.alert(
         'Actualizado',
         `Se actualizaron ${updates.length} ingrediente(s)`,
         [
+          {
+            text: 'Registrar en calendario',
+            onPress: () =>
+              navigation.navigate('AddMeal', {
+                prefillIngredientIds: consumedIds,
+                prefillMealType: 'dinner',
+                prefillConsumedAt: Date.now(),
+              }),
+          },
           {
             text: 'OK',
             onPress: () => navigation.goBack(),

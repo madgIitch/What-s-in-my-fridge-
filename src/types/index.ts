@@ -19,9 +19,17 @@ export type RootStackParamList = {
   RecipesTab: undefined;
   FavoritesTab: undefined;
   SettingsTab: undefined;
+  CalendarTab: undefined;
   ReviewDraft: { draftId: string };
   Detail: { itemId: string };
   AddItem: undefined;
+  AddMeal: {
+    prefillIngredientIds?: string[];
+    prefillName?: string;
+    prefillMealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+    prefillConsumedAt?: number;
+  } | undefined;
+  MealDetail: { mealId: string };
   RecipeSteps: { recipe: RecipeUi };
   ConsumeIngredients: undefined;
   ConsumeRecipeIngredients: {
@@ -36,6 +44,7 @@ export type MainTabParamList = {
   HomeTab: undefined;
   ScanTab: undefined;
   RecipesTab: undefined;
+  CalendarTab: undefined;
   SettingsTab: undefined;
 };
 

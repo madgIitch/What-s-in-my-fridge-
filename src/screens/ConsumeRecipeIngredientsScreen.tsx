@@ -214,10 +214,24 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
         ? `Se actualizaron ${itemsToUpdate.length} ingrediente(s) y se añadió "${recipeName}" a tu nevera`
         : `Se actualizaron ${itemsToUpdate.length} ingrediente(s)`;
 
+      const consumedIds = itemsToUpdate
+        .map((consumption) => consumption.inventoryItem?.id)
+        .filter((id): id is string => Boolean(id));
+
       Alert.alert(
         '¡Listo! 🎉',
         message,
         [
+          {
+            text: 'Registrar en calendario',
+            onPress: () =>
+              navigation.navigate('AddMeal', {
+                prefillIngredientIds: consumedIds,
+                prefillName: recipeName,
+                prefillMealType: 'dinner',
+                prefillConsumedAt: Date.now(),
+              }),
+          },
           {
             text: 'OK',
             onPress: () => navigation.goBack(),

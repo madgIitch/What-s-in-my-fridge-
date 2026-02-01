@@ -10,6 +10,7 @@ import { schemaMigrations, createTable, addColumns, unsafeSql } from '@nozbe/wat
  * - v7: Added normalized_name to food_items
  * - v8: Added favorite_recipes table
  * - v9: Removed expiry_at from food_items
+ * - v10: Added meal_entries table
  */
 export default schemaMigrations({
   migrations: [
@@ -104,6 +105,29 @@ export default schemaMigrations({
         }),
         unsafeSql({ sql: 'DROP TABLE food_items;' }),
         unsafeSql({ sql: 'ALTER TABLE food_items_new RENAME TO food_items;' }),
+      ],
+    },
+    // Migration from version 9 to 10
+    // Adds meal entries for calendar tracking
+    {
+      toVersion: 10,
+      steps: [
+        createTable({
+          name: 'meal_entries',
+          columns: [
+            { name: 'meal_type', type: 'string' },
+            { name: 'meal_date', type: 'number' },
+            { name: 'recipe_id', type: 'string', isOptional: true },
+            { name: 'custom_name', type: 'string', isOptional: true },
+            { name: 'ingredients_consumed', type: 'string' },
+            { name: 'notes', type: 'string', isOptional: true },
+            { name: 'calories_estimate', type: 'number', isOptional: true },
+            { name: 'user_id', type: 'string' },
+            { name: 'consumed_at', type: 'number' },
+            { name: 'created_at', type: 'number' },
+            { name: 'updated_at', type: 'number' },
+          ],
+        }),
       ],
     },
   ],

@@ -2,7 +2,7 @@ import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 /**
  * Database schema for What's In My Fridge app
- * Version 8 - Added favorite_recipes table
+ * Version 10 - Added meal_entries table
  *
  * Tables:
  * - food_items: Main inventory of food items
@@ -11,10 +11,11 @@ import { appSchema, tableSchema } from '@nozbe/watermelondb';
  * - favorite_recipes: User's favorite recipes
  * - ingredients: Reference database of ingredients for classification
  * - ingredient_mappings: Cache for scanned ingredient normalization
+ * - meal_entries: Calendar meal entries
  */
 
 export const schema = appSchema({
-  version: 9,
+  version: 10,
   tables: [
     // FoodItemEntity - Main inventory table
     tableSchema({
@@ -78,6 +79,24 @@ export const schema = appSchema({
         { name: 'instructions', type: 'string' },
         { name: 'user_id', type: 'string', isIndexed: true }, // For Firestore sync
         { name: 'saved_at', type: 'number' }, // Timestamp when favorited
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' }
+      ]
+    }),
+
+    // MealEntryEntity - Meal calendar entries
+    tableSchema({
+      name: 'meal_entries',
+      columns: [
+        { name: 'meal_type', type: 'string' }, // 'breakfast' | 'lunch' | 'dinner' | 'snack'
+        { name: 'meal_date', type: 'number' }, // Start of day timestamp
+        { name: 'recipe_id', type: 'string', isOptional: true }, // Favorite recipe reference
+        { name: 'custom_name', type: 'string', isOptional: true }, // Meal name without recipe
+        { name: 'ingredients_consumed', type: 'string' }, // JSON array of food_item IDs
+        { name: 'notes', type: 'string', isOptional: true },
+        { name: 'calories_estimate', type: 'number', isOptional: true },
+        { name: 'user_id', type: 'string' }, // For Firestore sync
+        { name: 'consumed_at', type: 'number' }, // Exact timestamp
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' }
       ]

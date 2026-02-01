@@ -9,6 +9,7 @@ import RecipeCache from './models/RecipeCache';
 import FavoriteRecipe from './models/FavoriteRecipe';
 import Ingredient from './models/Ingredient';
 import IngredientMapping from './models/IngredientMapping';
+import MealEntry from './models/MealEntry';
 
 /**
  * Initialize WatermelonDB database
@@ -26,7 +27,15 @@ const adapter = new SQLiteAdapter({
 // Create database instance
 export const database = new Database({
   adapter,
-  modelClasses: [FoodItem, ParsedDraft, RecipeCache, FavoriteRecipe, Ingredient, IngredientMapping],
+  modelClasses: [
+    FoodItem,
+    ParsedDraft,
+    RecipeCache,
+    FavoriteRecipe,
+    Ingredient,
+    IngredientMapping,
+    MealEntry,
+  ],
 });
 
 /**
@@ -39,6 +48,7 @@ export const collections = {
   favoriteRecipes: database.get<FavoriteRecipe>('favorite_recipes'),
   ingredients: database.get<Ingredient>('ingredients'),
   ingredientMappings: database.get<IngredientMapping>('ingredient_mappings'),
+  mealEntries: database.get<MealEntry>('meal_entries'),
 };
 
 export default database;

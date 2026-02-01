@@ -3,6 +3,7 @@ import { ensureFirebaseApp } from './app';
 import { database, collections } from '../../database';
 import FoodItem from '../../database/models/FoodItem';
 import ParsedDraft from '../../database/models/ParsedDraft';
+import MealEntry from '../../database/models/MealEntry';
 import { useAuthStore } from '../../stores/useAuthStore';
 
 /**
@@ -45,6 +46,41 @@ export const syncToFirestore = async (item: FoodItem) => {
 };
 
 /**
+ * Sync a meal entry to Firestore
+ */
+export const syncMealEntryToFirestore = async (entry: MealEntry) => {
+  const userId = useAuthStore.getState().user?.uid;
+  if (!userId) {
+    console.warn('No user logged in, skipping MealEntry Firestore sync');
+    return;
+  }
+
+  try {
+    await firestore()
+      .collection('users')
+      .doc(userId)
+      .collection('meal_entries')
+      .doc(entry.id)
+      .set({
+        mealType: entry.mealType,
+        mealDate: entry.mealDate,
+        recipeId: entry.recipeId || null,
+        customName: entry.customName || null,
+        ingredientsConsumed: entry.ingredientsConsumedArray,
+        notes: entry.notes || null,
+        caloriesEstimate: entry.caloriesEstimate ?? null,
+        userId: entry.userId,
+        consumedAt: entry.consumedAt,
+        createdAt: entry.createdAt?.getTime?.() ?? Date.now(),
+        updatedAt: entry.updatedAt?.getTime?.() ?? Date.now(),
+      });
+  } catch (error) {
+    console.error('Error syncing meal entry to Firestore:', error);
+    throw error;
+  }
+};
+
+/**
  * Delete a food item from Firestore
  */
 export const deleteFromFirestore = async (itemId: string) => {
@@ -63,6 +99,29 @@ export const deleteFromFirestore = async (itemId: string) => {
       .delete();
   } catch (error) {
     console.error('Error deleting from Firestore:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a meal entry from Firestore
+ */
+export const deleteMealEntryFromFirestore = async (entryId: string) => {
+  const userId = useAuthStore.getState().user?.uid;
+  if (!userId) {
+    console.warn('No user logged in, skipping MealEntry Firestore delete');
+    return;
+  }
+
+  try {
+    await firestore()
+      .collection('users')
+      .doc(userId)
+      .collection('meal_entries')
+      .doc(entryId)
+      .delete();
+  } catch (error) {
+    console.error('Error deleting meal entry from Firestore:', error);
     throw error;
   }
 };
@@ -159,6 +218,92 @@ export const startFirestoreSync = (userId: string) => {
       },
       (error) => {
         console.error('Firestore sync error:', error);
+      }
+    );
+
+  return unsubscribe;
+};
+
+/**
+ * Start bidirectional Firestore sync for meal entries
+ */
+export const startMealEntriesSync = (userId: string) => {
+  console.log('Starting MealEntry Firestore sync for user:', userId);
+
+  const unsubscribe = firestore()
+    .collection('users')
+    .doc(userId)
+    .collection('meal_entries')
+    .onSnapshot(
+      async (snapshot) => {
+        await database.write(async () => {
+          for (const change of snapshot.docChanges()) {
+            const data = change.doc.data();
+            const entryId = change.doc.id;
+
+            const ingredientsConsumed = Array.isArray(data.ingredientsConsumed)
+              ? JSON.stringify(data.ingredientsConsumed)
+              : typeof data.ingredientsConsumed === 'string'
+                ? data.ingredientsConsumed
+                : '[]';
+
+            if (change.type === 'added' || change.type === 'modified') {
+              try {
+                const existingEntry = await collections.mealEntries
+                  .find(entryId)
+                  .catch(() => null);
+
+                if (existingEntry) {
+                  await existingEntry.update(() => {
+                    if (data.mealType !== undefined) existingEntry.mealType = data.mealType;
+                    if (data.mealDate !== undefined) existingEntry.mealDate = data.mealDate;
+                    if (data.recipeId !== undefined) existingEntry.recipeId = data.recipeId || undefined;
+                    if (data.customName !== undefined) existingEntry.customName = data.customName || undefined;
+                    existingEntry.ingredientsConsumed = ingredientsConsumed;
+                    if (data.notes !== undefined) existingEntry.notes = data.notes || undefined;
+                    if (data.caloriesEstimate !== undefined) {
+                      existingEntry.caloriesEstimate = data.caloriesEstimate ?? undefined;
+                    }
+                    if (data.userId !== undefined) existingEntry.userId = data.userId;
+                    if (data.consumedAt !== undefined) existingEntry.consumedAt = data.consumedAt;
+                  });
+                } else {
+                  await collections.mealEntries.create((entry) => {
+                    (entry as any)._raw.id = entryId;
+                    entry.mealType = data.mealType;
+                    entry.mealDate = data.mealDate;
+                    entry.recipeId = data.recipeId || undefined;
+                    entry.customName = data.customName || undefined;
+                    entry.ingredientsConsumed = ingredientsConsumed;
+                    entry.notes = data.notes || undefined;
+                    entry.caloriesEstimate = data.caloriesEstimate ?? undefined;
+                    entry.userId = data.userId;
+                    entry.consumedAt = data.consumedAt;
+                  });
+                }
+              } catch (error) {
+                console.error('Error syncing meal entry from Firestore:', error);
+              }
+            }
+
+            if (change.type === 'removed') {
+              try {
+                const entry = await collections.mealEntries
+                  .find(entryId)
+                  .catch(() => null);
+
+                if (entry) {
+                  await entry.destroyPermanently();
+                }
+              } catch (error) {
+                console.error('Error deleting meal entry from local DB:', error);
+              }
+            }
+          }
+        });
+      },
+      (error) => {
+        console.error('MealEntry Firestore sync error:', error);
       }
     );
 
