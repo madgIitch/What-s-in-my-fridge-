@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,13 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
+  TouchableOpacity,
+  Animated,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { ArrowLeft } from 'lucide-react-native';
 import { RootStackParamList } from '../types';
 import ImagePicker from 'react-native-image-crop-picker';
 import { Button } from '../components/common/Button';
@@ -27,10 +32,35 @@ interface Props {
 
 const ScanScreen: React.FC<Props> = ({ navigation }) => {
   const { saveDraft } = useDrafts();
+  const wiggleAnim = useRef(new Animated.Value(0)).current;
 
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [ocrText, setOcrText] = useState<string | null>(null);
+
+  // Wiggle animation for emoji
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(wiggleAnim, {
+          toValue: -3,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(wiggleAnim, {
+          toValue: 3,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(wiggleAnim, {
+          toValue: 0,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.delay(2000),
+      ])
+    ).start();
+  }, [wiggleAnim]);
   /**
    * Take photo with camera
    */
@@ -176,11 +206,47 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Escanear Recibo</Text>
-      <Text style={styles.subtitle}>
-        Toma una foto de tu recibo o selecciona una de la galería
-      </Text>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
+      {/* Header Kawaii */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            activeOpacity={0.7}
+          >
+            <ArrowLeft size={24} color={colors.onSurface} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Escanear</Text>
+        </View>
+        <Text style={styles.headerSubtitle}>
+          Captura tu recibo de compra ✨
+        </Text>
+
+        {/* Camera Emoji */}
+        <View style={styles.cameraEmojiContainer}>
+          <Animated.Text
+            style={[
+              styles.cameraEmoji,
+              {
+                transform: [{
+                  rotate: wiggleAnim.interpolate({
+                    inputRange: [-3, 3],
+                    outputRange: ['-3deg', '3deg']
+                  })
+                }]
+              }
+            ]}
+          >
+            📸
+          </Animated.Text>
+          <Text style={styles.sparkleEmoji}>✨</Text>
+        </View>
+      </View>
+
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
 
       {imageUri ? (
         <Card style={styles.imageCard}>
@@ -197,14 +263,14 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={styles.imageActions}>
             <Button
-              title="Cambiar Foto"
+              title="🔄 Cambiar Foto"
               onPress={clearImage}
               variant="text"
               disabled={processing}
               style={styles.actionButton}
             />
             <Button
-              title="Procesar"
+              title="✨ Procesar"
               onPress={processImage}
               loading={processing}
               style={styles.actionButton}
@@ -247,17 +313,19 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
       {processing && (
         <View style={styles.processingOverlay}>
           <Card style={styles.processingCard}>
+            <Text style={styles.processingEmoji}>🔍</Text>
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={styles.processingText}>
-              Procesando imagen con OCR...
+              Procesando imagen con magia IA...
             </Text>
             <Text style={styles.processingSubtext}>
-              Esto puede tomar unos segundos
+              Esto puede tomar unos segundos ✨
             </Text>
           </Card>
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -266,18 +334,64 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  content: {
-    padding: spacing.lg,
+  header: {
+    backgroundColor: '#FFFFFF',
+    paddingTop: 16,
+    paddingBottom: 24,
+    paddingHorizontal: spacing.lg,
+    borderBottomLeftRadius: 48,
+    borderBottomRightRadius: 48,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    marginBottom: spacing.lg,
   },
-  title: {
-    ...typography.headlineSmall,
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  backButton: {
+    padding: 4,
+    marginRight: 4,
+  },
+  headerTitle: {
+    ...typography.headlineLarge,
+    fontSize: 32,
+    fontWeight: '800',
     color: colors.onSurface,
-    marginBottom: spacing.xs,
+    flex: 1,
   },
-  subtitle: {
+  headerSubtitle: {
     ...typography.bodyMedium,
     color: colors.onSurfaceVariant,
-    marginBottom: spacing.xl,
+    opacity: 0.9,
+  },
+  cameraEmojiContainer: {
+    alignItems: 'center',
+    marginTop: spacing.md,
+    position: 'relative',
+  },
+  cameraEmoji: {
+    fontSize: 64,
+  },
+  sparkleEmoji: {
+    position: 'absolute',
+    top: -8,
+    right: '35%',
+    fontSize: 24,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    padding: spacing.lg,
   },
   imageCard: {
     padding: 0,
@@ -359,8 +473,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.xl,
   },
+  processingEmoji: {
+    fontSize: 48,
+    marginBottom: spacing.md,
+  },
   processingText: {
     ...typography.titleMedium,
+    fontWeight: '700',
     color: colors.onSurface,
     marginTop: spacing.md,
     textAlign: 'center',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  TouchableOpacity,
+  Animated,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { ArrowLeft } from 'lucide-react-native';
 import { RootStackParamList, FOOD_CATEGORIES, FOOD_UNITS } from '../types';
 import { useInventory } from '../hooks/useInventory';
 import { Input } from '../components/common/Input';
@@ -16,6 +21,7 @@ import { Button } from '../components/common/Button';
 import { DatePicker } from '../components/common/DatePicker';
 import { Picker } from '../components/common/Picker';
 import { colors, typography, spacing } from '../theme';
+import { borderRadius } from '../theme/spacing';
 import { addDays } from 'date-fns';
 
 type AddItemScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AddItem'>;
@@ -26,6 +32,7 @@ interface Props {
 
 const AddItemScreen: React.FC<Props> = ({ navigation }) => {
   const { addItem, loading } = useInventory();
+  const wiggleAnim = useRef(new Animated.Value(0)).current;
 
   // Form state
   const [name, setName] = useState('');
@@ -38,6 +45,30 @@ const AddItemScreen: React.FC<Props> = ({ navigation }) => {
   // Validation errors
   const [nameError, setNameError] = useState('');
   const [quantityError, setQuantityError] = useState('');
+
+  // Wiggle animation for emoji
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(wiggleAnim, {
+          toValue: -3,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(wiggleAnim, {
+          toValue: 3,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(wiggleAnim, {
+          toValue: 0,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.delay(2000),
+      ])
+    ).start();
+  }, [wiggleAnim]);
 
   const validate = () => {
     let valid = true;
@@ -92,20 +123,58 @@ const AddItemScreen: React.FC<Props> = ({ navigation }) => {
   const unitOptions = FOOD_UNITS.map((u) => ({ label: u, value: u }));
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
+      {/* Header Kawaii */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            activeOpacity={0.7}
+          >
+            <ArrowLeft size={24} color={colors.onSurface} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Añadir Item</Text>
+        </View>
+        <Text style={styles.headerSubtitle}>
+          Completa los datos del alimento ✨
+        </Text>
+
+        {/* Food Emoji */}
+        <View style={styles.foodEmojiContainer}>
+          <Animated.Text
+            style={[
+              styles.foodEmoji,
+              {
+                transform: [{
+                  rotate: wiggleAnim.interpolate({
+                    inputRange: [-3, 3],
+                    outputRange: ['-3deg', '3deg']
+                  })
+                }]
+              }
+            ]}
+          >
+            🍎
+          </Animated.Text>
+          <Text style={styles.sparkleEmoji}>✨</Text>
+        </View>
+      </View>
+
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <Text style={styles.title}>Añadir Nuevo Item</Text>
-        <Text style={styles.subtitle}>Completa los datos del alimento</Text>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
 
         <View style={styles.form}>
           <Input
-            label="Nombre del Alimento *"
+            label="🍎 Nombre del Alimento *"
             value={name}
             onChangeText={(text) => {
               setName(text);
@@ -119,7 +188,7 @@ const AddItemScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.row}>
             <View style={styles.halfWidth}>
               <Input
-                label="Cantidad *"
+                label="📊 Cantidad *"
                 value={quantity}
                 onChangeText={(text) => {
                   setQuantity(text);
@@ -134,7 +203,7 @@ const AddItemScreen: React.FC<Props> = ({ navigation }) => {
 
             <View style={styles.halfWidth}>
               <Picker
-                label="Unidad"
+                label="📏 Unidad"
                 value={unit}
                 options={unitOptions}
                 onChange={setUnit}
@@ -143,14 +212,14 @@ const AddItemScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           <DatePicker
-            label="Fecha de Expiración *"
+            label="📅 Fecha de Expiración *"
             value={expiryDate}
             onChange={setExpiryDate}
             minimumDate={new Date()}
           />
 
           <Picker
-            label="Categoría"
+            label="🏷️ Categoría"
             value={category}
             options={categoryOptions}
             onChange={setCategory}
@@ -158,7 +227,7 @@ const AddItemScreen: React.FC<Props> = ({ navigation }) => {
           />
 
           <Input
-            label="Notas (Opcional)"
+            label="📝 Notas (Opcional)"
             value={notes}
             onChangeText={setNotes}
             placeholder="Ej: Comprado en Mercadona"
@@ -177,7 +246,7 @@ const AddItemScreen: React.FC<Props> = ({ navigation }) => {
               style={styles.cancelButton}
             />
             <Button
-              title="Añadir Item"
+              title="✨ Añadir Item"
               onPress={handleSubmit}
               loading={loading}
               style={styles.submitButton}
@@ -185,7 +254,8 @@ const AddItemScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -194,18 +264,64 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  scrollContent: {
-    padding: spacing.lg,
+  header: {
+    backgroundColor: '#FFFFFF',
+    paddingTop: 16,
+    paddingBottom: 24,
+    paddingHorizontal: spacing.lg,
+    borderBottomLeftRadius: 48,
+    borderBottomRightRadius: 48,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    marginBottom: spacing.lg,
   },
-  title: {
-    ...typography.headlineSmall,
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  backButton: {
+    padding: 4,
+    marginRight: 4,
+  },
+  headerTitle: {
+    ...typography.headlineLarge,
+    fontSize: 32,
+    fontWeight: '800',
     color: colors.onSurface,
-    marginBottom: spacing.xs,
+    flex: 1,
   },
-  subtitle: {
+  headerSubtitle: {
     ...typography.bodyMedium,
     color: colors.onSurfaceVariant,
-    marginBottom: spacing.xl,
+    opacity: 0.9,
+  },
+  foodEmojiContainer: {
+    alignItems: 'center',
+    marginTop: spacing.md,
+    position: 'relative',
+  },
+  foodEmoji: {
+    fontSize: 64,
+  },
+  sparkleEmoji: {
+    position: 'absolute',
+    top: -8,
+    right: '35%',
+    fontSize: 24,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: spacing.lg,
   },
   form: {
     gap: spacing.sm,

@@ -11,7 +11,9 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
+import { ArrowLeft } from 'lucide-react-native';
 import { colors, typography, spacing } from '../theme';
 import { borderRadius } from '../theme/spacing';
 import { useInventoryStore } from '../stores/useInventoryStore';
@@ -22,19 +24,20 @@ import { RecipeUi } from '../database/models/RecipeCache';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 
-// Common kitchen utensils (Spanish)
+// Common kitchen utensils (Spanish) with emojis
 const COMMON_UTENSILS = [
-  'horno',
-  'microondas',
-  'batidora',
-  'olla a presión',
-  'freidora',
-  'licuadora',
-  'procesador',
-  'tostadora',
+  { name: 'horno', emoji: '🔥' },
+  { name: 'microondas', emoji: '📡' },
+  { name: 'batidora', emoji: '🥄' },
+  { name: 'olla a presión', emoji: '🍲' },
+  { name: 'freidora', emoji: '🍟' },
+  { name: 'licuadora', emoji: '🥤' },
+  { name: 'procesador', emoji: '⚙️' },
+  { name: 'tostadora', emoji: '🍞' },
 ];
 
 const RecipesProScreen = () => {
+  const navigation = useNavigation();
   const { items } = useInventoryStore();
   const {
     isPro,
@@ -96,12 +99,12 @@ const RecipesProScreen = () => {
     setLocalCookingTime(cookingTime);
   }, [availableUtensils, cookingTime]);
 
-  const handleUtensilToggle = (utensil: string) => {
+  const handleUtensilToggle = (utensilName: string) => {
     setSelectedUtensils((prev) => {
-      if (prev.includes(utensil)) {
-        return prev.filter((u) => u !== utensil);
+      if (prev.includes(utensilName)) {
+        return prev.filter((u) => u !== utensilName);
       } else {
-        return [...prev, utensil];
+        return [...prev, utensilName];
       }
     });
   };
@@ -156,10 +159,24 @@ const RecipesProScreen = () => {
       {/* Header Kawaii */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Recetas IA</Text>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            activeOpacity={0.7}
+          >
+            <ArrowLeft size={24} color={colors.onSurface} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Recetas</Text>
+        </View>
+        <Text style={styles.headerSubtitle}>
+          Magia culinaria personalizada ✨
+        </Text>
+
+        {/* Chef Character */}
+        <View style={styles.chefContainer}>
           <Animated.Text
             style={[
-              styles.headerEmoji,
+              styles.chefEmoji,
               {
                 transform: [{
                   rotate: wiggleAnim.interpolate({
@@ -172,10 +189,8 @@ const RecipesProScreen = () => {
           >
             👨‍🍳
           </Animated.Text>
+          <Text style={styles.sparkleEmoji}>✨</Text>
         </View>
-        <Text style={styles.headerSubtitle}>
-          {recipes.length} {recipes.length === 1 ? 'receta' : 'recetas'} disponibles ♡
-        </Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
@@ -184,7 +199,7 @@ const RecipesProScreen = () => {
       <Card style={styles.statsCard}>
         <View style={styles.statsHeader}>
           <Text style={styles.statsTitle}>
-            {isPro ? 'Plan Pro' : 'Plan Gratuito'}
+            {isPro ? '⭐ Plan Pro' : '🎯 Plan Gratuito'}
           </Text>
           <Text style={styles.statsCount}>
             {monthlyRecipeCallsUsed} / {maxCalls}
@@ -213,7 +228,7 @@ const RecipesProScreen = () => {
 
         {!isPro && (
           <Button
-            title="Actualizar a Pro"
+            title="⭐ Actualizar a Pro"
             onPress={handleUpgradeToPro}
             style={styles.upgradeButton}
           />
@@ -222,13 +237,18 @@ const RecipesProScreen = () => {
 
       {/* Preferences Section */}
       <Card style={styles.preferencesCard}>
-        <Text style={styles.sectionTitle}>Preferencias de Cocina</Text>
+        <Text style={styles.sectionTitle}>👨‍🍳 Preferencias de Cocina</Text>
 
         {/* Cooking Time Slider */}
         <View style={styles.preferenceItem}>
-          <Text style={styles.preferenceLabel}>
-            Tiempo de cocción: {localCookingTime} minutos
-          </Text>
+          <View style={styles.sliderHeader}>
+            <Text style={styles.preferenceLabel}>⏰ Tiempo de cocción</Text>
+            <View style={styles.timeDisplay}>
+              <Text style={styles.timeEmoji}>⏱️</Text>
+              <Text style={styles.timeValue}>{localCookingTime}</Text>
+              <Text style={styles.timeUnit}>min</Text>
+            </View>
+          </View>
           <Slider
             style={styles.slider}
             minimumValue={10}
@@ -248,26 +268,28 @@ const RecipesProScreen = () => {
 
         {/* Utensils Selection */}
         <View style={styles.preferenceItem}>
-          <Text style={styles.preferenceLabel}>Utensilios disponibles:</Text>
+          <Text style={styles.preferenceLabel}>✨ Utensilios disponibles</Text>
           <View style={styles.utensilsContainer}>
             {COMMON_UTENSILS.map((utensil) => {
-              const isSelected = selectedUtensils.includes(utensil);
+              const isSelected = selectedUtensils.includes(utensil.name);
               return (
                 <TouchableOpacity
-                  key={utensil}
+                  key={utensil.name}
                   style={[
                     styles.utensilChip,
                     isSelected && styles.utensilChipSelected,
                   ]}
-                  onPress={() => handleUtensilToggle(utensil)}
+                  onPress={() => handleUtensilToggle(utensil.name)}
+                  activeOpacity={0.7}
                 >
+                  <Text style={styles.utensilEmoji}>{utensil.emoji}</Text>
                   <Text
                     style={[
                       styles.utensilChipText,
                       isSelected && styles.utensilChipTextSelected,
                     ]}
                   >
-                    {utensil}
+                    {utensil.name}
                   </Text>
                 </TouchableOpacity>
               );
@@ -278,7 +300,7 @@ const RecipesProScreen = () => {
 
       {/* Get Recipes Button */}
       <Button
-        title={loading ? 'Obteniendo recetas...' : 'Obtener Recetas'}
+        title={loading ? '⏳ Obteniendo recetas...' : '✨ Obtener Recetas Mágicas'}
         onPress={handleGetRecipes}
         disabled={loading || remainingCalls <= 0}
         style={styles.getRecipesButton}
@@ -303,6 +325,7 @@ const RecipesProScreen = () => {
       {/* Error Message */}
       {error && (
         <View style={styles.errorContainer}>
+          <Text style={styles.errorEmoji}>⚠️</Text>
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
@@ -310,17 +333,23 @@ const RecipesProScreen = () => {
       {/* Loading Indicator */}
       {loading && (
         <View style={styles.loadingContainer}>
+          <Text style={styles.loadingEmoji}>✨</Text>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Generando recetas...</Text>
+          <Text style={styles.loadingText}>Generando recetas mágicas...</Text>
         </View>
       )}
 
       {/* Recipes List */}
       {!loading && recipes.length > 0 && (
         <View style={styles.recipesContainer}>
-          <Text style={styles.recipesTitle}>
-            Recetas Sugeridas ({recipes.length})
-          </Text>
+          <View style={styles.recipesTitleContainer}>
+            <Text style={styles.recipesTitle}>
+              ✨ Recetas Sugeridas
+            </Text>
+            <View style={styles.recipesCount}>
+              <Text style={styles.recipesCountText}>{recipes.length}</Text>
+            </View>
+          </View>
           {recipes.map((recipe) => (
             <RecipeCard key={recipe.id} recipe={recipe} />
           ))}
@@ -330,8 +359,10 @@ const RecipesProScreen = () => {
       {/* Empty State */}
       {!loading && recipes.length === 0 && !error && (
         <View style={styles.emptyState}>
+          <Text style={styles.emptyStateEmoji}>👨‍🍳</Text>
+          <Text style={styles.emptyStateTitle}>¡Listo para cocinar!</Text>
           <Text style={styles.emptyStateText}>
-            👨‍🍳 Configura tus preferencias y pulsa "Obtener Recetas" para ver sugerencias
+            Configura tus preferencias y obtén recetas mágicas personalizadas ✨
           </Text>
         </View>
       )}
@@ -362,62 +393,84 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
 
   return (
     <Card style={styles.recipeCard}>
-      <TouchableOpacity onPress={() => setExpanded(!expanded)}>
+      <TouchableOpacity onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
         <View style={styles.recipeHeader}>
-          <Text style={styles.recipeName}>{recipe.name}</Text>
-          <View style={styles.matchBadge}>
-            <Text style={styles.matchText}>{recipe.matchPercentage}%</Text>
-          </View>
-        </View>
+          {/* Large Recipe Emoji */}
+          <Text style={styles.recipeEmoji}>🍽️</Text>
 
-        <View style={styles.ingredientsRow}>
-          <Text style={styles.ingredientLabel}>
-            ✓ Tienes: {matchedIngredients.length}
-          </Text>
-          <Text style={styles.ingredientLabel}>
-            ✗ Faltan: {missingIngredients.length}
-          </Text>
+          <View style={styles.recipeInfo}>
+            <View style={styles.recipeTitleRow}>
+              <Text style={styles.recipeName}>{recipe.name}</Text>
+              {/* Match Badge with Heart */}
+              <View style={styles.matchBadge}>
+                <Text style={styles.heartEmoji}>❤️</Text>
+                <Text style={styles.matchText}>{recipe.matchPercentage}%</Text>
+              </View>
+            </View>
+
+            {/* Quick Stats */}
+            <View style={styles.ingredientsRow}>
+              <View style={styles.ingredientStat}>
+                <Text style={styles.ingredientEmoji}>😊</Text>
+                <Text style={styles.ingredientLabel}>
+                  {matchedIngredients.length}/{matchedIngredients.length + missingIngredients.length}
+                </Text>
+              </View>
+              {missingIngredients.length > 0 && (
+                <View style={styles.ingredientStat}>
+                  <Text style={styles.ingredientEmoji}>🛒</Text>
+                  <Text style={styles.ingredientLabel}>
+                    {missingIngredients.length}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
         </View>
 
         {expanded && (
           <View style={styles.recipeDetails}>
-            {/* Matched Ingredients */}
+            {/* All Ingredients with Emoji Status */}
             <View style={styles.detailSection}>
-              <Text style={styles.detailTitle}>Ingredientes disponibles:</Text>
-              {matchedIngredients.map((ing, index) => (
-                <Text key={index} style={styles.detailItem}>
-                  • {ing}
-                </Text>
-              ))}
+              <Text style={styles.detailTitle}>📋 Ingredientes</Text>
+              <View style={styles.ingredientsList}>
+                {matchedIngredients.map((ing, index) => (
+                  <View key={`matched-${index}`} style={styles.ingredientRow}>
+                    <Text style={styles.ingredientStatusEmoji}>😊</Text>
+                    <Text style={styles.detailItem}>{ing}</Text>
+                  </View>
+                ))}
+                {missingIngredients.map((ing, index) => (
+                  <View key={`missing-${index}`} style={styles.ingredientRow}>
+                    <Text style={styles.ingredientStatusEmoji}>🛒</Text>
+                    <Text style={[styles.detailItem, styles.missingItem]}>{ing}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
 
-            {/* Missing Ingredients */}
-            {missingIngredients.length > 0 && (
+            {/* Full Ingredients with Measures */}
+            {ingredientsWithMeasures.length > 0 && (
               <View style={styles.detailSection}>
-                <Text style={styles.detailTitle}>Ingredientes faltantes:</Text>
-                {missingIngredients.map((ing, index) => (
-                  <Text key={index} style={[styles.detailItem, styles.missingItem]}>
-                    • {ing}
-                  </Text>
-                ))}
+                <Text style={styles.detailTitle}>🥄 Cantidades</Text>
+                <View style={styles.ingredientsList}>
+                  {ingredientsWithMeasures.map((ing, index) => (
+                    <View key={index} style={styles.ingredientRow}>
+                      <Text style={styles.bulletEmoji}>•</Text>
+                      <Text style={styles.detailItem}>{ing}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
             )}
 
-            {/* Full Ingredients with Measures */}
-            <View style={styles.detailSection}>
-              <Text style={styles.detailTitle}>Ingredientes completos:</Text>
-              {ingredientsWithMeasures.map((ing, index) => (
-                <Text key={index} style={styles.detailItem}>
-                  • {ing}
-                </Text>
-              ))}
-            </View>
-
             {/* Instructions */}
-            <View style={styles.detailSection}>
-              <Text style={styles.detailTitle}>Instrucciones:</Text>
-              <Text style={styles.instructionsText}>{instructions}</Text>
-            </View>
+            {instructions && (
+              <View style={styles.detailSection}>
+                <Text style={styles.detailTitle}>👨‍🍳 Preparación</Text>
+                <Text style={styles.instructionsText}>{instructions}</Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -459,11 +512,16 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 4,
   },
+  backButton: {
+    padding: 4,
+    marginRight: 4,
+  },
   headerTitle: {
     ...typography.headlineLarge,
     fontSize: 32,
     fontWeight: '800',
     color: colors.onSurface,
+    flex: 1,
   },
   headerEmoji: {
     fontSize: 28,
@@ -472,6 +530,20 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: colors.onSurfaceVariant,
     opacity: 0.9,
+  },
+  chefContainer: {
+    alignItems: 'center',
+    marginTop: spacing.md,
+    position: 'relative',
+  },
+  chefEmoji: {
+    fontSize: 64,
+  },
+  sparkleEmoji: {
+    position: 'absolute',
+    top: -8,
+    right: '35%',
+    fontSize: 24,
   },
   statsCard: {
     marginBottom: spacing.md,
@@ -523,8 +595,38 @@ const styles = StyleSheet.create({
   },
   preferenceLabel: {
     ...typography.bodyMedium,
+    fontWeight: '600',
     color: colors.onSurface,
     marginBottom: spacing.sm,
+  },
+  sliderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  timeDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    gap: spacing.xs,
+  },
+  timeEmoji: {
+    fontSize: 24,
+  },
+  timeValue: {
+    ...typography.titleLarge,
+    fontWeight: 'bold',
+    color: colors.onSurface,
+  },
+  timeUnit: {
+    ...typography.bodySmall,
+    color: colors.onSurfaceVariant,
   },
   slider: {
     width: '100%',
@@ -544,9 +646,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   utensilChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.full,
     borderWidth: 2,
     borderColor: colors.outline,
     backgroundColor: colors.surface,
@@ -554,6 +659,9 @@ const styles = StyleSheet.create({
   utensilChipSelected: {
     backgroundColor: colors.primaryContainer,
     borderColor: colors.primary,
+  },
+  utensilEmoji: {
+    fontSize: 16,
   },
   utensilChipText: {
     ...typography.labelMedium,
@@ -581,66 +689,134 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   errorContainer: {
-    padding: spacing.md,
+    padding: spacing.lg,
     backgroundColor: colors.errorContainer,
     borderRadius: borderRadius.lg,
     marginBottom: spacing.md,
+    alignItems: 'center',
+  },
+  errorEmoji: {
+    fontSize: 32,
+    marginBottom: spacing.sm,
   },
   errorText: {
     ...typography.bodyMedium,
     color: colors.onErrorContainer,
+    textAlign: 'center',
   },
   loadingContainer: {
     alignItems: 'center',
     padding: spacing.xl,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xl,
+    marginTop: spacing.md,
+  },
+  loadingEmoji: {
+    fontSize: 48,
+    marginBottom: spacing.md,
   },
   loadingText: {
     ...typography.bodyMedium,
-    color: colors.onSurfaceVariant,
-    marginTop: spacing.sm,
+    fontWeight: '600',
+    color: colors.onSurface,
+    marginTop: spacing.md,
   },
   recipesContainer: {
     marginBottom: spacing.xl,
   },
+  recipesTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
   recipesTitle: {
     ...typography.titleLarge,
+    fontSize: 20,
+    fontWeight: '700',
     color: colors.onSurface,
-    marginBottom: spacing.md,
+  },
+  recipesCount: {
+    backgroundColor: colors.primaryContainer,
+    borderRadius: borderRadius.full,
+    minWidth: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  recipesCountText: {
+    ...typography.labelMedium,
+    fontWeight: 'bold',
+    color: colors.onPrimaryContainer,
   },
   recipeCard: {
     marginBottom: spacing.md,
   },
   recipeHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: spacing.md,
     marginBottom: spacing.sm,
+  },
+  recipeEmoji: {
+    fontSize: 56,
+    flexShrink: 0,
+  },
+  recipeInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+  recipeTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
   },
   recipeName: {
     ...typography.titleMedium,
+    fontSize: 18,
+    fontWeight: '700',
     color: colors.onSurface,
     flex: 1,
   },
   matchBadge: {
-    backgroundColor: colors.primaryContainer,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 107, 157, 0.1)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 107, 157, 0.3)',
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
-    borderRadius: borderRadius.md,
-    marginLeft: spacing.sm,
+    borderRadius: borderRadius.full,
+    flexShrink: 0,
+  },
+  heartEmoji: {
+    fontSize: 14,
   },
   matchText: {
     ...typography.labelSmall,
-    color: colors.onPrimaryContainer,
+    fontSize: 12,
+    color: '#FF6B9D',
     fontWeight: 'bold',
   },
   ingredientsRow: {
     flexDirection: 'row',
     gap: spacing.md,
-    marginBottom: spacing.sm,
+  },
+  ingredientStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  ingredientEmoji: {
+    fontSize: 16,
   },
   ingredientLabel: {
     ...typography.bodySmall,
     color: colors.onSurfaceVariant,
+    fontWeight: '600',
   },
   expandText: {
     ...typography.labelMedium,
@@ -653,23 +829,45 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     borderTopWidth: 2,
     borderTopColor: colors.surfaceVariant,
+    backgroundColor: 'rgba(181, 234, 215, 0.05)',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
   },
   detailSection: {
     marginBottom: spacing.md,
   },
   detailTitle: {
     ...typography.titleSmall,
+    fontSize: 14,
     color: colors.onSurface,
-    marginBottom: spacing.xs,
-    fontWeight: '600',
+    marginBottom: spacing.sm,
+    fontWeight: '700',
+  },
+  ingredientsList: {
+    gap: spacing.xs,
+  },
+  ingredientRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  ingredientStatusEmoji: {
+    fontSize: 18,
+    width: 24,
+  },
+  bulletEmoji: {
+    fontSize: 16,
+    width: 24,
+    color: colors.primary,
   },
   detailItem: {
     ...typography.bodySmall,
+    fontSize: 14,
     color: colors.onSurface,
-    marginBottom: 2,
+    flex: 1,
   },
   missingItem: {
-    color: colors.error,
+    color: colors.onSurfaceVariant,
   },
   instructionsText: {
     ...typography.bodyMedium,
@@ -679,9 +877,22 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     padding: spacing.xl,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xl,
+    marginTop: spacing.md,
+  },
+  emptyStateEmoji: {
+    fontSize: 64,
+    marginBottom: spacing.md,
+  },
+  emptyStateTitle: {
+    ...typography.titleLarge,
+    fontWeight: '700',
+    color: colors.onSurface,
+    marginBottom: spacing.sm,
   },
   emptyStateText: {
-    ...typography.bodyLarge,
+    ...typography.bodyMedium,
     color: colors.onSurfaceVariant,
     textAlign: 'center',
   },

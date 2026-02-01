@@ -52,12 +52,12 @@ export const AppNavigator = () => {
             <Stack.Screen
               name="ScanTab"
               component={ScanScreen}
-              options={{ title: 'Escanear' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="RecipesTab"
               component={RecipesProScreen}
-              options={{ title: 'Recetas' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="SettingsTab"
@@ -84,7 +84,7 @@ export const AppNavigator = () => {
               name="AddItem"
               component={AddItemScreen}
               options={{
-                title: 'Añadir Item',
+                headerShown: false,
                 presentation: 'modal'
               }}
             />
