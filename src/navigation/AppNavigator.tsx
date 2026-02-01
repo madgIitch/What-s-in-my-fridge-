@@ -10,6 +10,7 @@ import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ScanScreen from '../screens/ScanScreen';
 import RecipesProScreen from '../screens/RecipesProScreen';
+import FavoritesScreen from '../screens/FavoritesScreen';
 import RecipeStepsScreen from '../screens/RecipeStepsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import ReviewDraftScreen from '../screens/ReviewDraftScreen';
@@ -58,6 +59,11 @@ export const AppNavigator = () => {
             <Stack.Screen
               name="RecipesTab"
               component={RecipesProScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="FavoritesTab"
+              component={FavoritesScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

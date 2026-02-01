@@ -6,6 +6,7 @@ import migrations from './migrations';
 import FoodItem from './models/FoodItem';
 import ParsedDraft from './models/ParsedDraft';
 import RecipeCache from './models/RecipeCache';
+import FavoriteRecipe from './models/FavoriteRecipe';
 import Ingredient from './models/Ingredient';
 import IngredientMapping from './models/IngredientMapping';
 
@@ -25,7 +26,7 @@ const adapter = new SQLiteAdapter({
 // Create database instance
 export const database = new Database({
   adapter,
-  modelClasses: [FoodItem, ParsedDraft, RecipeCache, Ingredient, IngredientMapping],
+  modelClasses: [FoodItem, ParsedDraft, RecipeCache, FavoriteRecipe, Ingredient, IngredientMapping],
 });
 
 /**
@@ -35,6 +36,7 @@ export const collections = {
   foodItems: database.get<FoodItem>('food_items'),
   parsedDrafts: database.get<ParsedDraft>('parsed_drafts'),
   recipeCache: database.get<RecipeCache>('recipe_cache'),
+  favoriteRecipes: database.get<FavoriteRecipe>('favorite_recipes'),
   ingredients: database.get<Ingredient>('ingredients'),
   ingredientMappings: database.get<IngredientMapping>('ingredient_mappings'),
 };

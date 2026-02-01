@@ -8,6 +8,7 @@ import { schemaMigrations, createTable, addColumns } from '@nozbe/watermelondb/S
  * - v5: Initial schema (migrated from Android Room)
  * - v6: Added ingredient_mappings table
  * - v7: Added normalized_name to food_items
+ * - v8: Added favorite_recipes table
  */
 export default schemaMigrations({
   migrations: [
@@ -37,6 +38,30 @@ export default schemaMigrations({
             { name: 'method', type: 'string' }, // 'exact' | 'synonym' | 'partial' | 'fuzzy' | 'llm' | 'none'
             { name: 'verified_by_user', type: 'boolean' }, // User manually verified
             { name: 'timestamp', type: 'number' }, // Cache timestamp
+            { name: 'created_at', type: 'number' },
+            { name: 'updated_at', type: 'number' },
+          ],
+        }),
+      ],
+    },
+    // Migration from version 7 to 8
+    // Adds favorite recipes support
+    {
+      toVersion: 8,
+      steps: [
+        // Create favorite_recipes table
+        createTable({
+          name: 'favorite_recipes',
+          columns: [
+            { name: 'recipe_id', type: 'string', isIndexed: true },
+            { name: 'name', type: 'string' },
+            { name: 'match_percentage', type: 'number' },
+            { name: 'matched_ingredients', type: 'string' },
+            { name: 'missing_ingredients', type: 'string' },
+            { name: 'ingredients_with_measures', type: 'string' },
+            { name: 'instructions', type: 'string' },
+            { name: 'user_id', type: 'string', isIndexed: true },
+            { name: 'saved_at', type: 'number' },
             { name: 'created_at', type: 'number' },
             { name: 'updated_at', type: 'number' },
           ],

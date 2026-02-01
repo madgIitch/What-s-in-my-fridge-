@@ -26,11 +26,20 @@ export const useRecipeStore = create<RecipeStore>((set) => ({
   error: null,
   lastFetchTime: null,
 
-  setRecipes: (recipes) => set({ recipes, lastFetchTime: Date.now(), error: null }),
+  setRecipes: (recipes) => {
+    console.log('📦 [RecipeStore] setRecipes called with', recipes.length, 'recipes');
+    set({ recipes, lastFetchTime: Date.now(), error: null });
+  },
 
-  setLoading: (loading) => set({ loading }),
+  setLoading: (loading) => {
+    console.log(`🔄 [RecipeStore] setLoading called with: ${loading}`);
+    set({ loading });
+  },
 
-  setError: (error) => set({ error, loading: false }),
+  setError: (error) => {
+    console.log('❌ [RecipeStore] setError called:', error);
+    set({ error, loading: false });
+  },
 
   setLastFetchTime: (time) => set({ lastFetchTime: time }),
 

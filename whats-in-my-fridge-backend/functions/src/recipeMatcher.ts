@@ -101,17 +101,73 @@ function calculateSimilarity(str1: string, str2: string): number {
 
 /**
  * Verifica si un ingrediente de receta coincide con algún item del inventario
- * Usa fuzzy matching con umbral de 0.7
+ * Usa matching inteligente con múltiples estrategias:
+ * 1. Exact match (normalizado)
+ * 2. Substring match (inventario contiene ingrediente o viceversa)
+ * 3. Keyword match (palabras clave importantes)
+ * 4. Fuzzy matching como fallback
  */
 function matchIngredient(
   ingredient: string,
   inventoryItems: string[],
-  threshold: number = 0.7
+  threshold: number = 0.65
 ): string | null {
+  const normalizedIngredient = normalizeString(ingredient);
+  const ingredientWords = normalizedIngredient.split(" ");
+
   let bestMatch: string | null = null;
   let bestScore = 0;
 
   for (const item of inventoryItems) {
+    const normalizedItem = normalizeString(item);
+    const itemWords = normalizedItem.split(" ");
+
+    // Estrategia 1: Exact match
+    if (normalizedIngredient === normalizedItem) {
+      return item;
+    }
+
+    // Estrategia 2: Substring match
+    // Si el item del inventario está contenido en el ingrediente de la receta
+    // Ejemplo: "rice" está en "raw white rice"
+    if (normalizedIngredient.includes(normalizedItem) && normalizedItem.length >= 3) {
+      const score = 0.95; // Alta prioridad para substring match
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = item;
+      }
+    }
+
+    // Si el ingrediente de la receta está contenido en el item del inventario
+    // Ejemplo: "tomato" está en "cherry tomatoes"
+    if (normalizedItem.includes(normalizedIngredient) && normalizedIngredient.length >= 3) {
+      const score = 0.9;
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = item;
+      }
+    }
+
+    // Estrategia 3: Keyword match
+    // Verifica si las palabras principales coinciden
+    // Filtra palabras comunes (artículos, preposiciones)
+    const commonWords = new Set(["the", "a", "an", "of", "with", "in", "on", "raw", "fresh", "dried"]);
+    const importantIngredientWords = ingredientWords.filter((w) => w.length > 2 && !commonWords.has(w));
+    const importantItemWords = itemWords.filter((w) => w.length > 2 && !commonWords.has(w));
+
+    if (importantIngredientWords.length > 0 && importantItemWords.length > 0) {
+      const matchingWords = importantIngredientWords.filter((w) =>
+        importantItemWords.some((iw) => iw.includes(w) || w.includes(iw))
+      );
+      const keywordScore = matchingWords.length / Math.max(importantIngredientWords.length, importantItemWords.length);
+
+      if (keywordScore >= 0.5 && keywordScore > bestScore * 0.85) {
+        bestScore = keywordScore * 0.85;
+        bestMatch = item;
+      }
+    }
+
+    // Estrategia 4: Fuzzy matching (fallback)
     const similarity = calculateSimilarity(ingredient, item);
     if (similarity >= threshold && similarity > bestScore) {
       bestScore = similarity;

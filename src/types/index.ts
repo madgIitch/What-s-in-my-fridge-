@@ -17,6 +17,7 @@ export type RootStackParamList = {
   HomeTab: undefined;
   ScanTab: undefined;
   RecipesTab: undefined;
+  FavoritesTab: undefined;
   SettingsTab: undefined;
   ReviewDraft: { draftId: string };
   Detail: { itemId: string };

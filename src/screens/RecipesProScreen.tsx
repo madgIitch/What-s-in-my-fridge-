@@ -14,13 +14,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Slider from '@react-native-community/slider';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Heart, Shuffle } from 'lucide-react-native';
 import { colors, typography, spacing } from '../theme';
 import { borderRadius } from '../theme/spacing';
 import { useInventoryStore } from '../stores/useInventoryStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
 import { useRecipes } from '../hooks/useRecipes';
 import { useInventory } from '../hooks/useInventory';
+import { useFavorites } from '../hooks/useFavorites';
 import { RecipeUi } from '../database/models/RecipeCache';
 import { RootStackParamList } from '../types';
 import { Card } from '../components/common/Card';
@@ -51,14 +52,17 @@ const RecipesProScreen = () => {
     availableUtensils,
     setCookingTime,
     setAvailableUtensils,
+    setProStatus,
   } = usePreferencesStore();
 
   const { recipes, loading, error, getRecipeSuggestions, clearAllCaches } = useRecipes();
   const { forceSyncAllToFirestore } = useInventory();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const [selectedUtensils, setSelectedUtensils] = useState<string[]>(availableUtensils);
   const [syncing, setSyncing] = useState(false);
   const [localCookingTime, setLocalCookingTime] = useState<number>(cookingTime);
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const wiggleAnim = useRef(new Animated.Value(0)).current;
 
   // Wiggle animation for emoji
@@ -90,6 +94,22 @@ const RecipesProScreen = () => {
     console.log('Recipes state updated:', recipes.length, 'recipes');
   }, [recipes]);
 
+  // Debug: Log loading state
+  useEffect(() => {
+    console.log('🔄 Loading state changed:', loading);
+    if (loading) {
+      console.log('✨ LoadingNeverito overlay should be visible now!');
+    }
+  }, [loading]);
+
+  // Debug: Log overlay visibility
+  useEffect(() => {
+    console.log('👁️ [Screen] showLoadingOverlay changed:', showLoadingOverlay);
+    if (showLoadingOverlay) {
+      console.log('🎨 LoadingNeverito overlay IS NOW VISIBLE!');
+    }
+  }, [showLoadingOverlay]);
+
   const maxCalls = isPro ? 100 : 10;
   const remainingCalls = maxCalls - monthlyRecipeCallsUsed;
 
@@ -118,14 +138,46 @@ const RecipesProScreen = () => {
   };
 
   const handleGetRecipes = async () => {
+    console.log('🍳 handleGetRecipes called');
     if (items.length === 0) {
       Alert.alert('Sin ingredientes', 'Añade ingredientes a tu inventario primero');
       return;
     }
 
-    // Preferences are already saved in Firebase through slider and utensils handlers
-    // Get recipe suggestions with current values
-    await getRecipeSuggestions(ingredientNames, localCookingTime, selectedUtensils);
+    console.log('📝 Calling getRecipeSuggestions with:', {
+      ingredients: ingredientNames.length,
+      cookingTime: localCookingTime,
+      utensils: selectedUtensils.length,
+    });
+
+    const MIN_LOADING_TIME = 800; // ms
+    const startTime = Date.now();
+
+    try {
+      // Show loading overlay immediately
+      console.log('🎬 [Screen] Showing loading overlay');
+      setShowLoadingOverlay(true);
+
+      // Small delay to ensure React renders the overlay
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Get recipe suggestions
+      await getRecipeSuggestions(ingredientNames, localCookingTime, selectedUtensils);
+
+      console.log('✅ getRecipeSuggestions completed');
+
+      // Ensure minimum loading time
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = MIN_LOADING_TIME - elapsedTime;
+
+      if (remainingTime > 0) {
+        console.log(`⏰ [Screen] Waiting ${remainingTime}ms more for animation`);
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
+    } finally {
+      console.log('🎬 [Screen] Hiding loading overlay');
+      setShowLoadingOverlay(false);
+    }
   };
 
   const handleUpgradeToPro = () => {
@@ -157,6 +209,37 @@ const RecipesProScreen = () => {
     }
   };
 
+  const handleToggleProStatus = () => {
+    const newStatus = !isPro;
+    setProStatus(newStatus);
+    Alert.alert(
+      'Estado actualizado',
+      `Ahora eres ${newStatus ? 'Pro ⭐' : 'Gratuito 🎯'}`,
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handleShuffleRecipe = () => {
+    // Filtrar recetas con 100% de compatibilidad
+    const perfectRecipes = recipes.filter((recipe) => recipe.matchPercentage === 100);
+
+    if (perfectRecipes.length === 0) {
+      Alert.alert(
+        'Sin recetas perfectas',
+        'No hay recetas con 100% de compatibilidad. Intenta obtener nuevas recetas o añade más ingredientes a tu inventario.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Seleccionar una receta aleatoria
+    const randomIndex = Math.floor(Math.random() * perfectRecipes.length);
+    const randomRecipe = perfectRecipes[randomIndex];
+
+    // Navegar a los pasos de la receta
+    navigation.navigate('RecipeSteps', { recipe: randomRecipe });
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -172,6 +255,13 @@ const RecipesProScreen = () => {
             <ArrowLeft size={24} color={colors.onSurface} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Recetas</Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('FavoritesTab')}
+            style={styles.favoritesButton}
+            activeOpacity={0.7}
+          >
+            <Heart size={24} color={colors.error} fill={colors.error} />
+          </TouchableOpacity>
         </View>
         <Text style={styles.headerSubtitle}>
           Magia culinaria personalizada ✨
@@ -308,15 +398,33 @@ const RecipesProScreen = () => {
       </Card>
 
       {/* Get Recipes Button */}
-      <Button
-        title={loading ? '⏳ Obteniendo recetas...' : '✨ Obtener Recetas Mágicas'}
-        onPress={handleGetRecipes}
-        disabled={loading || remainingCalls <= 0}
-        style={styles.getRecipesButton}
-      />
+      <View style={styles.mainButtonsContainer}>
+        <Button
+          title={loading ? '⏳ Obteniendo recetas...' : '✨ Obtener Recetas Mágicas'}
+          onPress={handleGetRecipes}
+          disabled={loading || remainingCalls <= 0}
+          style={styles.getRecipesButton}
+        />
+        <TouchableOpacity
+          onPress={handleShuffleRecipe}
+          disabled={recipes.length === 0}
+          style={[styles.shuffleButton, recipes.length === 0 && styles.shuffleButtonDisabled]}
+          activeOpacity={0.7}
+        >
+          <Shuffle size={24} color={recipes.length === 0 ? colors.outline : colors.onPrimary} />
+          <Text style={[styles.shuffleButtonText, recipes.length === 0 && styles.shuffleButtonTextDisabled]}>
+            Sorpréndeme
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Debug Buttons */}
       <View style={styles.debugButtonsContainer}>
+        <TouchableOpacity onPress={handleToggleProStatus} style={styles.clearCacheButton}>
+          <Text style={styles.clearCacheText}>
+            {isPro ? '⭐ → 🎯 Cambiar a Free' : '🎯 → ⭐ Cambiar a Pro'}
+          </Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={handleClearCache} style={styles.clearCacheButton}>
           <Text style={styles.clearCacheText}>🗑️ Limpiar Caché</Text>
         </TouchableOpacity>
@@ -354,6 +462,8 @@ const RecipesProScreen = () => {
             <RecipeCard
               key={recipe.id}
               recipe={recipe}
+              isFavorite={isFavorite(recipe.id)}
+              onToggleFavorite={() => toggleFavorite(recipe)}
               onOpenSteps={() => navigation.navigate('RecipeSteps', { recipe })}
             />
           ))}
@@ -373,7 +483,7 @@ const RecipesProScreen = () => {
       </ScrollView>
 
       {/* Loading Overlay */}
-      {loading && (
+      {showLoadingOverlay && (
         <View style={styles.loadingOverlay}>
           <Card style={styles.loadingCard}>
             <LoadingNeverito size={80} speed={120} />
@@ -393,10 +503,12 @@ const RecipesProScreen = () => {
  */
 interface RecipeCardProps {
   recipe: RecipeUi;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
   onOpenSteps: () => void;
 }
 
-const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onOpenSteps }) => {
+const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isFavorite, onToggleFavorite, onOpenSteps }) => {
   const [expanded, setExpanded] = useState(false);
   const matchedIngredients = Array.isArray(recipe.matchedIngredients)
     ? recipe.matchedIngredients
@@ -498,6 +610,16 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onOpenSteps }) => {
         onPress={onOpenSteps}
         style={styles.stepsButton}
       />
+      <TouchableOpacity onPress={onToggleFavorite} style={styles.favoriteButton} activeOpacity={0.7}>
+        <Heart
+          size={20}
+          color={isFavorite ? colors.error : colors.outline}
+          fill={isFavorite ? colors.error : 'transparent'}
+        />
+        <Text style={[styles.favoriteButtonText, isFavorite && styles.favoriteButtonTextActive]}>
+          {isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+        </Text>
+      </TouchableOpacity>
       <TouchableOpacity onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
         <Text style={styles.expandText}>{expanded ? 'Ver menos ▲' : 'Ver más ▼'}</Text>
       </TouchableOpacity>
@@ -697,11 +819,48 @@ const styles = StyleSheet.create({
     color: colors.onPrimaryContainer,
     fontWeight: '600',
   },
-  getRecipesButton: {
+  mainButtonsContainer: {
+    flexDirection: 'row',
+    gap: spacing.sm,
     marginBottom: spacing.sm,
+  },
+  getRecipesButton: {
+    flex: 1,
+  },
+  shuffleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.primary,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  shuffleButtonDisabled: {
+    backgroundColor: colors.surfaceVariant,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  shuffleButtonText: {
+    ...typography.labelMedium,
+    color: colors.onPrimary,
+    fontWeight: '600',
+  },
+  shuffleButtonTextDisabled: {
+    color: colors.outline,
   },
   debugButtonsContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
     gap: spacing.md,
     marginBottom: spacing.md,
@@ -736,10 +895,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: '#FFE5EC',
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.lg,
+    zIndex: 1000,
   },
   loadingCard: {
     alignItems: 'center',
@@ -859,6 +1019,29 @@ const styles = StyleSheet.create({
   },
   stepsButton: {
     marginTop: spacing.sm,
+  },
+  favoriteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    padding: spacing.sm,
+    marginTop: spacing.xs,
+    borderRadius: borderRadius.md,
+    borderWidth: 2,
+    borderColor: colors.outline,
+    backgroundColor: colors.surface,
+  },
+  favoriteButtonText: {
+    ...typography.labelMedium,
+    color: colors.onSurfaceVariant,
+  },
+  favoriteButtonTextActive: {
+    color: colors.error,
+    fontWeight: '600',
+  },
+  favoritesButton: {
+    padding: 4,
   },
   expandText: {
     ...typography.labelMedium,

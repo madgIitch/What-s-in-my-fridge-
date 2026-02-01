@@ -11,7 +11,6 @@ export const LoadingNeverito: React.FC<LoadingNeveritoProps> = ({
   speed = 150
 }) => {
   const [currentFrame, setCurrentFrame] = useState(0);
-  const translateX = useRef(new Animated.Value(-100)).current;
   const bounce = useRef(new Animated.Value(0)).current;
 
   // Array con los frames de neverito corriendo
@@ -23,29 +22,12 @@ export const LoadingNeverito: React.FC<LoadingNeveritoProps> = ({
   ];
 
   useEffect(() => {
-    // Animar los frames
+    // Animar los frames (loop infinito de los 4 frames)
     const frameInterval = setInterval(() => {
       setCurrentFrame((prev) => (prev + 1) % frames.length);
     }, speed);
 
-    // Animación horizontal (movimiento de izquierda a derecha)
-    const moveAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(translateX, {
-          toValue: 100,
-          duration: 3000,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateX, {
-          toValue: -100,
-          duration: 0,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    // Animación de rebote sutil
+    // Animación de rebote sutil vertical
     const bounceAnimation = Animated.loop(
       Animated.sequence([
         Animated.timing(bounce, {
@@ -63,12 +45,10 @@ export const LoadingNeverito: React.FC<LoadingNeveritoProps> = ({
       ])
     );
 
-    moveAnimation.start();
     bounceAnimation.start();
 
     return () => {
       clearInterval(frameInterval);
-      moveAnimation.stop();
       bounceAnimation.stop();
     };
   }, [speed]);
@@ -83,7 +63,6 @@ export const LoadingNeverito: React.FC<LoadingNeveritoProps> = ({
             width: size,
             height: size,
             transform: [
-              { translateX },
               { translateY: bounce },
             ],
           },

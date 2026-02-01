@@ -10,11 +10,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Heart } from 'lucide-react-native';
 import { RootStackParamList } from '../types';
 import { colors, typography, spacing } from '../theme';
 import { borderRadius } from '../theme/spacing';
 import { Card } from '../components/common/Card';
+import { useFavorites } from '../hooks/useFavorites';
 
 type RecipeStepsNavigationProp = StackNavigationProp<RootStackParamList, 'RecipeSteps'>;
 type RecipeStepsRouteProp = RouteProp<RootStackParamList, 'RecipeSteps'>;
@@ -57,6 +58,8 @@ const splitInstructions = (instructions: string | string[] | undefined): string[
 
 const RecipeStepsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { recipe } = route.params;
+  const { isFavorite, toggleFavorite } = useFavorites();
+
   const matchedIngredients = Array.isArray(recipe.matchedIngredients)
     ? recipe.matchedIngredients
     : [];
@@ -68,6 +71,7 @@ const RecipeStepsScreen: React.FC<Props> = ({ navigation, route }) => {
     : [];
 
   const steps = useMemo(() => splitInstructions(recipe.instructions), [recipe.instructions]);
+  const isRecipeFavorite = isFavorite(recipe.id);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -84,6 +88,17 @@ const RecipeStepsScreen: React.FC<Props> = ({ navigation, route }) => {
         <Text style={styles.headerTitle} numberOfLines={2}>
           {recipe.name}
         </Text>
+        <TouchableOpacity
+          onPress={() => toggleFavorite(recipe)}
+          style={styles.favoriteButton}
+          activeOpacity={0.7}
+        >
+          <Heart
+            size={24}
+            color={isRecipeFavorite ? colors.error : colors.outline}
+            fill={isRecipeFavorite ? colors.error : 'transparent'}
+          />
+        </TouchableOpacity>
         <View style={styles.matchBadge}>
           <Text style={styles.matchEmoji}>Match</Text>
           <Text style={styles.matchText}>{recipe.matchPercentage}%</Text>
@@ -192,6 +207,10 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
     flex: 1,
     fontWeight: '800',
+  },
+  favoriteButton: {
+    padding: 4,
+    marginRight: 8,
   },
   matchBadge: {
     flexDirection: 'row',

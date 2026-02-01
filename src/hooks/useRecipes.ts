@@ -131,13 +131,21 @@ export function useRecipes() {
     cookingTime: number,
     utensils: string[]
   ): Promise<void> => {
+    const startTime = Date.now();
+    const MIN_LOADING_TIME = 800; // Minimum time to show loading animation (ms)
+
     try {
+      console.log('🔥 [useRecipes] Setting loading to TRUE');
       setLoading(true);
       setError(null);
+
+      // Small delay to ensure React renders the loading state
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Check monthly limit
       const maxCalls = isPro ? 100 : 10;
       if (monthlyRecipeCallsUsed >= maxCalls) {
+        console.log('🚫 [useRecipes] Monthly limit reached, setting loading to FALSE');
         const errorMsg = `Límite mensual alcanzado (${maxCalls} llamadas). ${
           !isPro ? 'Actualiza a Pro para más llamadas.' : ''
         }`;
@@ -147,13 +155,17 @@ export function useRecipes() {
       }
 
       // Check cache first
+      console.log('🔍 [useRecipes] Checking cache...');
       const cachedRecipes = await getCachedRecipes(ingredientsList);
       if (cachedRecipes) {
+        console.log('✅ [useRecipes] Found cached recipes, setting loading to FALSE');
         console.log('Setting recipes from cache:', cachedRecipes.length, 'recipes');
         setRecipes(cachedRecipes);
         setLoading(false);
         return;
       }
+
+      console.log('📡 [useRecipes] No cache found, calling Cloud Function...');
 
       // Call Cloud Function with normalized ingredients
       // Use httpsCallableFromUrl for europe-west1 region
@@ -168,6 +180,7 @@ export function useRecipes() {
       });
 
       if (result.data.success && result.data.recipes) {
+        console.log('✅ [useRecipes] Cloud Function success! Got', result.data.recipes.length, 'recipes');
         const newRecipes = result.data.recipes;
         setRecipes(newRecipes);
 
@@ -180,12 +193,23 @@ export function useRecipes() {
         // Clean up expired caches
         await deleteExpiredCaches();
       } else {
+        console.log('❌ [useRecipes] Cloud Function failed');
         setError('No se pudieron obtener recetas');
       }
     } catch (err: any) {
-      console.error('Error getting recipe suggestions:', err);
+      console.error('💥 [useRecipes] Error getting recipe suggestions:', err);
       setError(err.message || 'Error al obtener recetas');
     } finally {
+      // Ensure loading is visible for at least MIN_LOADING_TIME
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = MIN_LOADING_TIME - elapsedTime;
+
+      if (remainingTime > 0) {
+        console.log(`⏰ [useRecipes] Waiting ${remainingTime}ms more to show loading animation`);
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
+
+      console.log('🏁 [useRecipes] Setting loading to FALSE (finally block)');
       setLoading(false);
     }
   }, [

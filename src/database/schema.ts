@@ -2,18 +2,19 @@ import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 /**
  * Database schema for What's In My Fridge app
- * Version 7 - Added normalized_name to food_items, ingredient_mappings table
+ * Version 8 - Added favorite_recipes table
  *
  * Tables:
  * - food_items: Main inventory of food items
  * - parsed_drafts: OCR scan drafts pending review
  * - recipe_cache: Cached recipe suggestions from Cloud Functions
+ * - favorite_recipes: User's favorite recipes
  * - ingredients: Reference database of ingredients for classification
  * - ingredient_mappings: Cache for scanned ingredient normalization
  */
 
 export const schema = appSchema({
-  version: 7,
+  version: 8,
   tables: [
     // FoodItemEntity - Main inventory table
     tableSchema({
@@ -60,6 +61,24 @@ export const schema = appSchema({
         { name: 'recipes_json', type: 'string' }, // JSON array of RecipeUi[]
         { name: 'timestamp', type: 'number' },
         { name: 'ttl_minutes', type: 'number' }, // Time to live in minutes
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' }
+      ]
+    }),
+
+    // FavoriteRecipeEntity - User's favorite recipes
+    tableSchema({
+      name: 'favorite_recipes',
+      columns: [
+        { name: 'recipe_id', type: 'string', isIndexed: true }, // Unique recipe identifier
+        { name: 'name', type: 'string' },
+        { name: 'match_percentage', type: 'number' },
+        { name: 'matched_ingredients', type: 'string' }, // JSON array
+        { name: 'missing_ingredients', type: 'string' }, // JSON array
+        { name: 'ingredients_with_measures', type: 'string' }, // JSON array
+        { name: 'instructions', type: 'string' },
+        { name: 'user_id', type: 'string', isIndexed: true }, // For Firestore sync
+        { name: 'saved_at', type: 'number' }, // Timestamp when favorited
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' }
       ]
