@@ -1,20 +1,3 @@
-{  
-  "compilerOptions": {  
-    "module": "commonjs",  
-    "noImplicitReturns": true,  
-    "noUnusedLocals": true,  
-    "outDir": "lib",  
-    "sourceMap": true,  
-    "strict": true,  
-    "target": "es2017",  
-    "esModuleInterop": true,  
-    "resolveJsonModule": true  
-  },  
-  "compileOnSave": true,  
-  "include": [  
-    "src"  
-  ],  
-  "exclude": [  
-    "node_modules"  
-  ]  
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:509d4422d04b6d60f9e831ae55124e75bd9dedbd7a4d074682e0a2e697208604
+size 483

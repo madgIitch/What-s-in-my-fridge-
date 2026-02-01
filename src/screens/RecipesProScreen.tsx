@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import Slider from '@react-native-community/slider';
 import { ArrowLeft } from 'lucide-react-native';
 import { colors, typography, spacing } from '../theme';
@@ -21,6 +22,7 @@ import { usePreferencesStore } from '../stores/usePreferencesStore';
 import { useRecipes } from '../hooks/useRecipes';
 import { useInventory } from '../hooks/useInventory';
 import { RecipeUi } from '../database/models/RecipeCache';
+import { RootStackParamList } from '../types';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { LoadingNeverito } from '../components/common';
@@ -37,8 +39,10 @@ const COMMON_UTENSILS = [
   { name: 'tostadora', emoji: '🍞' },
 ];
 
+type RecipesNavigationProp = StackNavigationProp<RootStackParamList, 'RecipesTab'>;
+
 const RecipesProScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<RecipesNavigationProp>();
   const { items } = useInventoryStore();
   const {
     isPro,
@@ -347,7 +351,11 @@ const RecipesProScreen = () => {
             </View>
           </View>
           {recipes.map((recipe) => (
-            <RecipeCard key={recipe.id} recipe={recipe} />
+            <RecipeCard
+              key={recipe.id}
+              recipe={recipe}
+              onOpenSteps={() => navigation.navigate('RecipeSteps', { recipe })}
+            />
           ))}
         </View>
       )}
@@ -385,9 +393,10 @@ const RecipesProScreen = () => {
  */
 interface RecipeCardProps {
   recipe: RecipeUi;
+  onOpenSteps: () => void;
 }
 
-const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
+const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onOpenSteps }) => {
   const [expanded, setExpanded] = useState(false);
   const matchedIngredients = Array.isArray(recipe.matchedIngredients)
     ? recipe.matchedIngredients
@@ -482,7 +491,14 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
             )}
           </View>
         )}
+      </TouchableOpacity>
 
+      <Button
+        title="Cocinar paso a paso"
+        onPress={onOpenSteps}
+        style={styles.stepsButton}
+      />
+      <TouchableOpacity onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
         <Text style={styles.expandText}>{expanded ? 'Ver menos ▲' : 'Ver más ▼'}</Text>
       </TouchableOpacity>
     </Card>
@@ -840,6 +856,9 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.onSurfaceVariant,
     fontWeight: '600',
+  },
+  stepsButton: {
+    marginTop: spacing.sm,
   },
   expandText: {
     ...typography.labelMedium,

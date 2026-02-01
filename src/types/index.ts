@@ -2,6 +2,8 @@
  * Core types for What's In My Fridge app
  */
 
+import type { RecipeUi } from '../database/models/RecipeCache';
+
 // Expiry state for food items
 export type ExpiryState = 'OK' | 'SOON' | 'EXPIRED';
 
@@ -19,6 +21,7 @@ export type RootStackParamList = {
   ReviewDraft: { draftId: string };
   Detail: { itemId: string };
   AddItem: undefined;
+  RecipeSteps: { recipe: RecipeUi };
 };
 
 // Mantener para compatibilidad con componentes existentes

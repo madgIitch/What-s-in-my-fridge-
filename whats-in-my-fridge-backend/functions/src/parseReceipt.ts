@@ -3,7 +3,15 @@ import * as admin from "firebase-admin";
 import vision from "@google-cloud/vision";
 import { ParsedDraftEntity, ParsedItem } from "./types";
 
-const visionClient = new vision.ImageAnnotatorClient();
+type VisionClient = InstanceType<typeof vision.ImageAnnotatorClient>;
+let visionClient: VisionClient | null = null;
+
+const getVisionClient = (): VisionClient => {
+  if (!visionClient) {
+    visionClient = new vision.ImageAnnotatorClient();
+  }
+  return visionClient;
+};
 
 /**
  * Cloud Function para procesar tickets con OCR
@@ -50,7 +58,8 @@ Vielen Dank für Ihren Einkauf!
       `.trim();
     } else {
       console.log("🔐 Modo producción: usando Vision API");
-      const [result] = await visionClient.textDetection(imageUri);
+      const client = getVisionClient();
+      const [result] = await client.textDetection(imageUri);
       rawText = result.fullTextAnnotation?.text || "";
     }
 

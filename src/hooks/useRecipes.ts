@@ -211,11 +211,14 @@ export function useRecipes() {
         }
       });
 
+      // Limpiar también el estado de las recetas en la UI
+      setRecipes([]);
+
       console.log('All recipe caches cleared');
     } catch (err) {
       console.error('Error clearing caches:', err);
     }
-  }, []);
+  }, [setRecipes]);
 
   return {
     recipes,

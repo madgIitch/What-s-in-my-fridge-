@@ -138,20 +138,22 @@ export function findMatchingRecipes(
   for (const recipe of recipes) {
     const matchedIngredients: string[] = [];
 
-    // Usar ingredientsNormalized si existe, sino usar ingredients
-    const recipeIngredients = recipe.ingredientsNormalized || recipe.ingredients;
+    // Usar ingredientsNormalized para hacer el matching (si existe)
+    // pero SIEMPRE calcular el porcentaje basado en la lista original de ingredients
+    const ingredientsForMatching = recipe.ingredientsNormalized || recipe.ingredients;
+    const totalIngredientsCount = recipe.ingredients.length; // Siempre usar la lista original para el conteo
 
     // Verificar cada ingrediente de la receta
-    for (const ingredient of recipeIngredients) {
+    for (const ingredient of ingredientsForMatching) {
       const match = matchIngredient(ingredient, inventoryItems);
       if (match) {
         matchedIngredients.push(match);
       }
     }
 
-    // Calcular porcentaje de match
-    const matchPercentage = matchedIngredients.length / recipeIngredients.length;
-    const missingCount = recipeIngredients.length - matchedIngredients.length;
+    // Calcular porcentaje de match basado en la cantidad REAL de ingredientes de la receta
+    const matchPercentage = matchedIngredients.length / totalIngredientsCount;
+    const missingCount = totalIngredientsCount - matchedIngredients.length;
 
     // Verificar si cumple requisitos mínimos
     if (
