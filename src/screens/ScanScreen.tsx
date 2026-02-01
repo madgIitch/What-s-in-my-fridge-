@@ -6,7 +6,6 @@ import {
   Image,
   Alert,
   ScrollView,
-  ActivityIndicator,
   TouchableOpacity,
   Animated,
   StatusBar,
@@ -18,6 +17,7 @@ import { RootStackParamList } from '../types';
 import ImagePicker from 'react-native-image-crop-picker';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
+import { LoadingNeverito } from '../components/common';
 import { colors, typography, spacing } from '../theme';
 import { borderRadius } from '../theme/spacing';
 import { recognizeText } from '../services/ocr/textRecognition';
@@ -207,7 +207,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFE5EC" />
 
       {/* Header Kawaii */}
       <View style={styles.header}>
@@ -225,11 +225,12 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
           Captura tu recibo de compra ✨
         </Text>
 
-        {/* Camera Emoji */}
+        {/* Camera Character */}
         <View style={styles.cameraEmojiContainer}>
-          <Animated.Text
+          <Animated.Image
+            source={require('../../assets/neveritoFoto.png')}
             style={[
-              styles.cameraEmoji,
+              styles.cameraImage,
               {
                 transform: [{
                   rotate: wiggleAnim.interpolate({
@@ -239,10 +240,8 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
                 }]
               }
             ]}
-          >
-            📸
-          </Animated.Text>
-          <Text style={styles.sparkleEmoji}>✨</Text>
+            resizeMode="contain"
+          />
         </View>
       </View>
 
@@ -313,8 +312,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
       {processing && (
         <View style={styles.processingOverlay}>
           <Card style={styles.processingCard}>
-            <Text style={styles.processingEmoji}>🔍</Text>
-            <ActivityIndicator size="large" color={colors.primary} />
+            <LoadingNeverito size={80} speed={120} />
             <Text style={styles.processingText}>
               Procesando imagen con magia IA...
             </Text>
@@ -332,10 +330,10 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFE5EC',
   },
   header: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFE5EC',
     paddingTop: 16,
     paddingBottom: 24,
     paddingHorizontal: spacing.lg,
@@ -378,8 +376,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     position: 'relative',
   },
-  cameraEmoji: {
-    fontSize: 64,
+  cameraImage: {
+    width: 80,
+    height: 80,
   },
   sparkleEmoji: {
     position: 'absolute',
@@ -472,6 +471,7 @@ const styles = StyleSheet.create({
   processingCard: {
     alignItems: 'center',
     padding: spacing.xl,
+    backgroundColor: '#B5EAD7',
   },
   processingEmoji: {
     fontSize: 48,

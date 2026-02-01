@@ -1,6 +1,7 @@
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { ensureFirebaseApp } from './app';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { usePreferencesStore } from '../../stores/usePreferencesStore';
 
 /**
  * Firebase Authentication Service
@@ -21,6 +22,13 @@ export const signIn = async (email: string, password: string) => {
       email: user.email,
       displayName: user.displayName,
     });
+
+    // Load cooking preferences from Firestore
+    try {
+      await usePreferencesStore.getState().loadCookingPreferencesFromFirestore(user.uid);
+    } catch (error) {
+      console.error('Error loading preferences after sign in:', error);
+    }
 
     return user;
   } catch (error: any) {
@@ -53,6 +61,15 @@ export const signUp = async (email: string, password: string) => {
       email: user.email,
       displayName: user.displayName,
     });
+
+    // Save initial cooking preferences to Firestore
+    try {
+      const { cookingTime, availableUtensils } = usePreferencesStore.getState();
+      const { syncCookingPreferencesToFirestore } = await import('./firestore');
+      await syncCookingPreferencesToFirestore(cookingTime, availableUtensils);
+    } catch (error) {
+      console.error('Error saving initial preferences after sign up:', error);
+    }
 
     return user;
   } catch (error: any) {

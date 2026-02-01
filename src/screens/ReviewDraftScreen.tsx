@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  ActivityIndicator,
   TextInput,
   Modal,
 } from 'react-native';
@@ -20,6 +19,7 @@ import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Picker } from '../components/common/Picker';
 import { DatePicker } from '../components/common/DatePicker';
+import { LoadingNeverito } from '../components/common';
 import { colors, typography, spacing } from '../theme';
 import { borderRadius } from '../theme/spacing';
 
@@ -300,7 +300,7 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <LoadingNeverito size={80} speed={120} />
         <Text style={styles.loadingText}>Cargando borrador...</Text>
       </View>
     );
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: '#B5EAD7',
   },
   loadingText: {
     ...typography.bodyLarge,

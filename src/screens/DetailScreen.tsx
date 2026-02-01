@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -19,6 +18,7 @@ import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
 import { DatePicker } from '../components/common/DatePicker';
 import { Picker } from '../components/common/Picker';
+import { LoadingNeverito } from '../components/common';
 import { colors, typography, spacing } from '../theme';
 import { borderRadius } from '../theme/spacing';
 
@@ -143,7 +143,7 @@ const DetailScreen: React.FC<Props> = ({ navigation, route }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <LoadingNeverito size={80} speed={120} />
         <Text style={styles.loadingText}>Cargando...</Text>
       </View>
     );
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: '#B5EAD7',
   },
   loadingText: {
     ...typography.bodyLarge,

@@ -5,10 +5,10 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   Alert,
   Animated,
   StatusBar,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -23,6 +23,7 @@ import { useInventory } from '../hooks/useInventory';
 import { RecipeUi } from '../database/models/RecipeCache';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
+import { LoadingNeverito } from '../components/common';
 
 // Common kitchen utensils (Spanish) with emojis
 const COMMON_UTENSILS = [
@@ -101,11 +102,14 @@ const RecipesProScreen = () => {
 
   const handleUtensilToggle = (utensilName: string) => {
     setSelectedUtensils((prev) => {
-      if (prev.includes(utensilName)) {
-        return prev.filter((u) => u !== utensilName);
-      } else {
-        return [...prev, utensilName];
-      }
+      const newUtensils = prev.includes(utensilName)
+        ? prev.filter((u) => u !== utensilName)
+        : [...prev, utensilName];
+
+      // Save to Firebase immediately
+      setAvailableUtensils(newUtensils);
+
+      return newUtensils;
     });
   };
 
@@ -115,11 +119,8 @@ const RecipesProScreen = () => {
       return;
     }
 
-    // Save preferences
-    setCookingTime(localCookingTime);
-    setAvailableUtensils(selectedUtensils);
-
-    // Get recipe suggestions
+    // Preferences are already saved in Firebase through slider and utensils handlers
+    // Get recipe suggestions with current values
     await getRecipeSuggestions(ingredientNames, localCookingTime, selectedUtensils);
   };
 
@@ -174,9 +175,10 @@ const RecipesProScreen = () => {
 
         {/* Chef Character */}
         <View style={styles.chefContainer}>
-          <Animated.Text
+          <Animated.Image
+            source={require('../../assets/neveritoCocinando.png')}
             style={[
-              styles.chefEmoji,
+              styles.chefImage,
               {
                 transform: [{
                   rotate: wiggleAnim.interpolate({
@@ -186,9 +188,8 @@ const RecipesProScreen = () => {
                 }]
               }
             ]}
-          >
-            👨‍🍳
-          </Animated.Text>
+            resizeMode="contain"
+          />
           <Text style={styles.sparkleEmoji}>✨</Text>
         </View>
       </View>
@@ -256,6 +257,10 @@ const RecipesProScreen = () => {
             step={5}
             value={localCookingTime}
             onValueChange={setLocalCookingTime}
+            onSlidingComplete={(value) => {
+              // Save to Firebase when user finishes sliding
+              setCookingTime(value);
+            }}
             minimumTrackTintColor={colors.primary}
             maximumTrackTintColor={colors.surfaceVariant}
             thumbTintColor={colors.primary}
@@ -330,15 +335,6 @@ const RecipesProScreen = () => {
         </View>
       )}
 
-      {/* Loading Indicator */}
-      {loading && (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingEmoji}>✨</Text>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Generando recetas mágicas...</Text>
-        </View>
-      )}
-
       {/* Recipes List */}
       {!loading && recipes.length > 0 && (
         <View style={styles.recipesContainer}>
@@ -367,6 +363,19 @@ const RecipesProScreen = () => {
         </View>
       )}
       </ScrollView>
+
+      {/* Loading Overlay */}
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <Card style={styles.loadingCard}>
+            <LoadingNeverito size={80} speed={120} />
+            <Text style={styles.loadingText}>Generando recetas mágicas...</Text>
+            <Text style={styles.loadingSubtext}>
+              Neverito está cocinando ideas ✨
+            </Text>
+          </Card>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -483,14 +492,14 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFE5EC',
   },
   contentContainer: {
     padding: spacing.md,
     paddingBottom: spacing.xxl,
   },
   header: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFE5EC',
     paddingTop: 16,
     paddingBottom: 24,
     paddingHorizontal: spacing.lg,
@@ -536,8 +545,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     position: 'relative',
   },
-  chefEmoji: {
-    fontSize: 64,
+  chefImage: {
+    width: 80,
+    height: 80,
   },
   sparkleEmoji: {
     position: 'absolute',
@@ -704,22 +714,35 @@ const styles = StyleSheet.create({
     color: colors.onErrorContainer,
     textAlign: 'center',
   },
-  loadingContainer: {
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  loadingCard: {
     alignItems: 'center',
     padding: spacing.xl,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    marginTop: spacing.md,
-  },
-  loadingEmoji: {
-    fontSize: 48,
-    marginBottom: spacing.md,
+    minWidth: 280,
+    backgroundColor: '#B5EAD7',
   },
   loadingText: {
-    ...typography.bodyMedium,
-    fontWeight: '600',
+    ...typography.titleMedium,
+    fontWeight: '700',
     color: colors.onSurface,
     marginTop: spacing.md,
+    textAlign: 'center',
+  },
+  loadingSubtext: {
+    ...typography.bodySmall,
+    color: colors.onSurfaceVariant,
+    marginTop: spacing.xs,
+    textAlign: 'center',
   },
   recipesContainer: {
     marginBottom: spacing.xl,

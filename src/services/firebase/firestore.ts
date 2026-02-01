@@ -195,3 +195,62 @@ export const fetchInventoryFromFirestore = async (userId: string) => {
     throw error;
   }
 };
+
+/**
+ * Sync cooking preferences to Firestore
+ */
+export const syncCookingPreferencesToFirestore = async (
+  cookingTime: number,
+  availableUtensils: string[]
+) => {
+  const userId = useAuthStore.getState().user?.uid;
+  if (!userId) {
+    console.warn('No user logged in, skipping preferences sync');
+    return;
+  }
+
+  try {
+    await firestore()
+      .collection('users')
+      .doc(userId)
+      .set(
+        {
+          cookingPreferences: {
+            cookingTime,
+            availableUtensils,
+            updatedAt: firestore.FieldValue.serverTimestamp(),
+          },
+        },
+        { merge: true }
+      );
+    console.log('Cooking preferences synced to Firestore');
+  } catch (error) {
+    console.error('Error syncing preferences to Firestore:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetch cooking preferences from Firestore
+ */
+export const fetchCookingPreferencesFromFirestore = async (userId: string) => {
+  try {
+    const doc = await firestore()
+      .collection('users')
+      .doc(userId)
+      .get();
+
+    const data = doc.data();
+    if (data?.cookingPreferences) {
+      return {
+        cookingTime: data.cookingPreferences.cookingTime,
+        availableUtensils: data.cookingPreferences.availableUtensils,
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error fetching preferences from Firestore:', error);
+    throw error;
+  }
+};

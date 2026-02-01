@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Animated,
   StatusBar,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -121,22 +122,26 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFE5EC" />
       {/* Header Kawaii */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Mi Nevera</Text>
-          <Animated.Text
+          <Animated.Image
+            source={require('../../assets/neveritoNevera.png')}
             style={[
-              styles.headerEmoji,
-              { transform: [{ rotate: wiggleAnim.interpolate({
-                inputRange: [-3, 3],
-                outputRange: ['-3deg', '3deg']
-              })}] }
+              styles.headerImage,
+              {
+                transform: [{
+                  rotate: wiggleAnim.interpolate({
+                    inputRange: [-3, 3],
+                    outputRange: ['-3deg', '3deg']
+                  })
+                }]
+              }
             ]}
-          >
-            🧊
-          </Animated.Text>
+            resizeMode="contain"
+          />
         </View>
         <Text style={styles.headerSubtitle}>
           {items.length} items guardados ♡
@@ -186,10 +191,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFE5EC',
   },
   header: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFE5EC',
     paddingTop: 16,
     paddingBottom: 24,
     paddingHorizontal: spacing.lg,
@@ -216,8 +221,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.onSurface,
   },
-  headerEmoji: {
-    fontSize: 28,
+  headerImage: {
+    width: 40,
+    height: 40,
   },
   headerSubtitle: {
     ...typography.bodyMedium,

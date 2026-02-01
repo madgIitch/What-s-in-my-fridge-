@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Package, Calendar, Tag, Trash2 } from 'lucide-react-native';
 import { colors, typography, spacing } from '../../theme';
 import { borderRadius } from '../../theme/spacing';
@@ -18,7 +18,7 @@ const STATUS_CONFIG = {
     textColor: '#2D5F4E',
     emoji: '♡',
     label: 'Fresco',
-    face: '😊',
+    image: require('../../../assets/neveritoSonri.png'),
   },
   SOON: {
     backgroundColor: 'rgba(255, 171, 171, 0.3)',
@@ -26,7 +26,7 @@ const STATUS_CONFIG = {
     textColor: '#8B4513',
     emoji: '⚠',
     label: 'Pronto',
-    face: '😰',
+    image: require('../../../assets/neveritoPreo.png'),
   },
   EXPIRED: {
     backgroundColor: 'rgba(255, 107, 157, 0.3)',
@@ -34,7 +34,7 @@ const STATUS_CONFIG = {
     textColor: '#8B1538',
     emoji: '(╥﹏╥)',
     label: 'Expirado',
-    face: '😢',
+    image: require('../../../assets/neveritoTrist.png'),
   },
 };
 
@@ -85,7 +85,7 @@ export const FoodItemCard: React.FC<FoodItemCardProps> = ({
         {/* Food Emoji with Status Face */}
         <View style={styles.emojiContainer}>
           <Text style={styles.foodEmoji}>{foodEmoji}</Text>
-          <Text style={styles.statusFace}>{statusConfig.face}</Text>
+          <Image source={statusConfig.image} style={styles.statusFace} />
         </View>
 
         {/* Item Info */}
@@ -173,7 +173,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -4,
     right: -4,
-    fontSize: 20,
+    width: 28,
+    height: 28,
+    resizeMode: 'contain',
   },
   infoContainer: {
     flex: 1,

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { syncCookingPreferencesToFirestore, fetchCookingPreferencesFromFirestore } from '../services/firebase/firestore';
 
 /**
  * Preferences Store - User preferences and settings
@@ -27,6 +28,7 @@ interface PreferencesStore {
   incrementRecipeCalls: () => void;
   resetMonthlyRecipeCalls: () => void;
   checkAndResetMonthlyCounter: () => void;
+  loadCookingPreferencesFromFirestore: (userId: string) => Promise<void>;
 }
 
 export const usePreferencesStore = create<PreferencesStore>()(
@@ -51,9 +53,27 @@ export const usePreferencesStore = create<PreferencesStore>()(
 
       setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
 
-      setCookingTime: (time) => set({ cookingTime: time }),
+      setCookingTime: async (time) => {
+        set({ cookingTime: time });
+        const state = get();
+        // Sync to Firestore
+        try {
+          await syncCookingPreferencesToFirestore(time, state.availableUtensils);
+        } catch (error) {
+          console.error('Error syncing cooking time to Firestore:', error);
+        }
+      },
 
-      setAvailableUtensils: (utensils) => set({ availableUtensils: utensils }),
+      setAvailableUtensils: async (utensils) => {
+        set({ availableUtensils: utensils });
+        const state = get();
+        // Sync to Firestore
+        try {
+          await syncCookingPreferencesToFirestore(state.cookingTime, utensils);
+        } catch (error) {
+          console.error('Error syncing utensils to Firestore:', error);
+        }
+      },
 
       incrementRecipeCalls: () => {
         const state = get();
@@ -72,6 +92,21 @@ export const usePreferencesStore = create<PreferencesStore>()(
 
         if (currentMonth !== state.lastResetMonth) {
           state.resetMonthlyRecipeCalls();
+        }
+      },
+
+      loadCookingPreferencesFromFirestore: async (userId: string) => {
+        try {
+          const preferences = await fetchCookingPreferencesFromFirestore(userId);
+          if (preferences) {
+            set({
+              cookingTime: preferences.cookingTime,
+              availableUtensils: preferences.availableUtensils,
+            });
+            console.log('Loaded cooking preferences from Firestore');
+          }
+        } catch (error) {
+          console.error('Error loading preferences from Firestore:', error);
         }
       },
     }),
