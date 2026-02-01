@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -57,6 +57,12 @@ const AddMealScreen: React.FC<Props> = ({ navigation, route }) => {
     () => items.filter((item) => selectedIds.includes(item.id)),
     [items, selectedIds]
   );
+
+  useEffect(() => {
+    if (selectedItems.length === 1 && customName.trim() === '') {
+      setCustomName(selectedItems[0].name);
+    }
+  }, [selectedItems, customName]);
 
   const handleSave = async () => {
     if (selectedIds.length === 0 && customName.trim() === '') {

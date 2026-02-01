@@ -2,7 +2,7 @@ import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 /**
  * Database schema for What's In My Fridge app
- * Version 10 - Added meal_entries table
+ * Version 9 - Added meal_entries table
  *
  * Tables:
  * - food_items: Main inventory of food items
@@ -15,7 +15,7 @@ import { appSchema, tableSchema } from '@nozbe/watermelondb';
  */
 
 export const schema = appSchema({
-  version: 10,
+  version: 9,
   tables: [
     // FoodItemEntity - Main inventory table
     tableSchema({
@@ -28,6 +28,7 @@ export const schema = appSchema({
         { name: 'quantity', type: 'number' },
         { name: 'notes', type: 'string', isOptional: true },
         { name: 'unit', type: 'string' }, // 'unidad', 'kg', 'litros', etc.
+        { name: 'expiry_at', type: 'number' }, // Epoch timestamp (legacy)
         { name: 'added_at', type: 'number' }, // Epoch timestamp
         { name: 'source', type: 'string' }, // 'manual' | 'ocr'
         { name: 'created_at', type: 'number' },

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { addMonths, format, startOfDay } from 'date-fns';
@@ -10,7 +10,7 @@ import { CalendarGrid } from '../components/meals/CalendarGrid';
 import { DaySummary } from '../components/meals/DaySummary';
 import { MealCard } from '../components/meals/MealCard';
 import { KawaiiFAB } from '../components/common/KawaiiFAB';
-import { Plus } from 'lucide-react-native';
+import { Plus, ArrowLeft } from 'lucide-react-native';
 import { useMealStore } from '../stores/useMealStore';
 import { useInventory } from '../hooks/useInventory';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -62,8 +62,28 @@ const CalendarScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFE5EC" />
       <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.heroHeader}>
+          <View style={styles.heroHeaderContent}>
+            <View style={styles.heroHeaderLeft}>
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={styles.backButton}
+                activeOpacity={0.7}
+              >
+                <ArrowLeft size={22} color={colors.onSurface} />
+              </TouchableOpacity>
+              <Text style={styles.heroTitle}>Calendario</Text>
+              <Image
+                source={require('../../assets/neveritoCalendar.png')}
+                style={styles.heroImage}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={styles.heroSubtitle}>Registra tus comidas</Text>
+          </View>
+        </View>
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.navButton}
@@ -129,11 +149,64 @@ const CalendarScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFE5EC',
   },
   content: {
     padding: spacing.lg,
     paddingBottom: 120,
+  },
+  heroHeader: {
+    backgroundColor: '#FFE5EC',
+    paddingTop: 16,
+    paddingBottom: 24,
+    paddingHorizontal: spacing.lg,
+    borderBottomLeftRadius: 48,
+    borderBottomRightRadius: 48,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    marginHorizontal: -spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  heroHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  heroHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  backButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.outlineVariant,
+  },
+  heroTitle: {
+    ...typography.headlineLarge,
+    fontSize: 32,
+    fontWeight: '800',
+    color: colors.onSurface,
+  },
+  heroImage: {
+    width: 44,
+    height: 44,
+  },
+  heroSubtitle: {
+    ...typography.bodyMedium,
+    color: colors.onSurfaceVariant,
+    opacity: 0.9,
   },
   header: {
     flexDirection: 'row',

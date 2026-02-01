@@ -1,4 +1,4 @@
-import { schemaMigrations, createTable, addColumns, unsafeSql } from '@nozbe/watermelondb/Schema/migrations';
+import { schemaMigrations, createTable, addColumns } from '@nozbe/watermelondb/Schema/migrations';
 
 /**
  * Database migrations for What's In My Fridge
@@ -9,8 +9,7 @@ import { schemaMigrations, createTable, addColumns, unsafeSql } from '@nozbe/wat
  * - v6: Added ingredient_mappings table
  * - v7: Added normalized_name to food_items
  * - v8: Added favorite_recipes table
- * - v9: Removed expiry_at from food_items
- * - v10: Added meal_entries table
+ * - v9: Added meal_entries table
  */
 export default schemaMigrations({
   migrations: [
@@ -71,46 +70,9 @@ export default schemaMigrations({
       ],
     },
     // Migration from version 8 to 9
-    // Removes redundant expiry_at column from food_items
-    {
-      toVersion: 9,
-      steps: [
-        unsafeSql({
-          sql: `CREATE TABLE IF NOT EXISTS food_items_new (
-            id TEXT PRIMARY KEY NOT NULL,
-            _status TEXT NOT NULL,
-            _changed TEXT NOT NULL,
-            name TEXT NOT NULL,
-            normalized_name TEXT,
-            expiry_date REAL NOT NULL,
-            category TEXT,
-            quantity REAL NOT NULL,
-            notes TEXT,
-            unit TEXT NOT NULL,
-            added_at REAL NOT NULL,
-            source TEXT NOT NULL,
-            created_at REAL NOT NULL,
-            updated_at REAL NOT NULL
-          );`,
-        }),
-        unsafeSql({
-          sql: `INSERT INTO food_items_new (
-            id, _status, _changed, name, normalized_name, expiry_date, category,
-            quantity, notes, unit, added_at, source, created_at, updated_at
-          )
-          SELECT
-            id, _status, _changed, name, normalized_name, expiry_date, category,
-            quantity, notes, unit, added_at, source, created_at, updated_at
-          FROM food_items;`,
-        }),
-        unsafeSql({ sql: 'DROP TABLE food_items;' }),
-        unsafeSql({ sql: 'ALTER TABLE food_items_new RENAME TO food_items;' }),
-      ],
-    },
-    // Migration from version 9 to 10
     // Adds meal entries for calendar tracking
     {
-      toVersion: 10,
+      toVersion: 9,
       steps: [
         createTable({
           name: 'meal_entries',

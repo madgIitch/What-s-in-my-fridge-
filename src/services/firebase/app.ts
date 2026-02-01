@@ -1,7 +1,9 @@
 import { getApps, initializeApp } from '@react-native-firebase/app';
+import Constants from 'expo-constants';
 
 const getEnv = (key: string) => {
-  const value = process.env[key];
+  const extra = Constants.expoConfig?.extra as Record<string, string | undefined> | undefined;
+  const value = extra?.[key] || process.env[key];
   if (!value) {
     throw new Error(`Missing required env var: ${key}`);
   }
