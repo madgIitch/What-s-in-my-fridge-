@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { addMonths, format, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -23,6 +23,7 @@ interface Props {
 }
 
 const CalendarScreen: React.FC<Props> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [monthDate, setMonthDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(startOfDay(new Date()));
   const { meals, initMonth, getMealsByDate, startSync, stopSync } = useMealStore();
@@ -61,9 +62,11 @@ const CalendarScreen: React.FC<Props> = ({ navigation }) => {
   }, [items, mealsForDay]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFE5EC" />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.lg }]}
+      >
         <View style={styles.heroHeader}>
           <View style={styles.heroHeaderContent}>
             <View style={styles.heroHeaderLeft}>
@@ -74,14 +77,16 @@ const CalendarScreen: React.FC<Props> = ({ navigation }) => {
               >
                 <ArrowLeft size={22} color={colors.onSurface} />
               </TouchableOpacity>
-              <Text style={styles.heroTitle}>Calendario</Text>
+              <View style={styles.heroTitleBlock}>
+                <Text style={styles.heroTitle}>Calendario</Text>
+                <Text style={styles.heroSubtitle}>Registra tus comidas</Text>
+              </View>
               <Image
                 source={require('../../assets/neveritoCalendar.png')}
                 style={styles.heroImage}
                 resizeMode="contain"
               />
             </View>
-            <Text style={styles.heroSubtitle}>Registra tus comidas</Text>
           </View>
         </View>
         <View style={styles.header}>
@@ -187,7 +192,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFE5EC',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -198,6 +203,10 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '800',
     color: colors.onSurface,
+  },
+  heroTitleBlock: {
+    flexDirection: 'column',
+    gap: 4,
   },
   heroImage: {
     width: 44,
