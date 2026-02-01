@@ -23,6 +23,12 @@ export type RootStackParamList = {
   Detail: { itemId: string };
   AddItem: undefined;
   RecipeSteps: { recipe: RecipeUi };
+  ConsumeIngredients: undefined;
+  ConsumeRecipeIngredients: {
+    recipeName: string;
+    matchedIngredients: string[];
+    ingredientsWithMeasures: string[];
+  };
 };
 
 // Mantener para compatibilidad con componentes existentes

@@ -16,6 +16,8 @@ import SettingsScreen from '../screens/SettingsScreen';
 import ReviewDraftScreen from '../screens/ReviewDraftScreen';
 import DetailScreen from '../screens/DetailScreen';
 import AddItemScreen from '../screens/AddItemScreen';
+import ConsumeIngredientsScreen from '../screens/ConsumeIngredientsScreen';
+import ConsumeRecipeIngredientsScreen from '../screens/ConsumeRecipeIngredientsScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -98,6 +100,22 @@ export const AppNavigator = () => {
               options={{
                 headerShown: false,
                 presentation: 'modal'
+              }}
+            />
+            <Stack.Screen
+              name="ConsumeIngredients"
+              component={ConsumeIngredientsScreen}
+              options={{
+                headerShown: false,
+                presentation: 'card'
+              }}
+            />
+            <Stack.Screen
+              name="ConsumeRecipeIngredients"
+              component={ConsumeRecipeIngredientsScreen}
+              options={{
+                headerShown: false,
+                presentation: 'card'
               }}
             />
           </>

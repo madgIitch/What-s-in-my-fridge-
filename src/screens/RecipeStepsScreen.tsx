@@ -15,6 +15,7 @@ import { RootStackParamList } from '../types';
 import { colors, typography, spacing } from '../theme';
 import { borderRadius } from '../theme/spacing';
 import { Card } from '../components/common/Card';
+import { Button } from '../components/common/Button';
 import { useFavorites } from '../hooks/useFavorites';
 
 type RecipeStepsNavigationProp = StackNavigationProp<RootStackParamList, 'RecipeSteps'>;
@@ -180,6 +181,25 @@ const RecipeStepsScreen: React.FC<Props> = ({ navigation, route }) => {
             <Text style={styles.emptyText}>No hay instrucciones detalladas para esta receta.</Text>
           )}
         </Card>
+
+        {/* Consume Ingredients Button */}
+        {matchedIngredients.length > 0 && (
+          <Card style={styles.consumeCard}>
+            <Text style={styles.consumeTitle}>¿Terminaste de cocinar?</Text>
+            <Text style={styles.consumeText}>
+              Marca los ingredientes que usaste para actualizar tu inventario
+            </Text>
+            <Button
+              title="Marcar ingredientes como usados"
+              onPress={() => navigation.navigate('ConsumeRecipeIngredients', {
+                recipeName: recipe.name,
+                matchedIngredients,
+                ingredientsWithMeasures,
+              })}
+              style={styles.consumeButton}
+            />
+          </Card>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -322,6 +342,24 @@ const styles = StyleSheet.create({
   emptyText: {
     ...typography.bodySmall,
     color: colors.onSurfaceVariant,
+  },
+  consumeCard: {
+    marginBottom: spacing.md,
+    backgroundColor: '#B5EAD7',
+  },
+  consumeTitle: {
+    ...typography.titleMedium,
+    color: colors.onSurface,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  consumeText: {
+    ...typography.bodySmall,
+    color: colors.onSurfaceVariant,
+    marginBottom: spacing.md,
+  },
+  consumeButton: {
+    marginTop: spacing.xs,
   },
 });
 
