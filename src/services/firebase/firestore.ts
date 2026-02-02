@@ -236,6 +236,7 @@ export const startMealEntriesSync = (userId: string) => {
     .collection('meal_entries')
     .onSnapshot(
       async (snapshot) => {
+        console.log('MealEntry snapshot received:', snapshot.docChanges().length, 'changes');
         await database.write(async () => {
           for (const change of snapshot.docChanges()) {
             const data = change.doc.data();
@@ -247,6 +248,16 @@ export const startMealEntriesSync = (userId: string) => {
                 ? data.ingredientsConsumed
                 : '[]';
 
+            const toMillis = (value: any): number | undefined => {
+              if (typeof value === 'number') return value;
+              if (value && typeof value.toMillis === 'function') return value.toMillis();
+              if (value && typeof value.seconds === 'number') return value.seconds * 1000;
+              return undefined;
+            };
+
+            const mealDate = toMillis(data.mealDate);
+            const consumedAt = toMillis(data.consumedAt);
+
             if (change.type === 'added' || change.type === 'modified') {
               try {
                 const existingEntry = await collections.mealEntries
@@ -256,7 +267,7 @@ export const startMealEntriesSync = (userId: string) => {
                 if (existingEntry) {
                   await existingEntry.update(() => {
                     if (data.mealType !== undefined) existingEntry.mealType = data.mealType;
-                    if (data.mealDate !== undefined) existingEntry.mealDate = data.mealDate;
+                    if (mealDate !== undefined) existingEntry.mealDate = mealDate;
                     if (data.recipeId !== undefined) existingEntry.recipeId = data.recipeId || undefined;
                     if (data.customName !== undefined) existingEntry.customName = data.customName || undefined;
                     existingEntry.ingredientsConsumed = ingredientsConsumed;
@@ -265,20 +276,20 @@ export const startMealEntriesSync = (userId: string) => {
                       existingEntry.caloriesEstimate = data.caloriesEstimate ?? undefined;
                     }
                     if (data.userId !== undefined) existingEntry.userId = data.userId;
-                    if (data.consumedAt !== undefined) existingEntry.consumedAt = data.consumedAt;
+                    if (consumedAt !== undefined) existingEntry.consumedAt = consumedAt;
                   });
                 } else {
                   await collections.mealEntries.create((entry) => {
                     (entry as any)._raw.id = entryId;
                     entry.mealType = data.mealType;
-                    entry.mealDate = data.mealDate;
+                    entry.mealDate = mealDate ?? Date.now();
                     entry.recipeId = data.recipeId || undefined;
                     entry.customName = data.customName || undefined;
                     entry.ingredientsConsumed = ingredientsConsumed;
                     entry.notes = data.notes || undefined;
                     entry.caloriesEstimate = data.caloriesEstimate ?? undefined;
                     entry.userId = data.userId;
-                    entry.consumedAt = data.consumedAt;
+                    entry.consumedAt = consumedAt ?? Date.now();
                   });
                 }
               } catch (error) {

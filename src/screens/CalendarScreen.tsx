@@ -13,7 +13,6 @@ import { KawaiiFAB } from '../components/common/KawaiiFAB';
 import { Plus, ArrowLeft } from 'lucide-react-native';
 import { useMealStore } from '../stores/useMealStore';
 import { useInventory } from '../hooks/useInventory';
-import { useAuthStore } from '../stores/useAuthStore';
 import { borderRadius } from '../theme/spacing';
 
 type CalendarScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CalendarTab'>;
@@ -26,21 +25,12 @@ const CalendarScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const [monthDate, setMonthDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(startOfDay(new Date()));
-  const { meals, initMonth, getMealsByDate, startSync, stopSync } = useMealStore();
+  const { meals, initMonth, getMealsByDate } = useMealStore();
   const { items } = useInventory();
-  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     initMonth(monthDate);
   }, [monthDate, initMonth]);
-
-  useEffect(() => {
-    if (user?.uid) {
-      startSync(user.uid);
-      return () => stopSync();
-    }
-    return undefined;
-  }, [user?.uid, startSync, stopSync]);
 
   const mealsForDay = getMealsByDate(selectedDate);
   const daysWithMeals = useMemo(() => new Set(meals.map((meal) => meal.mealDate)), [meals]);

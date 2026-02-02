@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import { useAuthStore } from '../stores/useAuthStore';
+import { useMealStore } from '../stores/useMealStore';
 
 // Import screens
 import LoginScreen from '../screens/LoginScreen';
@@ -24,6 +25,16 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 export const AppNavigator = () => {
   const user = useAuthStore((state) => state.user);
+  const { startSync, stopSync } = useMealStore();
+
+  useEffect(() => {
+    if (user?.uid) {
+      startSync(user.uid);
+      return () => stopSync();
+    }
+    stopSync();
+    return undefined;
+  }, [user?.uid, startSync, stopSync]);
 
   return (
     <NavigationContainer>
