@@ -159,6 +159,10 @@ function parseReceiptText(text: string): {
   const pricePatternA = /^(\d+),(\d{2})\s+A$/;
   const pricePatternB = /^(\d+),?\s*(\d{2})\s+B$/;
   const weightPattern = /^\s*(\d+),?\s*(\d+)\s*kg\s*x\s*(\d+),(\d{2})\s*EUR\/kg/;
+  // Quantity + item name pattern (e.g., "3 GO BIO TOMATEN")
+  const quantityItemPattern = /^(\d+)\s+([A-ZÄÖÜ][A-ZÄÖÜa-zäöü&.\s-]+)$/;
+  // Unit price pattern (e.g., "á 2,09" or "á 2,09     6,27")
+  const unitPricePattern = /^á\s*(\d+)[,.](\d{2})(?:\s+(\d+)[,.](\d{2}))?$/;
 
   const isMetadataLine = (line: string): boolean => {
     const normalized = line.trim();
@@ -250,6 +254,32 @@ function parseReceiptText(text: string): {
       matched = true;
       i++;
       continue;
+    }
+
+    // Capturar cantidad + nombre + precio unitario en siguiente línea (e.g., "3 GO BIO TOMATEN")
+    const quantityItemMatch = line.match(quantityItemPattern);
+    if (quantityItemMatch && i + 1 < lines.length) {
+      const quantity = parseInt(quantityItemMatch[1], 10);
+      const name = quantityItemMatch[2].trim();
+      const nextLine = lines[i + 1].trim();
+      const unitPriceMatch = nextLine.match(unitPricePattern);
+
+      if (unitPriceMatch) {
+        const unitPrice = parseFloat(`${unitPriceMatch[1]}.${unitPriceMatch[2]}`);
+        // Si el precio total está en la misma línea, usarlo; sino calcularlo
+        const totalPrice = unitPriceMatch[3] && unitPriceMatch[4] ?
+          parseFloat(`${unitPriceMatch[3]}.${unitPriceMatch[4]}`) :
+          unitPrice * quantity;
+
+        items.push({
+          name: quantity > 1 ? `${name} (${quantity}x)` : name,
+          quantity,
+          price: totalPrice,
+        });
+        matched = true;
+        i += 2; // Saltar nombre + línea de precio unitario
+        continue;
+      }
     }
 
     // Capturar nombre + peso en siguiente línea

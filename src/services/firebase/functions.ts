@@ -162,6 +162,7 @@ export const uploadReceipt = async (imageUri: string): Promise<{ uploadUrl: stri
 export interface NormalizationResult {
   scannedName: string;
   normalizedName: string | null;
+  categorySpanish?: string; // Categoría en español auto-asignada
   confidence: number;
   method: 'exact' | 'synonym' | 'partial' | 'fuzzy' | 'llm' | 'none';
 }

@@ -178,6 +178,11 @@ const parseItems = (
   // Inline item pattern (name + price on same line)
   const inlinePattern = /^(.+?)\s+(\d+)[,.](\d{2})\s*€?$/;
 
+  // Quantity + item name pattern (e.g., "3 GO BIO TOMATEN")
+  const quantityItemPattern = /^(\d+)\s+([A-ZÄÖÜ][A-ZÄÖÜa-zäöü&.\s-]+)$/;
+  // Unit price pattern (e.g., "á 2,09" or "á 2,09     6,27")
+  const unitPricePattern = /^á\s*(\d+)[,.](\d{2})(?:\s+(\d+)[,.](\d{2}))?$/;
+
   let i = 0;
   while (i < lines.length) {
     const line = lines[i].trim();
@@ -236,6 +241,43 @@ const parseItems = (
         matched = true;
         i++;
         continue;
+      }
+    }
+
+    // Try quantity + item pattern (e.g., "3 GO BIO TOMATEN")
+    const matchQuantityItem = quantityItemPattern.exec(line);
+    if (matchQuantityItem && !matched) {
+      const quantity = parseInt(matchQuantityItem[1], 10);
+      const name = matchQuantityItem[2].trim();
+      console.log(`  ? CANTIDAD + NOMBRE DETECTADO: ${quantity}x '${name}'`);
+
+      // Check if next line has unit price info (á X,XX)
+      if (i + 1 < lines.length) {
+        const nextLine = lines[i + 1].trim();
+        console.log(`    Siguiente línea: '${nextLine}'`);
+
+        const matchUnitPrice = unitPricePattern.exec(nextLine);
+        if (matchUnitPrice) {
+          const unitPrice = parseFloat(`${matchUnitPrice[1]}.${matchUnitPrice[2]}`);
+          // If total price is provided on same line, use it; otherwise calculate it
+          const totalPrice = matchUnitPrice[3] && matchUnitPrice[4]
+            ? parseFloat(`${matchUnitPrice[3]}.${matchUnitPrice[4]}`)
+            : unitPrice * quantity;
+
+          console.log(`  ✓ ITEM CON CANTIDAD`);
+          console.log(`    Cantidad: ${quantity}`);
+          console.log(`    Precio unitario: €${unitPrice}`);
+          console.log(`    Precio total: €${totalPrice}`);
+
+          items.push({
+            name: quantity > 1 ? `${name} (${quantity}x)` : name,
+            quantity,
+            price: totalPrice,
+          });
+          matched = true;
+          i += 2; // Skip name + unit price lines
+          continue;
+        }
       }
     }
 

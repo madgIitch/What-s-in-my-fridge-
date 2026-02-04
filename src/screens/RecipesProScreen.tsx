@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -63,6 +63,8 @@ const RecipesProScreen = () => {
   const [syncing, setSyncing] = useState(false);
   const [localCookingTime, setLocalCookingTime] = useState<number>(cookingTime);
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
+  const [selectedIngredientFilters, setSelectedIngredientFilters] = useState<string[]>([]);
+  const [selectedCategoryFilters, setSelectedCategoryFilters] = useState<string[]>([]);
   const wiggleAnim = useRef(new Animated.Value(0)).current;
 
   // Wiggle animation for emoji
@@ -118,6 +120,27 @@ const RecipesProScreen = () => {
   const ingredientNames = items
     .map((item) => item.normalizedName || item.name)
     .filter((name) => name && name.trim() !== ''); // Remove empty/null names
+
+  const ingredientOptions = useMemo(() => {
+    const unique = new Set<string>();
+
+    for (const item of items) {
+      const name = (item.normalizedName || item.name || '').trim();
+      if (name) unique.add(name);
+    }
+
+    return Array.from(unique).sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
+  const categoryOptions = useMemo(() => {
+    const unique = new Set(
+      items
+        .map((item) => item.category)
+        .filter((category) => category && category.trim() !== '')
+        .map((category) => category!.trim())
+    );
+    return Array.from(unique).sort((a, b) => a.localeCompare(b));
+  }, [items]);
 
   useEffect(() => {
     setSelectedUtensils(availableUtensils);
@@ -219,9 +242,85 @@ const RecipesProScreen = () => {
     );
   };
 
+  const normalized = (value: string) => value.trim().toLowerCase();
+
+  const filteredRecipes = useMemo(() => {
+    if (selectedIngredientFilters.length === 0 && selectedCategoryFilters.length === 0) {
+      return recipes;
+    }
+
+    const ingredientFilters = selectedIngredientFilters.map(normalized);
+    const categoryFilters = selectedCategoryFilters.map(normalized);
+
+    const categoryIngredientMap = new Map<string, Set<string>>();
+    for (const item of items) {
+      const category = item.category ? normalized(item.category) : '';
+      const ingredient = item.normalizedName ? normalized(item.normalizedName) : normalized(item.name);
+      if (!category || !ingredient) continue;
+      const bucket = categoryIngredientMap.get(category) ?? new Set<string>();
+      bucket.add(ingredient);
+      categoryIngredientMap.set(category, bucket);
+    }
+
+    const categoryIngredientUnion = new Set<string>();
+    for (const category of categoryFilters) {
+      const bucket = categoryIngredientMap.get(category);
+      if (bucket) {
+        bucket.forEach((value) => categoryIngredientUnion.add(value));
+      }
+    }
+
+    return recipes.filter((recipe) => {
+      const baseIngredients =
+        Array.isArray(recipe.matchedIngredients) && Array.isArray(recipe.missingIngredients)
+          ? [...recipe.matchedIngredients, ...recipe.missingIngredients]
+          : [];
+      const fallbackIngredients =
+        baseIngredients.length > 0
+          ? baseIngredients
+          : Array.isArray(recipe.ingredientsWithMeasures)
+            ? recipe.ingredientsWithMeasures
+            : [];
+
+      const recipeIngredientSet = new Set(fallbackIngredients.map(normalized));
+
+      const ingredientsMatch = ingredientFilters.every((filter) => recipeIngredientSet.has(filter));
+      if (!ingredientsMatch) return false;
+
+      if (categoryFilters.length === 0) return true;
+      if (categoryIngredientUnion.size === 0) return false;
+
+      for (const ingredient of recipeIngredientSet) {
+        if (categoryIngredientUnion.has(ingredient)) return true;
+      }
+      return false;
+    });
+  }, [items, recipes, selectedCategoryFilters, selectedIngredientFilters]);
+
+  const handleIngredientFilterToggle = (ingredientName: string) => {
+    setSelectedIngredientFilters((prev) =>
+      prev.includes(ingredientName)
+        ? prev.filter((name) => name !== ingredientName)
+        : [...prev, ingredientName]
+    );
+  };
+
+  const handleCategoryFilterToggle = (categoryName: string) => {
+    setSelectedCategoryFilters((prev) =>
+      prev.includes(categoryName)
+        ? prev.filter((name) => name !== categoryName)
+        : [...prev, categoryName]
+    );
+  };
+
+  const handleClearFilters = () => {
+    setSelectedIngredientFilters([]);
+    setSelectedCategoryFilters([]);
+  };
+
   const handleShuffleRecipe = () => {
     // Filtrar recetas con 100% de compatibilidad
-    const perfectRecipes = recipes.filter((recipe) => recipe.matchPercentage === 100);
+    const perfectRecipes = filteredRecipes.filter((recipe) => recipe.matchPercentage === 100);
 
     if (perfectRecipes.length === 0) {
       Alert.alert(
@@ -397,6 +496,67 @@ const RecipesProScreen = () => {
         </View>
       </Card>
 
+      <Card style={styles.filtersCard}>
+          <View style={styles.filtersHeader}>
+            <Text style={styles.sectionTitle}>🔎 Filtros de recetas</Text>
+            {(selectedIngredientFilters.length > 0 || selectedCategoryFilters.length > 0) && (
+              <TouchableOpacity onPress={handleClearFilters} activeOpacity={0.7}>
+                <Text style={styles.clearFiltersText}>Limpiar</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {ingredientOptions.length > 0 ? (
+            <View style={styles.filterGroup}>
+              <Text style={styles.preferenceLabel}>🥕 Ingredientes</Text>
+              <View style={styles.filtersContainer}>
+                {ingredientOptions.map((ingredient) => {
+                  const isSelected = selectedIngredientFilters.includes(ingredient);
+                  return (
+                    <TouchableOpacity
+                      key={ingredient}
+                      style={[styles.filterChip, isSelected && styles.filterChipSelected]}
+                      onPress={() => handleIngredientFilterToggle(ingredient)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.filterChipText, isSelected && styles.filterChipTextSelected]}>
+                        {ingredient}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          ) : (
+            <Text style={styles.filtersEmptyText}>
+              Añade ingredientes o genera recetas para ver opciones de filtro.
+            </Text>
+          )}
+
+          {categoryOptions.length > 0 && (
+            <View style={styles.filterGroup}>
+              <Text style={styles.preferenceLabel}>🧺 Categorías</Text>
+              <View style={styles.filtersContainer}>
+                {categoryOptions.map((category) => {
+                  const isSelected = selectedCategoryFilters.includes(category);
+                  return (
+                    <TouchableOpacity
+                      key={category}
+                      style={[styles.filterChip, isSelected && styles.filterChipSelected]}
+                      onPress={() => handleCategoryFilterToggle(category)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.filterChipText, isSelected && styles.filterChipTextSelected]}>
+                        {category}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+        </Card>
+
       {/* Get Recipes Button */}
       <View style={styles.mainButtonsContainer}>
         <Button
@@ -407,12 +567,12 @@ const RecipesProScreen = () => {
         />
         <TouchableOpacity
           onPress={handleShuffleRecipe}
-          disabled={recipes.length === 0}
-          style={[styles.shuffleButton, recipes.length === 0 && styles.shuffleButtonDisabled]}
+          disabled={filteredRecipes.length === 0}
+          style={[styles.shuffleButton, filteredRecipes.length === 0 && styles.shuffleButtonDisabled]}
           activeOpacity={0.7}
         >
-          <Shuffle size={24} color={recipes.length === 0 ? colors.outline : colors.onPrimary} />
-          <Text style={[styles.shuffleButtonText, recipes.length === 0 && styles.shuffleButtonTextDisabled]}>
+          <Shuffle size={24} color={filteredRecipes.length === 0 ? colors.outline : colors.onPrimary} />
+          <Text style={[styles.shuffleButtonText, filteredRecipes.length === 0 && styles.shuffleButtonTextDisabled]}>
             Sorpréndeme
           </Text>
         </TouchableOpacity>
@@ -448,17 +608,17 @@ const RecipesProScreen = () => {
       )}
 
       {/* Recipes List */}
-      {!loading && recipes.length > 0 && (
+      {!loading && filteredRecipes.length > 0 && (
         <View style={styles.recipesContainer}>
           <View style={styles.recipesTitleContainer}>
             <Text style={styles.recipesTitle}>
               ✨ Recetas Sugeridas
             </Text>
             <View style={styles.recipesCount}>
-              <Text style={styles.recipesCountText}>{recipes.length}</Text>
+              <Text style={styles.recipesCountText}>{filteredRecipes.length}</Text>
             </View>
           </View>
-          {recipes.map((recipe) => (
+          {filteredRecipes.map((recipe) => (
             <RecipeCard
               key={recipe.id}
               recipe={recipe}
@@ -477,6 +637,15 @@ const RecipesProScreen = () => {
           <Text style={styles.emptyStateTitle}>¡Listo para cocinar!</Text>
           <Text style={styles.emptyStateText}>
             Configura tus preferencias y obtén recetas mágicas personalizadas ✨
+          </Text>
+        </View>
+      )}
+      {!loading && recipes.length > 0 && filteredRecipes.length === 0 && (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateEmoji}>🧽</Text>
+          <Text style={styles.emptyStateTitle}>Sin resultados</Text>
+          <Text style={styles.emptyStateText}>
+            Ajusta los filtros para ver más recetas.
           </Text>
         </View>
       )}
@@ -732,6 +901,53 @@ const styles = StyleSheet.create({
   },
   preferencesCard: {
     marginBottom: spacing.md,
+  },
+  filtersCard: {
+    marginBottom: spacing.md,
+  },
+  filtersHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  clearFiltersText: {
+    ...typography.labelMedium,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  filterGroup: {
+    marginBottom: spacing.lg,
+  },
+  filtersContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  filtersEmptyText: {
+    ...typography.bodySmall,
+    color: colors.onSurfaceVariant,
+    marginBottom: spacing.sm,
+  },
+  filterChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    borderWidth: 2,
+    borderColor: colors.outline,
+    backgroundColor: colors.surface,
+  },
+  filterChipSelected: {
+    backgroundColor: colors.primaryContainer,
+    borderColor: colors.primary,
+  },
+  filterChipText: {
+    ...typography.labelMedium,
+    color: colors.onSurface,
+  },
+  filterChipTextSelected: {
+    color: colors.onPrimaryContainer,
+    fontWeight: '600',
   },
   sectionTitle: {
     ...typography.titleMedium,

@@ -48,10 +48,12 @@ export const useInventory = () => {
     try {
       // Normalize ingredient name for recipe matching
       let normalizedName: string | null = null;
+      let autoCategory: string | undefined = undefined;
       try {
         const normalizationResult = await normalizeIngredient(itemData.name, false);
         normalizedName = normalizationResult.normalizedName;
-        console.log(`🔄 Normalized "${itemData.name}" → "${normalizedName}" (${normalizationResult.method}, confidence: ${normalizationResult.confidence})`);
+        autoCategory = normalizationResult.categorySpanish;
+        console.log(`🔄 Normalized "${itemData.name}" → "${normalizedName}" (${normalizationResult.method}, confidence: ${normalizationResult.confidence})${autoCategory ? `, category: ${autoCategory}` : ''}`);
       } catch (error) {
         console.error('Error normalizing ingredient:', error);
         // Continue without normalization if it fails
@@ -62,7 +64,8 @@ export const useInventory = () => {
           item.name = itemData.name;
           item.normalizedName = normalizedName || undefined;
           item.expiryDate = itemData.expiryDate;
-          item.category = itemData.category;
+          // Use provided category, or fallback to auto-detected category
+          item.category = itemData.category || autoCategory;
           item.quantity = itemData.quantity;
           item.notes = itemData.notes;
           item.unit = itemData.unit;

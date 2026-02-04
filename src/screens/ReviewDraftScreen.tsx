@@ -22,6 +22,7 @@ import { DatePicker } from '../components/common/DatePicker';
 import { LoadingNeverito } from '../components/common';
 import { colors, typography, spacing } from '../theme';
 import { borderRadius } from '../theme/spacing';
+import { normalizeScannedIngredient } from '../services/firebase/functions';
 
 type ReviewDraftScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ReviewDraft'>;
 type ReviewDraftScreenRouteProp = RouteProp<RootStackParamList, 'ReviewDraft'>;
@@ -80,7 +81,34 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
           selected: true,
           expiryDateObj: getDefaultExpiryDate(item.category),
         }));
-        setItems(editableItems);
+
+        // Auto-assign categories by normalizing ingredient names
+        const itemsWithCategories = await Promise.all(
+          editableItems.map(async (item) => {
+            // Skip if category is already set
+            if (item.category) {
+              return item;
+            }
+
+            try {
+              const normalizationResult = await normalizeScannedIngredient(item.name, false);
+              if (normalizationResult.categorySpanish) {
+                console.log(`📦 Auto-assigned category "${normalizationResult.categorySpanish}" to "${item.name}"`);
+                return {
+                  ...item,
+                  category: normalizationResult.categorySpanish,
+                  expiryDateObj: getDefaultExpiryDate(normalizationResult.categorySpanish),
+                };
+              }
+            } catch (error) {
+              console.error(`Error normalizing "${item.name}":`, error);
+            }
+
+            return item;
+          })
+        );
+
+        setItems(itemsWithCategories);
       } else {
         Alert.alert('Error', 'No se pudo cargar el borrador');
         navigation.goBack();

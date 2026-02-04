@@ -10,6 +10,7 @@ interface NormalizedIngredient {
   synonyms: string[];
   category: string;
   subcategory?: string;
+  categorySpanish?: string; // Categoría en español para la app
   frequency: number;
 }
 
@@ -20,6 +21,7 @@ interface NormalizedVocabulary {
 interface NormalizationResult {
   scannedName: string;
   normalizedName: string | null;
+  categorySpanish?: string; // Categoría en español auto-asignada
   confidence: number;
   method: "exact" | "synonym" | "partial" | "fuzzy" | "llm" | "none";
 }
@@ -114,9 +116,11 @@ async function normalizeIngredient(
 
   // 1. Búsqueda exacta
   if (vocabulary[scannedLower]) {
+    const ingredientData = vocabulary[scannedLower];
     return {
       scannedName,
-      normalizedName: vocabulary[scannedLower].normalized,
+      normalizedName: ingredientData.normalized,
+      categorySpanish: ingredientData.categorySpanish,
       confidence: 1.0,
       method: "exact",
     };
@@ -128,6 +132,7 @@ async function normalizeIngredient(
       return {
         scannedName,
         normalizedName: data.normalized,
+        categorySpanish: data.categorySpanish,
         confidence: 0.95,
         method: "synonym",
       };
@@ -135,11 +140,12 @@ async function normalizeIngredient(
   }
 
   // 3. Búsqueda parcial (contiene)
-  for (const [normalized] of Object.entries(vocabulary)) {
+  for (const [normalized, data] of Object.entries(vocabulary)) {
     if (scannedLower.includes(normalized.toLowerCase())) {
       return {
         scannedName,
         normalizedName: normalized,
+        categorySpanish: data.categorySpanish,
         confidence: 0.8,
         method: "partial",
       };
@@ -147,7 +153,7 @@ async function normalizeIngredient(
   }
 
   // 4. Fuzzy matching con Levenshtein
-  let bestMatch: { normalized: string; score: number } | null = null;
+  let bestMatch: { normalized: string; categorySpanish?: string; score: number } | null = null;
 
   for (const [normalized, data] of Object.entries(vocabulary)) {
     // Comparar con nombre normalizado
@@ -161,7 +167,11 @@ async function normalizeIngredient(
     const score = Math.max(scoreNormalized, scoreSynonyms);
 
     if (!bestMatch || score > bestMatch.score) {
-      bestMatch = { normalized: data.normalized, score };
+      bestMatch = {
+        normalized: data.normalized,
+        categorySpanish: data.categorySpanish,
+        score
+      };
     }
   }
 
@@ -170,6 +180,7 @@ async function normalizeIngredient(
     return {
       scannedName,
       normalizedName: bestMatch.normalized,
+      categorySpanish: bestMatch.categorySpanish,
       confidence: bestMatch.score,
       method: "fuzzy",
     };
@@ -180,9 +191,12 @@ async function normalizeIngredient(
     try {
       const llmResult = await normalizWithLLM(scannedName, vocabulary);
       if (llmResult) {
+        // Buscar la categoría del resultado del LLM
+        const llmIngredientData = vocabulary[llmResult.toLowerCase()];
         return {
           scannedName,
           normalizedName: llmResult,
+          categorySpanish: llmIngredientData?.categorySpanish,
           confidence: 0.85,
           method: "llm",
         };
@@ -198,6 +212,7 @@ async function normalizeIngredient(
     return {
       scannedName,
       normalizedName: bestMatch.normalized,
+      categorySpanish: bestMatch.categorySpanish,
       confidence: bestMatch.score,
       method: "fuzzy",
     };
@@ -207,6 +222,7 @@ async function normalizeIngredient(
   return {
     scannedName,
     normalizedName: null,
+    categorySpanish: undefined,
     confidence: 0,
     method: "none",
   };
