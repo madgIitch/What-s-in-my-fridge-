@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,9 @@ import {
   Platform,
   ScrollView,
   Alert,
+  Animated,
+  StatusBar,
+  Image,
 } from 'react-native';
 import { signIn, signUp } from '../services/firebase/auth';
 import { Button } from '../components/common/Button';
@@ -21,6 +24,40 @@ const LoginScreen = () => {
 
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+
+  const wiggleAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Wiggle animation for fridge emoji
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(wiggleAnim, {
+          toValue: -5,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(wiggleAnim, {
+          toValue: 5,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(wiggleAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.delay(3000),
+      ])
+    ).start();
+
+    // Fade in animation
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  }, [wiggleAnim, fadeAnim]);
 
   const validate = () => {
     let valid = true;
@@ -80,99 +117,166 @@ const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFE5EC" />
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>🍎 What's In My Fridge</Text>
-          <Text style={styles.subtitle}>
-            Gestiona tu inventario de alimentos
-          </Text>
-        </View>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header Kawaii */}
+          <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
+            <View style={styles.headerContent}>
+              <Animated.Image
+                source={require('../../assets/neveritoNevera.png')}
+                style={[
+                  styles.headerImage,
+                  {
+                    transform: [{
+                      rotate: wiggleAnim.interpolate({
+                        inputRange: [-5, 5],
+                        outputRange: ['-5deg', '5deg']
+                      })
+                    }]
+                  }
+                ]}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={styles.title}>What's In My Fridge</Text>
+            <Text style={styles.subtitle}>
+              Gestiona tu inventario de alimentos ♡
+            </Text>
+          </Animated.View>
 
-        <View style={styles.form}>
-          <Input
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            error={emailError}
-            placeholder="ejemplo@email.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            editable={!loading}
-          />
+          {/* Form Card */}
+          <Animated.View style={[styles.formCard, { opacity: fadeAnim }]}>
+            <Text style={styles.formTitle}>
+              {isSignUp ? '¡Únete a nosotros! ✨' : '¡Bienvenid@ de vuelta! 🎉'}
+            </Text>
 
-          <Input
-            label="Contraseña"
-            value={password}
-            onChangeText={setPassword}
-            error={passwordError}
-            placeholder="Mínimo 6 caracteres"
-            secureTextEntry
-            autoComplete="password"
-            editable={!loading}
-          />
+            <View style={styles.form}>
+              <Input
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+                error={emailError}
+                placeholder="ejemplo@email.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                editable={!loading}
+              />
 
-          <Button
-            title={isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
-            onPress={isSignUp ? handleSignUp : handleSignIn}
-            loading={loading}
-            style={styles.primaryButton}
-          />
+              <Input
+                label="Contraseña"
+                value={password}
+                onChangeText={setPassword}
+                error={passwordError}
+                placeholder="Mínimo 6 caracteres"
+                secureTextEntry
+                autoComplete="password"
+                editable={!loading}
+              />
 
-          <Button
-            title={isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
-            onPress={toggleMode}
-            variant="text"
-            disabled={loading}
-          />
-        </View>
+              <Button
+                title={isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
+                onPress={isSignUp ? handleSignUp : handleSignIn}
+                loading={loading}
+                style={styles.primaryButton}
+              />
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            {isSignUp
-              ? 'Al crear una cuenta, aceptas nuestros términos y condiciones'
-              : 'Tus datos están protegidos con Firebase Authentication'}
-          </Text>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+              <Button
+                title={isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
+                onPress={toggleMode}
+                variant="text"
+                disabled={loading}
+              />
+            </View>
+          </Animated.View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              {isSignUp
+                ? 'Al crear una cuenta, aceptas nuestros términos y condiciones'
+                : 'Tus datos están protegidos con Firebase Authentication 🔒'}
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFE5EC',
+  },
+  keyboardView: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xxl,
   },
   header: {
     alignItems: 'center',
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.xl,
+    paddingTop: spacing.lg,
+  },
+  headerContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  headerImage: {
+    width: 120,
+    height: 120,
   },
   title: {
-    ...typography.headlineMedium,
-    color: colors.primary,
+    ...typography.headlineLarge,
+    fontSize: 28,
+    fontWeight: '800',
+    color: colors.onSurface,
     textAlign: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   subtitle: {
     ...typography.bodyLarge,
     color: colors.onSurfaceVariant,
     textAlign: 'center',
   },
+  formCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 32,
+    padding: spacing.xl,
+    marginBottom: spacing.lg,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  formTitle: {
+    ...typography.headlineSmall,
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.onSurface,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
   form: {
-    marginBottom: spacing.xl,
+    gap: spacing.sm,
   },
   primaryButton: {
     marginTop: spacing.md,
@@ -180,12 +284,13 @@ const styles = StyleSheet.create({
   },
   footer: {
     alignItems: 'center',
-    marginTop: spacing.xl,
+    paddingHorizontal: spacing.md,
   },
   footerText: {
     ...typography.bodySmall,
     color: colors.onSurfaceVariant,
     textAlign: 'center',
+    opacity: 0.8,
   },
 });
 

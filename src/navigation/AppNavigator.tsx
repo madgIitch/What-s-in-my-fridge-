@@ -9,6 +9,7 @@ import { useMealStore } from '../stores/useMealStore';
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ScanScreen from '../screens/ScanScreen';
+import CropScreen from '../screens/CropScreen';
 import RecipesProScreen from '../screens/RecipesProScreen';
 import FavoritesScreen from '../screens/FavoritesScreen';
 import RecipeStepsScreen from '../screens/RecipeStepsScreen';
@@ -85,7 +86,7 @@ export const AppNavigator = () => {
               name="ReviewDraft"
               component={ReviewDraftScreen}
               options={{
-                title: 'Revisar Items',
+                headerShown: false,
                 presentation: 'modal'
               }}
             />
@@ -103,6 +104,15 @@ export const AppNavigator = () => {
               options={{
                 headerShown: false,
                 presentation: 'modal'
+              }}
+            />
+            <Stack.Screen
+              name="Crop"
+              component={CropScreen}
+              options={{
+                headerShown: false,
+                presentation: 'fullScreenModal',
+                gestureEnabled: false
               }}
             />
             <Stack.Screen

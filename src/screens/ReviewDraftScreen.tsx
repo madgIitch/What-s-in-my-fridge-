@@ -8,7 +8,9 @@ import {
   Alert,
   TextInput,
   Modal,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, FOOD_CATEGORIES, FOOD_UNITS } from '../types';
@@ -244,16 +246,8 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
 
               await confirmDraft(draftId);
 
-              Alert.alert(
-                'Éxito',
-                `${selectedItems.length} item(s) agregados al inventario`,
-                [
-                  {
-                    text: 'OK',
-                    onPress: () => navigation.navigate('Home'),
-                  },
-                ]
-              );
+              // Navigate to home automatically
+              navigation.navigate('HomeTab');
             } catch (error) {
               console.error('Error adding items:', error);
               Alert.alert('Error', 'Error al agregar items al inventario');
@@ -327,17 +321,21 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer} edges={['top', 'bottom']}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFE5EC" />
         <LoadingNeverito size={80} speed={120} />
         <Text style={styles.loadingText}>Cargando borrador...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   const selectedCount = items.filter((item) => item.selected).length;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFE5EC" />
+
+      <View style={styles.contentContainer}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {(merchant || purchaseDate || total) && (
           <Card variant="outlined" style={styles.infoCard}>
@@ -504,25 +502,29 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </View>
       </Modal>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFE5EC',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#B5EAD7',
+    backgroundColor: '#FFE5EC',
   },
   loadingText: {
     ...typography.bodyLarge,
-    color: colors.onSurfaceVariant,
+    color: '#5A4A5E',
     marginTop: spacing.md,
+  },
+  contentContainer: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
@@ -533,6 +535,14 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     marginBottom: spacing.md,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    borderWidth: 0,
+    elevation: 2,
+    shadowColor: '#5A4A5E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
   infoRow: {
     flexDirection: 'row',
@@ -560,24 +570,26 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.titleMedium,
-    color: colors.onSurface,
+    color: '#5A4A5E',
+    fontWeight: '600',
   },
   selectAllText: {
     ...typography.labelMedium,
-    color: colors.primary,
+    color: '#FF9AA2',
+    fontWeight: '600',
   },
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     marginBottom: spacing.sm,
     padding: spacing.sm,
-    elevation: 1,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    elevation: 2,
+    shadowColor: '#5A4A5E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
   },
   checkbox: {
     padding: spacing.xs,
@@ -599,17 +611,18 @@ const styles = StyleSheet.create({
   },
   itemName: {
     ...typography.bodyLarge,
-    color: colors.onSurface,
-    fontWeight: '500',
+    color: '#5A4A5E',
+    fontWeight: '600',
   },
   itemDetails: {
     ...typography.bodySmall,
-    color: colors.onSurfaceVariant,
+    color: '#8B7B8B',
     marginTop: 2,
   },
   itemPrice: {
     ...typography.labelMedium,
-    color: colors.primary,
+    color: '#FF9AA2',
+    fontWeight: '600',
     marginTop: 2,
   },
   editIcon: {
@@ -629,7 +642,9 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
   },
   unrecognizedCard: {
-    backgroundColor: colors.surfaceVariant,
+    backgroundColor: '#FFF8F0',
+    borderRadius: 20,
+    borderWidth: 0,
   },
   unrecognizedLine: {
     ...typography.bodySmall,
@@ -643,16 +658,22 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   bottomActions: {
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     padding: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.outlineVariant,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    elevation: 8,
+    shadowColor: '#5A4A5E',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
   },
   selectedText: {
     ...typography.bodyMedium,
-    color: colors.onSurfaceVariant,
+    color: '#8B7B8B',
     textAlign: 'center',
     marginBottom: spacing.sm,
+    fontWeight: '500',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -667,9 +688,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     maxHeight: '85%',
   },
   modalHeader: {
@@ -682,7 +703,8 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     ...typography.titleLarge,
-    color: colors.onSurface,
+    color: '#5A4A5E',
+    fontWeight: '700',
   },
   closeButton: {
     ...typography.headlineSmall,
@@ -694,16 +716,17 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     ...typography.labelMedium,
-    color: colors.onSurface,
+    color: '#5A4A5E',
     marginBottom: spacing.xs,
+    fontWeight: '600',
   },
   textInput: {
     ...typography.bodyLarge,
-    borderWidth: 1,
-    borderColor: colors.outline,
-    borderRadius: borderRadius.md,
+    borderWidth: 2,
+    borderColor: '#FFD1DC',
+    borderRadius: 16,
     padding: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFBF7',
     color: colors.onSurface,
     marginBottom: spacing.md,
   },

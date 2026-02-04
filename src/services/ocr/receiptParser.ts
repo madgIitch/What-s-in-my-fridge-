@@ -86,6 +86,7 @@ const findMerchant = (lines: string[]): string | null => {
       lower.includes('lidl') ||
       lower.includes('aldi') ||
       lower.includes('dia') ||
+      lower.includes('netto') ||
       line.includes('Str.') ||
       line.includes('Damm') ||
       lower.includes('kaiserin')
@@ -117,42 +118,45 @@ const findDate = (text: string): string | null => {
  * Find total amount from receipt
  */
 const findTotal = (lines: string[]): number | null => {
-  const summeIndex = lines.findIndex((line) =>
-    line.trim().toUpperCase().startsWith('SUMME') ||
-    line.trim().toUpperCase().startsWith('TOTAL') ||
-    line.trim().toUpperCase().includes('GESAMT')
-  );
+  let maxTotal: number | null = null;
 
-  if (summeIndex >= 0) {
-    // Look for amount in next few lines
-    for (let i = summeIndex + 1; i < Math.min(summeIndex + 30, lines.length); i++) {
-      const amountRegex = /^(\d+),(\d{2})$/;
-      const match = amountRegex.exec(lines[i].trim());
+  for (let i = 0; i < lines.length; i++) {
+    const upper = lines[i].trim().toUpperCase();
+    const isTotalLine =
+      upper.startsWith('SUMME') ||
+      upper.startsWith('TOTAL') ||
+      upper.includes('GESAMT');
 
-      if (match) {
-        const euros = match[1];
-        const cents = match[2];
-        const total = parseFloat(`${euros}.${cents}`);
-        console.log(`✓ Total encontrado en línea ${i}: '${lines[i]}' → €${total}`);
-        return total;
+    if (!isTotalLine) continue;
+
+    // Check same line for amount
+    const sameLineMatch = /(\d+)[,.](\d{2})/.exec(lines[i]);
+    if (sameLineMatch) {
+      const amount = parseFloat(`${sameLineMatch[1]}.${sameLineMatch[2]}`);
+      if (amount > 0 && (!maxTotal || amount > maxTotal)) {
+        console.log(`✓ Total candidato en línea ${i}: '${lines[i].trim()}' → €${amount}`);
+        maxTotal = amount;
+      }
+    }
+
+    // Check next few lines for amount
+    for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+      const amountMatch = /^(\d+)[,.](\d{2})$/.exec(lines[j].trim());
+      if (amountMatch) {
+        const amount = parseFloat(`${amountMatch[1]}.${amountMatch[2]}`);
+        if (amount > 0 && (!maxTotal || amount > maxTotal)) {
+          console.log(`✓ Total candidato en línea ${j}: '${lines[j].trim()}' → €${amount}`);
+          maxTotal = amount;
+        }
       }
     }
   }
 
-  // Alternative: look for "TOTAL" with amount on same line
-  for (const line of lines) {
-    if (line.toUpperCase().includes('TOTAL')) {
-      const amountRegex = /(\d+)[,.](\d{2})/;
-      const match = amountRegex.exec(line);
-      if (match) {
-        const total = parseFloat(`${match[1]}.${match[2]}`);
-        console.log(`✓ Total encontrado en línea: '${line}' → €${total}`);
-        return total;
-      }
-    }
+  if (maxTotal) {
+    console.log(`✓ Total final (máximo): €${maxTotal}`);
   }
 
-  return null;
+  return maxTotal;
 };
 
 /**
@@ -182,6 +186,8 @@ const parseItems = (
   const quantityItemPattern = /^(\d+)\s+([A-ZÄÖÜ][A-ZÄÖÜa-zäöü&.\s-]+)$/;
   // Unit price pattern (e.g., "á 2,09" or "á 2,09     6,27")
   const unitPricePattern = /^á\s*(\d+)[,.](\d{2})(?:\s+(\d+)[,.](\d{2}))?$/;
+  // Name with specification pattern (e.g., "H-MILCH 1,5%")
+  const nameWithSpecPattern = /^([A-ZÄÖÜ&][A-ZÄÖÜa-zäöü&.\s-]+\d+[,.]\d+%?)$/;
 
   let i = 0;
   while (i < lines.length) {
@@ -281,8 +287,8 @@ const parseItems = (
       }
     }
 
-    // Try name pattern
-    const matchName = namePattern.exec(line);
+    // Try name pattern (also try name with specifications like "H-MILCH 1,5%")
+    const matchName = namePattern.exec(line) || nameWithSpecPattern.exec(line);
     if (matchName && !matched) {
       console.log(`  ? NOMBRE DETECTADO: '${matchName[1]}'`);
 
@@ -318,15 +324,35 @@ const parseItems = (
           i++;
           continue;
         }
+
+        // Check if next line is a standalone price (e.g., "2,49")
+        const standalonePriceMatch = /^(\d+)[,.](\d{2})$/.exec(nextLine);
+        if (standalonePriceMatch) {
+          const price = parseFloat(`${standalonePriceMatch[1]}.${standalonePriceMatch[2]}`);
+          if (price > 0 && price < 1000) {
+            console.log(`  ✓ ITEM CON PRECIO: '${matchName[1].trim()}' - €${price}`);
+            items.push({
+              name: matchName[1].trim(),
+              quantity: 1,
+              price,
+            });
+            matched = true;
+            i += 2;
+            continue;
+          }
+        }
       }
 
-      // No weight, save as product name to pair later
+      // No weight/price found, save as product name to pair later
       const name = matchName[1].trim();
+      const nameLower = name.toLowerCase();
       if (
         name.length > 3 &&
-        !name.includes('Berlin') &&
-        !name.includes('Debit') &&
-        !name.includes('Nr.')
+        !nameLower.includes('berlin') &&
+        !nameLower.includes('debit') &&
+        !nameLower.includes('nr.') &&
+        !nameLower.includes('netto') &&
+        !nameLower.includes('onlin')
       ) {
         console.log(`  ✓ NOMBRE GUARDADO: '${name}'`);
         productNames.push(name);
@@ -445,6 +471,13 @@ const shouldSkipLine = (line: string): boolean => {
     'Bed.',
     'Bon-Nr',
     'Markt:',
+    // Total and payment keywords
+    'GESAMT',
+    'ERHALTEN',
+    'KARTE',
+    'K-U-N-D-E',
+    'KOPENICK',
+    'KÖPENICK',
   ];
 
   if (skipKeywords.some((keyword) => line.includes(keyword))) {

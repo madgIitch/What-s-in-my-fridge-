@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ArrowLeft } from 'lucide-react-native';
 import { RootStackParamList } from '../types';
-import ImagePicker from 'react-native-image-crop-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { LoadingNeverito } from '../components/common';
@@ -66,16 +66,28 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
    */
   const takePhoto = async () => {
     try {
-      const image = await ImagePicker.openCamera({
-        mediaType: 'photo',
-        cropping: true,
-        freeStyleCropEnabled: true,
-        compressImageQuality: 0.8,
+      // Request camera permission
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permiso necesario', 'Necesitamos acceso a tu cámara');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: false,
+        quality: 0.8,
       });
 
-      if (image?.path) {
-        setImageUri(image.path);
-        setOcrText(null);
+      if (!result.canceled && result.assets[0]) {
+        // Navigate to crop screen
+        navigation.navigate('Crop', {
+          imageUri: result.assets[0].uri,
+          onCropComplete: (croppedUri: string) => {
+            setImageUri(croppedUri);
+            setOcrText(null);
+          },
+        });
       }
     } catch (error: any) {
       Alert.alert('Error', 'No se pudo tomar la foto');
@@ -88,16 +100,28 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
    */
   const pickImage = async () => {
     try {
-      const image = await ImagePicker.openPicker({
-        mediaType: 'photo',
-        cropping: true,
-        freeStyleCropEnabled: true,
-        compressImageQuality: 0.8,
+      // Request media library permission
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permiso necesario', 'Necesitamos acceso a tu galería');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: false,
+        quality: 0.8,
       });
 
-      if (image?.path) {
-        setImageUri(image.path);
-        setOcrText(null);
+      if (!result.canceled && result.assets[0]) {
+        // Navigate to crop screen
+        navigation.navigate('Crop', {
+          imageUri: result.assets[0].uri,
+          onCropComplete: (croppedUri: string) => {
+            setImageUri(croppedUri);
+            setOcrText(null);
+          },
+        });
       }
     } catch (error: any) {
       Alert.alert('Error', 'No se pudo seleccionar la imagen');
