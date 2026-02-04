@@ -103,9 +103,16 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
     const newConsumptions = [...consumptions];
     const item = newConsumptions[index];
 
-    if (item.inventoryItem && item.consumedAmount < item.inventoryItem.quantity) {
-      newConsumptions[index].consumedAmount += 1;
-      setConsumptions(newConsumptions);
+    if (item.inventoryItem) {
+      // Convert consumed amount to inventory unit for accurate comparison
+      const inventoryUnit = item.inventoryItem.unit as FoodUnit;
+      const newConsumedAmount = item.consumedAmount + 1;
+      const amountInInventoryUnit = convertUnits(newConsumedAmount, item.selectedUnit, inventoryUnit);
+
+      if (amountInInventoryUnit <= item.inventoryItem.quantity) {
+        newConsumptions[index].consumedAmount = newConsumedAmount;
+        setConsumptions(newConsumptions);
+      }
     }
   };
 
@@ -122,10 +129,15 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
     const item = newConsumptions[index];
     const amount = parseFloat(value) || 0;
 
-    const maxQuantity = item.inventoryItem?.quantity || 999;
-    if (amount >= 0 && amount <= maxQuantity) {
-      newConsumptions[index].consumedAmount = amount;
-      setConsumptions(newConsumptions);
+    if (item.inventoryItem && amount >= 0) {
+      // Convert amount to inventory unit for accurate comparison
+      const inventoryUnit = item.inventoryItem.unit as FoodUnit;
+      const amountInInventoryUnit = convertUnits(amount, item.selectedUnit, inventoryUnit);
+
+      if (amountInInventoryUnit <= item.inventoryItem.quantity) {
+        newConsumptions[index].consumedAmount = amount;
+        setConsumptions(newConsumptions);
+      }
     }
   };
 
@@ -542,14 +554,14 @@ const IngredientCard: React.FC<IngredientCardProps> = ({
           onPress={onIncrement}
           style={[
             styles.controlButton,
-            consumedAmount >= inventoryItem.quantity && styles.controlButtonDisabled
+            amountInInventoryUnit >= inventoryItem.quantity && styles.controlButtonDisabled
           ]}
-          disabled={consumedAmount >= inventoryItem.quantity}
+          disabled={amountInInventoryUnit >= inventoryItem.quantity}
           activeOpacity={0.7}
         >
           <Plus
             size={20}
-            color={consumedAmount >= inventoryItem.quantity ? colors.outline : colors.onPrimary}
+            color={amountInInventoryUnit >= inventoryItem.quantity ? colors.outline : colors.onPrimary}
           />
         </TouchableOpacity>
       </View>

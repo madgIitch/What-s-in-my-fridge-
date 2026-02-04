@@ -31,10 +31,13 @@ interface Props {
   navigation: HomeScreenNavigationProp;
 }
 
+type FilterType = 'fresh' | 'soon' | 'expired' | 'prepared';
+
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const { items, loading, error, deleteItem } = useInventory();
   const user = useAuthStore((state) => state.user);
   const wiggleAnim = useRef(new Animated.Value(0)).current;
+  const [activeFilter, setActiveFilter] = React.useState<FilterType | null>(null);
 
   // Wiggle animation for emoji
   useEffect(() => {
@@ -67,6 +70,29 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       return () => unsubscribe();
     }
   }, [user?.uid]);
+
+  // Filter items based on active filter
+  const filteredItems = React.useMemo(() => {
+    if (!activeFilter) return items;
+
+    switch (activeFilter) {
+      case 'fresh':
+        return items.filter(item => item.expiryState === 'OK');
+      case 'soon':
+        return items.filter(item => item.expiryState === 'SOON');
+      case 'expired':
+        return items.filter(item => item.expiryState === 'EXPIRED');
+      case 'prepared':
+        return items.filter(item => item.category === 'Platos preparados');
+      default:
+        return items;
+    }
+  }, [items, activeFilter]);
+
+  // Toggle filter (deactivate if already active)
+  const handleFilterPress = (filter: FilterType) => {
+    setActiveFilter(activeFilter === filter ? null : filter);
+  };
 
   const handleDeleteItem = (item: FoodItem) => {
     Alert.alert(
@@ -165,6 +191,49 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <Text style={styles.headerSubtitle}>
           {items.length} items guardados ♡
         </Text>
+
+        {/* Filters Row */}
+        <View style={styles.filtersContainer}>
+          <TouchableOpacity
+            style={[styles.filterChip, activeFilter === 'fresh' && styles.filterChipActive, styles.filterChipFresh]}
+            onPress={() => handleFilterPress('fresh')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.filterChipText, activeFilter === 'fresh' && styles.filterChipTextActive]}>
+              ♡ Frescos
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.filterChip, activeFilter === 'soon' && styles.filterChipActive, styles.filterChipSoon]}
+            onPress={() => handleFilterPress('soon')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.filterChipText, activeFilter === 'soon' && styles.filterChipTextActive]}>
+              ⚠ Pronto
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.filterChip, activeFilter === 'expired' && styles.filterChipActive, styles.filterChipExpired]}
+            onPress={() => handleFilterPress('expired')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.filterChipText, activeFilter === 'expired' && styles.filterChipTextActive]}>
+              (╥﹏╥) Vencidos
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.filterChip, activeFilter === 'prepared' && styles.filterChipActive, styles.filterChipPrepared]}
+            onPress={() => handleFilterPress('prepared')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.filterChipText, activeFilter === 'prepared' && styles.filterChipTextActive]}>
+              🍲 Platos
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {error && (
@@ -174,7 +243,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       )}
 
       <FlatList
-        data={items}
+        data={filteredItems}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
@@ -268,6 +337,47 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: colors.onSurfaceVariant,
     opacity: 0.9,
+    marginBottom: spacing.md,
+  },
+  filtersContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  filterChip: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderWidth: 2,
+    borderColor: colors.outlineVariant,
+  },
+  filterChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryContainer,
+  },
+  filterChipFresh: {
+    // Light green tint when active
+  },
+  filterChipSoon: {
+    // Light orange tint when active
+  },
+  filterChipExpired: {
+    // Light red tint when active
+  },
+  filterChipPrepared: {
+    // Light blue tint when active
+  },
+  filterChipText: {
+    ...typography.labelSmall,
+    fontSize: 12,
+    color: colors.onSurface,
+    fontWeight: '600',
+  },
+  filterChipTextActive: {
+    color: colors.onPrimaryContainer,
+    fontWeight: '700',
   },
   errorBanner: {
     backgroundColor: colors.errorContainer,

@@ -57,7 +57,13 @@ export const FOOD_CATEGORIES = [
   'Frutas',
   'Verduras',
   'Granos',
-  'Bebidas',
+  'Agua',
+  'Jugos',
+  'Refrescos',
+  'Café y Té',
+  'Vinos',
+  'Cervezas',
+  'Licores',
   'Snacks',
   'Condimentos',
   'Aceites',
@@ -89,7 +95,13 @@ export const DEFAULT_UNITS_BY_CATEGORY: Record<FoodCategory, FoodUnit> = {
   'Frutas': 'kg',              // Peso para frutas
   'Verduras': 'kg',            // Peso para verduras
   'Granos': 'kg',              // Arroz, pasta, legumbres
-  'Bebidas': 'litros',         // Bebidas líquidas
+  'Agua': 'litros',            // Agua embotellada
+  'Jugos': 'litros',           // Jugos de frutas
+  'Refrescos': 'litros',       // Sodas, refrescos
+  'Café y Té': 'g',            // Café molido, té en gramos
+  'Vinos': 'litros',           // Vinos (botellas)
+  'Cervezas': 'litros',        // Cervezas (botellas/latas)
+  'Licores': 'litros',         // Licores destilados
   'Snacks': 'paquete',         // Snacks empaquetados
   'Condimentos': 'g',          // Especias, sal en gramos
   'Aceites': 'litros',         // Aceites líquidos

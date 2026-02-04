@@ -54,7 +54,13 @@ export const FoodItemCard: React.FC<FoodItemCardProps> = ({
       'Frutas': '🍎',
       'Verduras': '🥬',
       'Granos': '🌾',
-      'Bebidas': '🥤',
+      'Agua': '💧',
+      'Jugos': '🧃',
+      'Refrescos': '🥤',
+      'Café y Té': '☕',
+      'Vinos': '🍷',
+      'Cervezas': '🍺',
+      'Licores': '🥃',
       'Snacks': '🍿',
       'Condimentos': '🧂',
       'Aceites': '🫒',
@@ -67,6 +73,7 @@ export const FoodItemCard: React.FC<FoodItemCardProps> = ({
       'Salsas': '🍯',
       'Postres': '🍰',
       'Pan': '🍞',
+      'Platos preparados': '🍲',
       'Otros': '📦',
     };
     return emojiMap[category || ''] || '🍱';
