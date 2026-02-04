@@ -105,6 +105,50 @@ function levenshteinDistance(str1: string, str2: string): number {
 }
 
 /**
+ * Limpia términos de marketing/etiquetas ecológicas del nombre del ingrediente
+ * Ejemplos:
+ * - "BIO-GURKEN GO BIO" → "GURKEN"
+ * - "GO BIO TOMATEN" → "TOMATEN"
+ * - "BIO CLEMENTINEN" → "CLEMENTINEN"
+ */
+function cleanMarketingTerms(scannedName: string): string {
+  let cleaned = scannedName.trim();
+
+  // Términos de marketing a eliminar (case-insensitive)
+  const marketingTerms = [
+    // Prefijos comunes
+    /^bio[-\s]*/i,           // "BIO-", "BIO "
+    /^go\s+bio\s*/i,         // "GO BIO "
+    /^organic\s*/i,          // "ORGANIC "
+    /^eco\s*/i,              // "ECO "
+    /^fair\s+trade\s*/i,     // "FAIR TRADE "
+
+    // Sufijos comunes
+    /\s+go\s+bio$/i,         // " GO BIO"
+    /\s+bio$/i,              // " BIO"
+    /\s+organic$/i,          // " ORGANIC"
+    /\s+eco$/i,              // " ECO"
+
+    // Términos en medio (entre espacios)
+    /\s+bio\s+/i,            // " BIO "
+    /\s+go\s+/i,             // " GO "
+    /\s+organic\s+/i,        // " ORGANIC "
+  ];
+
+  // Aplicar cada patrón de limpieza
+  for (const pattern of marketingTerms) {
+    cleaned = cleaned.replace(pattern, ' ');
+  }
+
+  // Limpiar espacios múltiples y trimear
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+  console.log(`🧹 Cleaning: "${scannedName}" → "${cleaned}"`);
+
+  return cleaned;
+}
+
+/**
  * Normaliza un ingrediente usando estrategia híbrida en cascada
  */
 async function normalizeIngredient(
@@ -112,7 +156,9 @@ async function normalizeIngredient(
   vocabulary: NormalizedVocabulary,
   useLlmFallback: boolean = true
 ): Promise<NormalizationResult> {
-  const scannedLower = scannedName.toLowerCase().trim();
+  // Limpiar términos de marketing ANTES de hacer matching
+  const cleanedName = cleanMarketingTerms(scannedName);
+  const scannedLower = cleanedName.toLowerCase().trim();
 
   // 1. Búsqueda exacta
   if (vocabulary[scannedLower]) {

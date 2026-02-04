@@ -81,6 +81,31 @@ export const FOOD_UNITS = ['unidad', 'kg', 'g', 'litros', 'ml', 'paquete', 'porc
 
 export type FoodUnit = typeof FOOD_UNITS[number];
 
+// Default units by category
+export const DEFAULT_UNITS_BY_CATEGORY: Record<FoodCategory, FoodUnit> = {
+  'Lácteos': 'litros',        // Leche, yogurt líquidos
+  'Carnes': 'kg',              // Peso para carnes
+  'Pescados': 'kg',            // Peso para pescados
+  'Frutas': 'kg',              // Peso para frutas
+  'Verduras': 'kg',            // Peso para verduras
+  'Granos': 'kg',              // Arroz, pasta, legumbres
+  'Bebidas': 'litros',         // Bebidas líquidas
+  'Snacks': 'paquete',         // Snacks empaquetados
+  'Condimentos': 'g',          // Especias, sal en gramos
+  'Aceites': 'litros',         // Aceites líquidos
+  'Harinas': 'kg',             // Harina en peso
+  'Huevos': 'unidad',          // Huevos por unidad
+  'Frutos Secos': 'g',         // Frutos secos en gramos
+  'Embutidos': 'g',            // Embutidos en gramos/lonchas
+  'Congelados': 'kg',          // Productos congelados por peso
+  'Conservas': 'unidad',       // Latas/botes por unidad
+  'Salsas': 'ml',              // Salsas líquidas
+  'Postres': 'unidad',         // Postres por unidad
+  'Pan': 'unidad',             // Pan por unidad/barra
+  'Platos preparados': 'porción', // Porciones
+  'Otros': 'unidad',           // Por defecto unidad
+};
+
 // Kitchen utensils
 export const KITCHEN_UTENSILS = [
   'oven',
@@ -105,4 +130,12 @@ export type SubscriptionTier = 'Free' | 'Pro';
 export const RECIPE_LIMITS: Record<SubscriptionTier, number> = {
   Free: 10,
   Pro: 100,
+};
+
+// Helper function to get default unit for a category
+export const getDefaultUnitForCategory = (category?: string): FoodUnit => {
+  if (!category) return 'unidad';
+
+  const foodCategory = category as FoodCategory;
+  return DEFAULT_UNITS_BY_CATEGORY[foodCategory] || 'unidad';
 };

@@ -83,7 +83,10 @@ export const getRecipeSuggestions = async (
 ): Promise<RecipeUi[]> => {
   try {
     const callable = functions().httpsCallableFromUrl(
-      getCallableUrl('europe-west1', 'getRecipeSuggestions')
+      getCallableUrl('europe-west1', 'getRecipeSuggestions'),
+      {
+        timeout: 300000, // 5 minutes (300 seconds in milliseconds)
+      }
     );
     const result = await callable(params);
 
@@ -237,5 +240,43 @@ export const normalizeScannedIngredientsBatch = async (
     }
 
     throw new Error('Error al normalizar ingredientes');
+  }
+};
+
+/**
+ * Migrar items existentes del inventario para agregar nombres normalizados
+ * @returns Resultado de la migración con estadísticas
+ */
+export const migrateInventoryNormalization = async (): Promise<{
+  success: boolean;
+  totalItems: number;
+  updatedCount: number;
+  errorCount: number;
+  updates: Array<{
+    id: string;
+    originalName: string;
+    normalizedName: string;
+    category?: string;
+    method: string;
+    confidence: number;
+  }>;
+}> => {
+  try {
+    const callable = functions().httpsCallableFromUrl(
+      getCallableUrl('europe-west1', 'migrateInventoryNormalization'),
+      {
+        timeout: 540000, // 9 minutes
+      }
+    );
+    const result = await callable({});
+
+    if (!result.data) {
+      throw new Error('Invalid response from Cloud Function');
+    }
+
+    return result.data;
+  } catch (error: any) {
+    console.error('Error calling migrateInventoryNormalization:', error);
+    throw new Error('Error al migrar normalización del inventario');
   }
 };

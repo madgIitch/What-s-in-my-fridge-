@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList, FOOD_CATEGORIES, FOOD_UNITS } from '../types';
+import { RootStackParamList, FOOD_CATEGORIES, FOOD_UNITS, getDefaultUnitForCategory } from '../types';
 import { useDrafts } from '../hooks/useDrafts';
 import { useInventory } from '../hooks/useInventory';
 import { ParsedItem } from '../database/models/ParsedDraft';
@@ -173,7 +173,7 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
     setEditName(item.name);
     setEditQuantity(String(item.quantity || 1));
     setEditCategory(item.category || 'Otros');
-    setEditUnit('unidad');
+    setEditUnit(getDefaultUnitForCategory(item.category));
     setEditExpiryDate(item.expiryDateObj);
     setEditModalVisible(true);
   };
@@ -239,7 +239,7 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
                   expiryDate: item.expiryDateObj.getTime(),
                   category: item.category,
                   quantity: item.quantity || 1,
-                  unit: 'unidad',
+                  unit: getDefaultUnitForCategory(item.category),
                   source: 'ocr',
                 });
               }

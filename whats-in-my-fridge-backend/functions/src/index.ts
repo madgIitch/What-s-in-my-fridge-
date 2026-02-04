@@ -16,7 +16,98 @@ export {parseReceipt};
 export {getRecipeSuggestions};
 
 // Funciones de normalización de ingredientes
-export {normalizeScannedIngredient, normalizeScannedIngredientsBatch};  
+export {normalizeScannedIngredient, normalizeScannedIngredientsBatch};
+
+// Función de migración para normalizar items existentes
+export const migrateInventoryNormalization = functions
+  .region("europe-west1")
+  .runWith({ memory: "2GB", timeoutSeconds: 540 })
+  .https.onCall(async (data, context) => {
+    // Solo permitir a usuarios autenticados
+    if (!context.auth) {
+      throw new functions.https.HttpsError("unauthenticated", "Usuario debe estar autenticado");
+    }
+
+    const userId = context.auth.uid;
+
+    try {
+      console.log(`🔄 Starting inventory normalization migration for user ${userId}`);
+
+      // Obtener todos los items del inventario del usuario
+      const inventoryRef = admin
+        .firestore()
+        .collection("users")
+        .doc(userId)
+        .collection("inventory");
+
+      const snapshot = await inventoryRef.get();
+
+      let updatedCount = 0;
+      let errorCount = 0;
+      const updates: any[] = [];
+
+      for (const doc of snapshot.docs) {
+        const itemData = doc.data();
+        const itemName = itemData.name;
+
+        // Skip if already has a valid normalized name
+        if (itemData.normalizedName && itemData.normalizedName.trim().length > 0) {
+          console.log(`⏭️ Skipping "${itemName}" - already normalized to "${itemData.normalizedName}"`);
+          continue;
+        }
+
+        try {
+          // Llamar a la función de normalización
+          const normalizationResult = await normalizeScannedIngredient.run(
+            {ingredientName: itemName, useLlmFallback: false},
+            {auth: context.auth} as any
+          );
+
+          if (normalizationResult.result.normalizedName) {
+            // Actualizar el documento con el nombre normalizado y categoría
+            await doc.ref.update({
+              normalizedName: normalizationResult.result.normalizedName,
+              category: normalizationResult.result.categorySpanish || itemData.category || "Otros",
+            });
+
+            updates.push({
+              id: doc.id,
+              originalName: itemName,
+              normalizedName: normalizationResult.result.normalizedName,
+              category: normalizationResult.result.categorySpanish,
+              method: normalizationResult.result.method,
+              confidence: normalizationResult.result.confidence,
+            });
+
+            updatedCount++;
+            console.log(
+              `✅ Updated "${itemName}" → "${normalizationResult.result.normalizedName}" (${normalizationResult.result.method}, ${normalizationResult.result.confidence})`
+            );
+          } else {
+            console.log(`⚠️ Could not normalize "${itemName}"`);
+          }
+        } catch (error: any) {
+          errorCount++;
+          console.error(`❌ Error normalizing "${itemName}":`, error.message);
+        }
+      }
+
+      console.log(
+        `✅ Migration complete: ${updatedCount} items updated, ${errorCount} errors, ${snapshot.size} total items`
+      );
+
+      return {
+        success: true,
+        totalItems: snapshot.size,
+        updatedCount,
+        errorCount,
+        updates,
+      };
+    } catch (error: any) {
+      console.error("❌ Error in migrateInventoryNormalization:", error);
+      throw new functions.https.HttpsError("internal", error.message);
+    }
+  });  
   
 // HTTP endpoint para subir imagen - us-central1 (cerca del Storage)  
 export const uploadReceipt = functions  

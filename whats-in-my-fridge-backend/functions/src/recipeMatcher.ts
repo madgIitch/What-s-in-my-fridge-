@@ -242,65 +242,204 @@ export function findMatchingRecipes(
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
+// Cache del vocabulario normalizado
+let vocabularyCache: any = null;
+let vocabularyCacheTime: number = 0;
+const CACHE_TTL_MS = 3600000; // 1 hora
+
+/**
+ * Carga el vocabulario normalizado desde Firebase Storage
+ */
+async function loadVocabulary(): Promise<any> {
+  const now = Date.now();
+
+  // Usar caché si está disponible y no ha expirado
+  if (vocabularyCache && now - vocabularyCacheTime < CACHE_TTL_MS) {
+    return vocabularyCache;
+  }
+
+  console.log("📥 Cargando vocabulario normalizado desde Storage...");
+
+  const bucket = admin.storage().bucket();
+  const file = bucket.file("normalized-ingredients.json");
+
+  const [contents] = await file.download();
+  const data = JSON.parse(contents.toString());
+
+  vocabularyCache = data.ingredients;
+  vocabularyCacheTime = now;
+
+  console.log(`✅ Vocabulario cargado: ${Object.keys(vocabularyCache!).length} ingredientes`);
+
+  return vocabularyCache!;
+}
+
+/**
+ * Obtiene la categoría de un ingrediente desde el vocabulario
+ */
+function getIngredientCategory(ingredientName: string, vocabulary: any): string | null {
+  const normalized = normalizeString(ingredientName);
+
+  // Buscar coincidencia exacta
+  if (vocabulary[normalized]) {
+    return vocabulary[normalized].categorySpanish || vocabulary[normalized].category;
+  }
+
+  // Buscar en sinónimos
+  for (const [, data] of Object.entries<any>(vocabulary)) {
+    if (data.synonyms && data.synonyms.some((syn: string) => normalizeString(syn) === normalized)) {
+      return data.categorySpanish || data.category;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Encuentra recetas basadas en categorías del inventario y ordena por match real
+ */
+function findMatchingRecipesByCategory(
+  inventoryItems: string[],
+  inventoryCategories: Set<string>,
+  vocabulary: any,
+  minMatchPercentage: number = 0.3
+): RecipeMatch[] {
+  const matches: RecipeMatch[] = [];
+  const recipes = getRecipes();
+
+  for (const recipe of recipes) {
+    const matchedIngredients: string[] = [];
+    let hasIngredientFromInventoryCategory = false;
+
+    const ingredientsForMatching = recipe.ingredientsNormalized || recipe.ingredients;
+    const totalIngredientsCount = recipe.ingredients.length;
+
+    // Verificar cada ingrediente de la receta
+    for (const ingredient of ingredientsForMatching) {
+      // Intentar match exacto primero
+      const match = matchIngredient(ingredient, inventoryItems);
+      if (match) {
+        matchedIngredients.push(match);
+      }
+
+      // Verificar si el ingrediente pertenece a una categoría del inventario
+      const ingredientCategory = getIngredientCategory(ingredient, vocabulary);
+      if (ingredientCategory && inventoryCategories.has(ingredientCategory)) {
+        hasIngredientFromInventoryCategory = true;
+      }
+    }
+
+    // Calcular porcentaje de match basado en ingredientes reales
+    const matchPercentage = matchedIngredients.length / totalIngredientsCount;
+    const missingCount = totalIngredientsCount - matchedIngredients.length;
+
+    // Solo incluir recetas que:
+    // 1. Tengan al menos un ingrediente de una categoría del inventario
+    // 2. Cumplan el porcentaje mínimo de match de ingredientes reales
+    // 3. Cumplan los requisitos mínimos de la receta
+    if (
+      hasIngredientFromInventoryCategory &&
+      matchedIngredients.length >= recipe.minIngredients &&
+      matchPercentage >= minMatchPercentage
+    ) {
+      matches.push({
+        recipe,
+        matchedIngredients,
+        matchPercentage,
+        missingCount,
+      });
+    }
+  }
+
+  // Ordenar por porcentaje de match descendente (ingredientes reales)
+  matches.sort((a, b) => {
+    if (a.missingCount !== b.missingCount) {
+      return a.missingCount - b.missingCount;
+    }
+    return b.matchPercentage - a.matchPercentage;
+  });
+
+  return matches;
+}
+
 export const getRecipeSuggestions = functions
   .region("europe-west1")
-  .runWith({ memory: "1GB", timeoutSeconds: 60 })
+  .runWith({ memory: "2GB", timeoutSeconds: 300 })
   .https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError("unauthenticated", "Usuario debe estar autenticado");
-  }
+    if (!context.auth) {
+      throw new functions.https.HttpsError("unauthenticated", "Usuario debe estar autenticado");
+    }
 
-  const userId = context.auth.uid;
+    const userId = context.auth.uid;
 
-  try {
-    // Obtener items del inventario del usuario desde Firestore
-    const inventorySnapshot = await admin
-      .firestore()
-      .collection("users")
-      .doc(userId)
-      .collection("inventory")
-      .get();
+    try {
+      // Cargar vocabulario para obtener categorías
+      const vocabulary = await loadVocabulary();
 
-    // Usar normalizedName si existe, sino usar name como fallback
-    const inventoryItems = inventorySnapshot.docs
-      .map((doc) => {
+      // Obtener items del inventario del usuario desde Firestore
+      const inventorySnapshot = await admin
+        .firestore()
+        .collection("users")
+        .doc(userId)
+        .collection("inventory")
+        .get();
+
+      // Extraer nombres normalizados Y categorías del inventario
+      const inventoryItems = inventorySnapshot.docs
+        .map((doc) => {
+          const data = doc.data();
+          return (data.normalizedName || data.name) as string;
+        })
+        .filter((name) => name && name.trim().length > 0);
+
+      // Extraer categorías únicas del inventario
+      const inventoryCategories = new Set<string>();
+      inventorySnapshot.docs.forEach((doc) => {
         const data = doc.data();
-        return (data.normalizedName || data.name) as string;
-      })
-      .filter((name) => name && name.trim().length > 0);
+        const category = data.category;
+        if (category && category.trim().length > 0) {
+          inventoryCategories.add(category);
+        }
+      });
 
-    console.log(`📦 Inventory items (normalized): ${inventoryItems.join(", ")}`);
+      console.log(`📦 Inventory items (normalized): ${inventoryItems.join(", ")}`);
+      console.log(`🏷️ Inventory categories: ${Array.from(inventoryCategories).join(", ")}`);
 
-    // Encontrar recetas que coincidan
-    const matches = findMatchingRecipes(inventoryItems, 0.5); // 50% mínimo para más resultados
-    console.log(`🍳 Found ${matches.length} matching recipes`);
+      // Encontrar recetas que coincidan
+      const matches = findMatchingRecipesByCategory(
+        inventoryItems,
+        inventoryCategories,
+        vocabulary,
+        0.3 // 30% mínimo para considerar recetas con ingredientes de categorías similares
+      );
+      console.log(`🍳 Found ${matches.length} matching recipes`);
 
-    return {
-      success: true,
-      recipes: matches.map((match) => ({
-        id: match.recipe.id,
-        name: match.recipe.name,
-        matchPercentage: Math.round(match.matchPercentage * 100),
-        matchedIngredients: match.matchedIngredients,
-        missingIngredients: (() => {
-          const normalizedMatches = new Set(
-            match.matchedIngredients.map((item) => normalizeString(item))
-          );
-          const recipeIngredients = match.recipe.ingredients;
-          const normalizedRecipeIngredients =
-            match.recipe.ingredientsNormalized || match.recipe.ingredients;
+      return {
+        success: true,
+        recipes: matches.map((match) => ({
+          id: match.recipe.id,
+          name: match.recipe.name,
+          matchPercentage: Math.round(match.matchPercentage * 100),
+          matchedIngredients: match.matchedIngredients,
+          missingIngredients: (() => {
+            const normalizedMatches = new Set(
+              match.matchedIngredients.map((item) => normalizeString(item))
+            );
+            const recipeIngredients = match.recipe.ingredients;
+            const normalizedRecipeIngredients =
+              match.recipe.ingredientsNormalized || match.recipe.ingredients;
 
-          return recipeIngredients.filter((ingredient, index) => {
-            const normalized =
-              normalizedRecipeIngredients[index] || ingredient;
-            return !normalizedMatches.has(normalizeString(normalized));
-          });
-        })(),
-        instructions: match.recipe.instructions,
-      })),
-    };
-  } catch (error) {
-    console.error("Error obteniendo sugerencias:", error);
-    throw new functions.https.HttpsError("internal", "Error obteniendo sugerencias de recetas");
-  }
-});
+            return recipeIngredients.filter((ingredient, index) => {
+              const normalized =
+                normalizedRecipeIngredients[index] || ingredient;
+              return !normalizedMatches.has(normalizeString(normalized));
+            });
+          })(),
+          instructions: match.recipe.instructions,
+        })),
+      };
+    } catch (error) {
+      console.error("Error obteniendo sugerencias:", error);
+      throw new functions.https.HttpsError("internal", "Error obteniendo sugerencias de recetas");
+    }
+  });

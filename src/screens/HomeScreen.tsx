@@ -22,7 +22,7 @@ import FoodItem from '../database/models/FoodItem';
 import { Button } from '../components/common/Button';
 import { KawaiiFAB, FABGroup } from '../components/common/KawaiiFAB';
 import { FoodItemCard } from '../components/food/FoodItemCard';
-import { Plus, Camera, ChefHat, Calendar } from 'lucide-react-native';
+import { Plus, Camera, ChefHat, Calendar, Settings } from 'lucide-react-native';
 import { colors, typography, spacing } from '../theme';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'HomeTab'>;
@@ -145,13 +145,22 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             resizeMode="contain"
             />
           </View>
-          <TouchableOpacity
-            style={styles.headerCalendarButton}
-            onPress={() => navigation.navigate('CalendarTab')}
-            activeOpacity={0.8}
-          >
-            <Calendar size={20} color={colors.onSurface} />
-          </TouchableOpacity>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => navigation.navigate('SettingsTab')}
+              activeOpacity={0.8}
+            >
+              <Settings size={20} color={colors.onSurface} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => navigation.navigate('CalendarTab')}
+              activeOpacity={0.8}
+            >
+              <Calendar size={20} color={colors.onSurface} />
+            </TouchableOpacity>
+          </View>
         </View>
         <Text style={styles.headerSubtitle}>
           {items.length} items guardados ♡
@@ -240,7 +249,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
   },
-  headerCalendarButton: {
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerIconButton: {
     width: 36,
     height: 36,
     borderRadius: 18,

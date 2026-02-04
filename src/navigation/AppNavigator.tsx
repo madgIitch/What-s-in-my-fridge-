@@ -12,6 +12,7 @@ import ScanScreen from '../screens/ScanScreen';
 import CropScreen from '../screens/CropScreen';
 import RecipesProScreen from '../screens/RecipesProScreen';
 import FavoritesScreen from '../screens/FavoritesScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import RecipeStepsScreen from '../screens/RecipeStepsScreen';
 import ReviewDraftScreen from '../screens/ReviewDraftScreen';
 import DetailScreen from '../screens/DetailScreen';
@@ -70,6 +71,11 @@ export const AppNavigator = () => {
             <Stack.Screen
               name="CalendarTab"
               component={CalendarScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="SettingsTab"
+              component={SettingsScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen
