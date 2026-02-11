@@ -1,5 +1,5 @@
 # Plan de Adaptación para Hackathon - What's In My Fridge
-## **ACTUALIZADO con Whisper + Ollama en Cloud Run**
+## **ACTUALIZADO con yt-dlp + Whisper + Ollama en Cloud Run**
 
 **Hackathon:** Propuesta de Aitum Bernath
 **Tiempo disponible:** 1.5 días
@@ -54,20 +54,21 @@
 
 #### **YouTube** 📺
 ```
-URL → youtube-transcript (subtítulos automáticos) →
+URL → Intento 1: youtube-transcript (rápido) →
+Si falla: Whisper Service (yt-dlp descarga audio) →
 Ollama extrae ingredientes → Lista de compras
 ```
 
-#### **Instagram** 📸
+#### **Instagram Reels** 📸
 ```
-URL → Scraping (descripción) + [BONUS: Whisper si hay audio] →
-Ollama extrae ingredientes → Lista de compras
+URL → Scraping de caption/metadata + Whisper Service (yt-dlp audio) →
+Combinar texto → Ollama extrae ingredientes → Lista de compras
 ```
 
 #### **TikTok** 🎵
 ```
-URL → Scraping (descripción) + [BONUS: Whisper si hay audio] →
-Ollama extrae ingredientes → Lista de compras
+URL → Scraping de descripción/metadata + Whisper Service (yt-dlp audio) →
+Combinar texto → Ollama extrae ingredientes → Lista de compras
 ```
 
 #### **Blogs** 📰
@@ -146,12 +147,13 @@ gcloud run deploy ollama-service \
 
 ---
 
-### 2. **Whisper Service** (Transcripción de Audio) [NUEVO]
+### 2. **Whisper Service** (Transcripción de Audio + URL social)
 
-**Función:** Transcribir audio de videos a texto para extracción de ingredientes
+**Función:** Transcribir audio de videos para extracción de ingredientes, aceptando URL de audio directo o URL social (YouTube/TikTok/Instagram Reels).
 
 **Especificaciones:**
 - **Modelo:** faster-whisper base (150MB)
+- **Descarga de audio:** yt-dlp
 - **Memoria:** 2Gi
 - **CPU:** 2 vCPUs
 - **Puerto:** 8080
@@ -172,9 +174,10 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar faster-whisper y Flask para API
+# Instalar faster-whisper, yt-dlp y Flask para API
 RUN pip install --no-cache-dir \
     faster-whisper==1.0.3 \
+    yt-dlp==2026.* \
     flask==3.0.0 \
     gunicorn==21.2.0 \
     requests==2.31.0
@@ -187,8 +190,8 @@ model = WhisperModel("base", device="cpu", compute_type="int8")
 print("✅ Modelo descargado exitosamente")
 EOF
 
-# Crear API Flask (ver archivo completo en Dockerfile.whisper)
-# ...
+# Copiar API Flask
+COPY whisper_api.py /app/whisper_api.py
 
 ENV PORT=8080
 EXPOSE 8080
@@ -196,16 +199,16 @@ EXPOSE 8080
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--threads", "2", "--timeout", "300", "whisper_api:app"]
 ```
 
-**API Endpoints:**
+**API Endpoints (actualizados):**
 - `GET /health` - Health check
-- `POST /transcribe` - Transcribir audio desde URL
+- `POST /transcribe` - Transcribir desde URL de audio o URL social
 
 **Ejemplo de request:**
 ```bash
 curl -X POST https://whisper-service-XXX.run.app/transcribe \
   -H "Content-Type: application/json" \
   -d '{
-    "url": "https://url-del-video-audio.mp3",
+    "url": "https://www.tiktok.com/@user/video/XXXXX",
     "language": "es"
   }'
 ```
@@ -215,7 +218,8 @@ curl -X POST https://whisper-service-XXX.run.app/transcribe \
 {
   "text": "Hoy vamos a hacer una pasta carbonara...",
   "language": "es",
-  "segments": [...]
+  "segments": [...],
+  "audio_source": "yt-dlp"
 }
 ```
 
@@ -256,82 +260,62 @@ gcloud run deploy whisper-service \
 
 **Ubicación:** `functions/src/parseRecipeFromUrl.ts`
 
-**Función:** Orquestador principal que coordina scraping, transcripción y extracción
+**Función:** Orquestador principal que coordina scraping, transcripción y extracción de `ingredients + steps`
 
-### **Flujo de Procesamiento**
+### **Flujo de Procesamiento (actualizado)**
 
 ```typescript
 // 1. Detectar tipo de URL
 const sourceType = detectUrlType(url);
 
-// 2. Extraer contenido según tipo
-switch (sourceType) {
-  case "youtube":
-    // Usar youtube-transcript para subtítulos automáticos
-    const transcript = await YoutubeTranscript.fetchTranscript(url);
-    rawText = transcript.map(item => item.text).join(" ");
-    break;
+// 2. Extraer metadata base por plataforma (title/caption/description)
+const socialText = await extractSocialMetadata(url, sourceType);
 
-  case "instagram":
-    // Opción A: Scraping de descripción (rápido)
-    rawText = await scrapeInstagram(url);
-
-    // Opción B [BONUS]: Si tiene URL de audio, transcribir
-    if (hasAudioUrl) {
-      const audioText = await transcribeWithWhisper(audioUrl);
-      rawText += "\n\n" + audioText;
-    }
-    break;
-
-  case "tiktok":
-    // Similar a Instagram
-    rawText = await scrapeTikTok(url);
-
-    // [BONUS]: Transcribir audio si disponible
-    if (hasAudioUrl) {
-      const audioText = await transcribeWithWhisper(audioUrl);
-      rawText += "\n\n" + audioText;
-    }
-    break;
-
-  case "blog":
-    // Web scraping con Cheerio
-    rawText = await extractFromBlog(url);
-    break;
+// 3. Obtener transcripción con fallback robusto
+let transcriptText = "";
+if (["youtube", "instagram", "tiktok"].includes(sourceType)) {
+  // YouTube: intento rápido con youtube-transcript
+  // Si falla o retorna vacío -> fallback a Whisper (yt-dlp dentro del servicio)
+  transcriptText = await getTranscriptWithFallback(url, sourceType);
 }
 
-// 3. Extraer ingredientes con Ollama
+// 4. Combinar texto de metadata + transcripción
+const rawText = [socialText, transcriptText].filter(Boolean).join("\n\n");
+
+// 5. Extraer ingredientes con Ollama
 const ingredients = await extractIngredientsWithOllama(rawText);
 
-// 4. Comparar con inventario del usuario
-const { matched, missing } = compareWithInventory(ingredients, userInventory);
+// 6. Extraer pasos con Ollama
+const steps = await extractStepsWithOllama(rawText);
 
-// 5. Guardar receta en Firestore
-return { recipeId, recipe, matched, missing, matchPercentage };
+// 7. Respuesta final
+return { ingredients, steps, sourceType, rawText, recipeTitle };
 ```
 
-### **Función auxiliar: Transcribir con Whisper**
+### **Función auxiliar: Fallback de transcripción**
 
 ```typescript
 /**
- * Transcribir audio usando Whisper service
+ * 1) Intenta youtube-transcript (solo YouTube)
+ * 2) Si falla, usa Whisper Service con la URL original
  */
-async function transcribeWithWhisper(audioUrl: string): Promise<string> {
-  const WHISPER_URL = "https://whisper-service-XXX.run.app";
-
+async function getTranscriptWithFallback(url: string, sourceType: string): Promise<string> {
   try {
-    const response = await axios.post(`${WHISPER_URL}/transcribe`, {
-      url: audioUrl,
-      language: "es"
-    }, {
-      timeout: 120000 // 2 minutos
-    });
-
-    return response.data.text;
+    if (sourceType === "youtube") {
+      const transcript = await YoutubeTranscript.fetchTranscript(url, { lang: "es" });
+      const text = transcript.map(item => item.text).join(" ").trim();
+      if (text.length > 50) return text;
+    }
   } catch (error) {
-    console.error("Error transcribiendo audio:", error);
-    return ""; // Fallback silencioso
+    console.warn("youtube-transcript falló, usando Whisper fallback");
   }
+
+  const response = await axios.post(`${WHISPER_URL}/transcribe`, {
+    url,
+    language: "es"
+  }, { timeout: 180000 });
+
+  return response.data.text || "";
 }
 ```
 
@@ -341,8 +325,25 @@ async function transcribeWithWhisper(audioUrl: string): Promise<string> {
 // En parseRecipeFromUrl.ts
 const OLLAMA_URL = "https://ollama-service-534730978435.europe-west1.run.app";
 const OLLAMA_MODEL = "qwen2.5:3b";
+const WHISPER_URL = "https://whisper-service-534730978435.europe-west1.run.app";
+```
 
-const WHISPER_URL = "https://whisper-service-XXXXXX-ew.a.run.app"; // Obtener después del deploy
+### **Comportamiento esperado por plataforma**
+- `youtube`: `youtube-transcript` primero; si falla, fallback a Whisper + yt-dlp.
+- `instagram` (incluye reels): metadata + transcripción de audio.
+- `tiktok`: metadata + transcripción de audio.
+- `blog`: scraping HTML directo (sin Whisper).
+
+### **Contrato de respuesta actual**
+
+```json
+{
+  "ingredients": ["..."],
+  "steps": ["..."],
+  "sourceType": "tiktok",
+  "rawText": "...",
+  "recipeTitle": "..."
+}
 ```
 
 ---
@@ -369,112 +370,40 @@ npm install --save-dev @types/cheerio
 
 ---
 
-## 📋 Plan de Implementación ACTUALIZADO
+## 📋 Estado del Proyecto en Pasos (actualizado)
 
-### **✅ COMPLETADO**
+### **Paso 1: Infraestructura IA (Cloud Run)**
+- ✅ Ollama service desplegado y operativo (`qwen2.5:3b`)
+- ✅ Whisper service desplegado y operativo (`faster-whisper base`)
+- ✅ Whisper reforzado con `yt-dlp` dentro del contenedor
+- ✅ Test real validado: `/transcribe` con URL pública de TikTok (`audio_source: "yt-dlp"`)
 
-1. **Setup de Ollama en Cloud Run**
-   - ✅ Dockerfile creado
-   - ✅ Build exitoso (~3min)
-   - ✅ Deploy a Cloud Run
-   - ✅ Testing: qwen2.5:3b funcionando
-   - ✅ URL: `https://ollama-service-534730978435.europe-west1.run.app`
+### **Paso 2: Parsing de URL en backend (Firebase Functions)**
+- ✅ `parseRecipeFromUrl` desplegada y funcionando
+- ✅ Entrada por texto manual funcional
+- ✅ Salida estructurada con `ingredients + steps`
+- ⚠️ YouTube con `youtube-transcript` presenta casos de bloqueo regional/captcha
+- 🔄 Pendiente: fallback automático a Whisper (`url social -> yt-dlp -> audio -> transcripción`)
 
-2. **Cloud Function parseRecipeFromUrl**
-   - ✅ Estructura básica creada
-   - ✅ Soporte para YouTube (youtube-transcript)
-   - ✅ Soporte para Instagram (scraping)
-   - ✅ Soporte para TikTok (scraping)
-   - ✅ Soporte para blogs (Cheerio)
-   - ✅ Integración con Ollama
-   - ✅ Exportada en index.ts
+### **Paso 3: Cobertura de redes sociales al 100%**
+- 🔄 YouTube: completar fallback robusto
+- ✅ TikTok: extracción `metadata + audio` validada end-to-end
+- 🔄 Instagram Reels: asegurar extracción `metadata + audio`
+- ⏳ Validar con URLs públicas reales por plataforma
 
-### **🔄 EN PROGRESO**
+### **Paso 4: Integración app + UX de errores**
+- ⏳ Mensajes claros en frontend cuando falle una fuente específica
+- ⏳ Mostrar al usuario qué estrategia se usó (`transcript`, `scraping`, `whisper`)
 
-3. **Setup de Whisper en Cloud Run**
-   - ⏳ Dockerfile.whisper creado
-   - ⏳ Pendiente: Build de imagen
-   - ⏳ Pendiente: Deploy a Cloud Run
-   - ⏳ Pendiente: Testing de transcripción
-
-4. **Integración Whisper en parseRecipeFromUrl**
-   - ⏳ Pendiente: Agregar función transcribeWithWhisper
-   - ⏳ Pendiente: Integrar en flujo de Instagram/TikTok
-   - ⏳ Pendiente: Testing end-to-end
-
-### **⏸️ PENDIENTE**
-
-5. **Deploy de Cloud Function**
-   - ⏸️ Instalar dependencias (cheerio, youtube-transcript)
-   - ⏸️ Build: `npm run build`
-   - ⏸️ Deploy: `firebase deploy --only functions:parseRecipeFromUrl`
-   - ⏸️ Testing con URLs reales
-
-6. **Frontend React Native**
-   - ⏸️ Crear AddRecipeFromUrlScreen
-   - ⏸️ Integrar con Cloud Function
-   - ⏸️ Mostrar resultados (matched/missing)
-   - ⏸️ Generar lista de compras
-
-7. **Testing End-to-End**
-   - ⏸️ Probar YouTube (5 videos diferentes)
-   - ⏸️ Probar Instagram (3 posts diferentes)
-   - ⏸️ Probar TikTok (3 videos diferentes)
-   - ⏸️ Probar blogs (3 páginas diferentes)
-   - ⏸️ Verificar precisión de extracción
+### **Paso 5: Validación final de hackathon**
+- ⏳ Suite mínima de pruebas E2E por plataforma
+- ⏳ Checklist de demo con 1 caso exitoso por fuente
 
 ---
 
 ## 🚀 Pasos Siguientes INMEDIATOS
 
-### **Paso 1: Deploy de Whisper** (20 minutos)
-
-```bash
-cd whats-in-my-fridge-backend
-
-# 1. Build de imagen (~5-8 minutos)
-gcloud builds submit --config=cloudbuild.whisper.yaml
-
-# 2. Deploy a Cloud Run (~2 minutos)
-gcloud run deploy whisper-service \
-  --image gcr.io/what-s-in-my-fridge-a2a07/whisper-service \
-  --platform managed \
-  --region europe-west1 \
-  --memory 2Gi \
-  --cpu 2 \
-  --timeout 300 \
-  --allow-unauthenticated \
-  --port 8080 \
-  --min-instances 0 \
-  --max-instances 2
-
-# 3. Guardar URL del servicio
-# Te dará algo como: https://whisper-service-XXXXXX-ew.a.run.app
-
-# 4. Test básico
-curl https://whisper-service-XXXXXX-ew.a.run.app/health
-# Debería devolver: {"status": "healthy", "model": "whisper-base"}
-```
-
-### **Paso 2: Instalar dependencias en Functions** (5 minutos)
-
-```bash
-cd whats-in-my-fridge-backend/functions
-
-npm install cheerio youtube-transcript
-npm install --save-dev @types/cheerio
-```
-
-### **Paso 3: Actualizar parseRecipeFromUrl con URL de Whisper** (2 minutos)
-
-Editar `functions/src/parseRecipeFromUrl.ts`:
-
-```typescript
-// Agregar al inicio del archivo
-const WHISPER_URL = "https://whisper-service-XXXXXX-ew.a.run.app"; // ← Cambiar XXX
-```
-
-### **Paso 4: Build y Deploy de Cloud Function** (10 minutos)
+### **Paso 1: Deploy final de parseRecipeFromUrl con fallback automático** (10-20 minutos)
 
 ```bash
 cd whats-in-my-fridge-backend/functions
@@ -486,32 +415,16 @@ npm run build
 firebase deploy --only functions:parseRecipeFromUrl
 ```
 
-### **Paso 5: Testing** (15 minutos)
+### **Paso 2: Testing de regresión por plataforma** (20-30 minutos)
 
-Test desde el emulador de Firebase Functions o desde la app:
+Pruebas recomendadas:
 
-```typescript
-// Test con YouTube
-const result1 = await parseRecipeFromUrl({
-  url: "https://www.youtube.com/watch?v=XXXXX"
-});
+- YouTube: 5 URLs (mínimo 2 sin transcript accesible)
+- Instagram Reels: 3 URLs públicas
+- TikTok: 3 URLs públicas
+- Blogs: 3 URLs
 
-// Test con Instagram
-const result2 = await parseRecipeFromUrl({
-  url: "https://www.instagram.com/p/XXXXX/"
-});
-
-// Test con TikTok
-const result3 = await parseRecipeFromUrl({
-  url: "https://www.tiktok.com/@user/video/XXXXX"
-});
-
-// Test con blog
-const result4 = await parseRecipeFromUrl({
-  url: "https://www.recetasgratis.net/receta-de-paella-valenciana-70337.html"
-});
-```
-
+Criterio de éxito: en cada plataforma retorna `rawText` útil, `ingredients` y `steps`.
 ---
 
 ## 💰 Costos Totales Estimados
@@ -586,10 +499,10 @@ https://www.youtube.com/watch?v=dQw4w9WgXcQ
 (Buscar videos de recetas en español con subtítulos automáticos)
 ```
 
-### **Instagram** (posts públicos)
+### **Instagram Reels** (públicos)
 ```
-https://www.instagram.com/p/XXXXX/
-(Buscar posts de chefs con ingredientes en caption)
+https://www.instagram.com/reel/XXXXX/
+(Buscar reels de recetas con audio y caption)
 ```
 
 ### **TikTok** (videos públicos)
@@ -610,26 +523,24 @@ https://www.directoalpaladar.com/recetas-de-carnes-y-aves/pollo-al-ajillo
 
 ### **Cloud Run Services**
 - [x] Ollama service deployed ✅
-- [ ] Whisper service deployed ⏳
-- [ ] URLs guardadas en código
+- [x] Whisper service deployed ✅
+- [x] Whisper actualizado con `yt-dlp` ✅
+- [x] URLs guardadas en código base
+- [x] Test TikTok en `/transcribe` exitoso (`audio_source: "yt-dlp"`) ✅
 
 ### **Firebase Functions**
 - [x] parseRecipeFromUrl creada ✅
-- [ ] Dependencias instaladas (cheerio, youtube-transcript) ⏳
-- [ ] Build successful ⏳
-- [ ] Deployed to Firebase ⏳
-- [ ] Tested con URLs reales ⏳
+- [x] Integración con Ollama ✅
+- [x] Respuesta con `ingredients + steps` ✅
+- [ ] Fallback automático YouTube -> Whisper
+- [x] Integración metadata + audio para TikTok ✅
+- [ ] Integración metadata + audio para Reels
+- [ ] Build + deploy final de parseRecipeFromUrl
 
-### **Frontend**
-- [ ] AddRecipeFromUrlScreen creada ⏳
-- [ ] Integración con Cloud Function ⏳
-- [ ] UI para mostrar matched/missing ⏳
-- [ ] Shopping list generation ⏳
-
-### **Testing**
-- [ ] 5+ URLs de YouTube testeadas ⏳
-- [ ] 3+ URLs de Instagram testeadas ⏳
-- [ ] 3+ URLs de TikTok testeadas ⏳
+### **Testing técnico**
+- [ ] 5+ URLs de YouTube testeadas (incluyendo casos bloqueados) ⏳
+- [ ] 3+ URLs de Instagram Reels testeadas ⏳
+- [x] TikTok testeado con éxito en backend (ingredients + steps) ✅
 - [ ] 3+ URLs de blogs testeadas ⏳
 - [ ] Flujo end-to-end validado ⏳
 
@@ -637,21 +548,18 @@ https://www.directoalpaladar.com/recetas-de-carnes-y-aves/pollo-al-ajillo
 
 ## 🎁 Features Bonus (Si sobra tiempo)
 
-1. **Transcripción automática para Instagram/TikTok**
-   - Detectar URL de video en Instagram/TikTok
-   - Descargar audio con yt-dlp
-   - Transcribir con Whisper
-   - Combinar con descripción
-
-2. **Caché de recetas**
+1. **Caché de recetas parseadas por URL**
    - Guardar recetas parseadas en Firestore
    - Evitar re-procesar la misma URL
-   - Mostrar "ya parseado" si existe
+   - Reducir latencia y costo
 
-3. **Mejora de prompts**
-   - Fine-tune prompts de Ollama
-   - A/B testing de diferentes prompts
-   - Optimizar precisión de extracción
+2. **Normalización post-Ollama**
+   - Unificar sinónimos de ingredientes
+   - Mejorar match con inventario
+
+3. **Observabilidad**
+   - Loggear estrategia usada (`transcript`, `scraping`, `whisper_yt_dlp`)
+   - Medir tasa de éxito por plataforma
 
 ---
 
@@ -675,30 +583,20 @@ whats-in-my-fridge-backend/
 
 ## 🎉 Siguiente Paso AHORA
 
-**Ejecuta estos comandos para deployar Whisper:**
+**Orden recomendado de ejecución:**
 
 ```powershell
-cd whats-in-my-fridge-backend
-
-# 1. Build de Whisper
-gcloud builds submit --config=cloudbuild.whisper.yaml
-
-# 2. Deploy de Whisper
-gcloud run deploy whisper-service --image gcr.io/what-s-in-my-fridge-a2a07/whisper-service --platform managed --region europe-west1 --memory 2Gi --cpu 2 --timeout 300 --allow-unauthenticated --port 8080 --min-instances 0 --max-instances 2
-
-# 3. Instalar dependencias
 cd functions
-npm install cheerio youtube-transcript
-npm install --save-dev @types/cheerio
-
-# 4. Build y deploy de Cloud Function
 npm run build
 firebase deploy --only functions:parseRecipeFromUrl
+
+# 2) Correr testing por plataforma (YouTube, Reels, TikTok, Blogs)
 ```
 
 ---
 
 **Última actualización:** 11 Febrero 2026
-**Arquitectura:** Ollama (qwen2.5:3b) + Whisper (faster-whisper base)
-**Plataformas soportadas:** YouTube 📺 | Instagram 📸 | TikTok 🎵 | Blogs 📰
-**Deployment:** 100% Cloud Run + Firebase Functions
+**Arquitectura:** Ollama (qwen2.5:3b) + Whisper (faster-whisper base) + yt-dlp
+**Plataformas objetivo:** YouTube 📺 | Instagram Reels 📸 | TikTok 🎵 | Blogs 📰
+**Estado actual:** Backend devuelve ingredients + steps; TikTok E2E validado; pendiente cierre E2E en YouTube/Reels/Blogs
+**Deployment:** Cloud Run + Firebase Functions

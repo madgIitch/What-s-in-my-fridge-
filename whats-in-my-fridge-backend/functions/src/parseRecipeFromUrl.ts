@@ -3,55 +3,46 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 import { YoutubeTranscript } from "youtube-transcript";
 
-// URL del servicio Ollama en Cloud Run
 const OLLAMA_URL = "https://ollama-service-534730978435.europe-west1.run.app";
 const OLLAMA_MODEL = "qwen2.5:3b";
+const WHISPER_URL = "https://whisper-service-534730978435.europe-west1.run.app";
 
 interface ParseRecipeFromUrlRequest {
   url: string;
-  manualText?: string; // Para Instagram/TikTok, el usuario puede pegar el texto manualmente
+  manualText?: string;
 }
 
 interface ParseRecipeFromUrlResponse {
   ingredients: string[];
+  steps: string[];
   sourceType: "youtube" | "instagram" | "tiktok" | "blog" | "manual";
   rawText: string;
   recipeTitle?: string;
 }
 
-/**
- * Cloud Function para parsear recetas de URLs (YouTube, Instagram, TikTok, blogs)
- * y extraer ingredientes usando Ollama
- */
 export const parseRecipeFromUrl = functions
   .region("europe-west1")
-  .runWith({ memory: "512MB", timeoutSeconds: 120 })
+  .runWith({ memory: "1GB", timeoutSeconds: 540 })
   .https.onCall(async (data: ParseRecipeFromUrlRequest, context): Promise<ParseRecipeFromUrlResponse> => {
-    // Validar autenticación
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Usuario debe estar autenticado");
     }
 
     const { url, manualText } = data;
+    if (!url || typeof url !== "string") {
+      throw new functions.https.HttpsError("invalid-argument", "URL inválida");
+    }
 
     try {
-      console.log(`🔍 Procesando URL: ${url}`);
-
       let rawText = "";
       let recipeTitle = "";
       let sourceType: ParseRecipeFromUrlResponse["sourceType"] = "blog";
 
-      // Si el usuario provee texto manual (para Instagram/TikTok)
       if (manualText && manualText.trim().length > 0) {
-        rawText = manualText;
+        rawText = manualText.trim();
         sourceType = "manual";
-        console.log("📝 Usando texto manual proporcionado por el usuario");
       } else {
-        // Detectar tipo de URL
         sourceType = detectUrlType(url);
-        console.log(`📱 Tipo de fuente detectado: ${sourceType}`);
-
-        // Extraer contenido según el tipo
         switch (sourceType) {
           case "youtube":
             ({ rawText, recipeTitle } = await extractFromYouTube(url));
@@ -73,38 +64,26 @@ export const parseRecipeFromUrl = functions
         throw new functions.https.HttpsError("failed-precondition", "No se pudo extraer texto de la URL");
       }
 
-      console.log(`📄 Texto extraído (${rawText.length} caracteres)`);
-
-      // Llamar a Ollama para extraer ingredientes
       const ingredients = await extractIngredientsWithOllama(rawText);
-
-      console.log(`✅ Ingredientes extraídos: ${ingredients.length} items`);
+      const steps = await extractStepsWithOllama(rawText);
 
       return {
         ingredients,
+        steps,
         sourceType,
-        rawText: rawText.substring(0, 500), // Retornar solo los primeros 500 caracteres
+        rawText: rawText.substring(0, 500),
         recipeTitle,
       };
     } catch (error: any) {
-      console.error("❌ Error en parseRecipeFromUrl:", error);
-
-      // Si ya es un HttpsError, re-lanzarlo
       if (error instanceof functions.https.HttpsError) {
         throw error;
       }
-
-      // Sino, crear un nuevo error
       throw new functions.https.HttpsError("internal", `Error procesando la receta: ${error.message}`);
     }
   });
 
-/**
- * Detecta el tipo de URL (YouTube, Instagram, TikTok, blog)
- */
 function detectUrlType(url: string): ParseRecipeFromUrlResponse["sourceType"] {
   const urlLower = url.toLowerCase();
-
   if (urlLower.includes("youtube.com") || urlLower.includes("youtu.be")) {
     return "youtube";
   }
@@ -114,218 +93,206 @@ function detectUrlType(url: string): ParseRecipeFromUrlResponse["sourceType"] {
   if (urlLower.includes("tiktok.com")) {
     return "tiktok";
   }
-
   return "blog";
 }
 
-/**
- * Extrae información de videos de YouTube usando transcripciones automáticas
- * Esto captura lo que se dice en el video, ideal para recetas
- */
-async function extractFromYouTube(url: string): Promise<{ rawText: string; recipeTitle: string }> {
+function transcriptItemsToText(transcript: any[]): string {
+  return transcript
+    .map((item: any) => item.text)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function combineTextParts(parts: string[]): string {
+  return parts
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0)
+    .join("\n\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+async function transcribeWithWhisper(url: string): Promise<string> {
   try {
-    // Primero, extraer metadatos (título) del HTML
-    let title = "";
-    try {
-      const response = await axios.get(url, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        },
-        timeout: 15000,
-      });
-      const $ = cheerio.load(response.data);
-      title = $('meta[property="og:title"]').attr("content") || $("title").text() || "Video de YouTube";
-    } catch (error) {
-      console.warn("No se pudo extraer el título del video, continuando con transcripción...");
-      title = "Receta de YouTube";
+    const response = await axios.post(
+      `${WHISPER_URL}/transcribe`,
+      { url, language: "en" },
+      {
+        timeout: 100000,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    const text = response.data?.text;
+    if (typeof text !== "string") {
+      return "";
     }
-
-    // Extraer transcripción del video (subtítulos automáticos)
-    console.log("🎥 Extrayendo transcripción de YouTube...");
-    const transcript = await YoutubeTranscript.fetchTranscript(url);
-
-    if (!transcript || transcript.length === 0) {
-      throw new Error("Este video no tiene subtítulos disponibles");
-    }
-
-    // Convertir la transcripción a texto continuo
-    const transcriptText = transcript
-      .map((item: any) => item.text)
-      .join(" ")
-      .replace(/\s+/g, " ") // Limpiar espacios múltiples
-      .trim();
-
-    console.log(`📝 Transcripción extraída: ${transcriptText.length} caracteres`);
-
-    if (transcriptText.length < 50) {
-      throw new Error("La transcripción es demasiado corta");
-    }
-
-    // Combinar título y transcripción
-    const rawText = `${title}\n\n${transcriptText}`;
-
-    return { rawText, recipeTitle: title };
+    return text.replace(/\s+/g, " ").trim();
   } catch (error: any) {
-    console.error("Error extrayendo de YouTube:", error.message);
-
-    // Si falla la transcripción, dar mensaje útil
-    if (error.message.includes("subtítulos") || error.message.includes("transcript")) {
-      throw new Error(
-        "Este video no tiene subtítulos disponibles. " +
-        "Por favor, copia manualmente los ingredientes del video y pégalos en el campo 'Texto manual'."
-      );
-    }
-
-    throw new Error(`Error al procesar el video de YouTube: ${error.message}`);
+    console.warn(`Whisper fallback no disponible: ${error.message}`);
+    return "";
   }
 }
 
-/**
- * Extrae información de posts de Instagram
- * Nota: Instagram tiene protecciones anti-scraping, esta implementación
- * intenta extraer metadatos básicos del HTML
- */
-async function extractFromInstagram(url: string): Promise<{ rawText: string; recipeTitle: string }> {
+async function fetchPageHtml(url: string): Promise<string> {
+  const response = await axios.get(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+      "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+    },
+    timeout: 30000,
+  });
+  return response.data;
+}
+
+async function extractFromYouTube(url: string): Promise<{ rawText: string; recipeTitle: string }> {
+  let title = "Receta de YouTube";
   try {
-    const response = await axios.get(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
-      },
-      timeout: 30000,
-    });
+    const html = await fetchPageHtml(url);
+    const $ = cheerio.load(html);
+    title = $('meta[property="og:title"]').attr("content") || $("title").text() || title;
+  } catch (error: any) {
+    console.warn(`No se pudo extraer título de YouTube: ${error.message}`);
+  }
 
-    const $ = cheerio.load(response.data);
+  let transcriptText = "";
+  try {
+    const transcriptEs = await YoutubeTranscript.fetchTranscript(url, { lang: "es" });
+    transcriptText = transcriptItemsToText(transcriptEs);
+  } catch (error: any) {
+    console.warn(`youtube-transcript (es) falló: ${error.message}`);
+  }
 
-    // Intentar extraer título/caption del meta tag
-    const title = $('meta[property="og:title"]').attr("content") || "Receta de Instagram";
-    const description = $('meta[property="og:description"]').attr("content") || "";
+  if (transcriptText.length < 50) {
+    try {
+      const transcriptAny = await YoutubeTranscript.fetchTranscript(url);
+      transcriptText = transcriptItemsToText(transcriptAny);
+    } catch (error: any) {
+      console.warn(`youtube-transcript (auto) falló: ${error.message}`);
+    }
+  }
 
-    // Intentar extraer del meta tag de descripción alternativo
-    const metaDescription = $('meta[name="description"]').attr("content") || "";
+  if (transcriptText.length < 50) {
+    transcriptText = await transcribeWithWhisper(url);
+  }
 
-    // Buscar scripts JSON-LD que a veces contienen la descripción
-    let jsonData = "";
+  const rawText = combineTextParts([title, transcriptText]);
+  if (rawText.length < 30) {
+    throw new Error(
+      "No se pudo extraer texto útil del video de YouTube (ni subtítulos ni audio). " +
+      "Prueba con otra URL pública o usa texto manual."
+    );
+  }
+
+  return { rawText, recipeTitle: title };
+}
+
+async function extractFromInstagram(url: string): Promise<{ rawText: string; recipeTitle: string }> {
+  let title = "Receta de Instagram";
+  let description = "";
+  let metaDescription = "";
+  let jsonData = "";
+
+  try {
+    const html = await fetchPageHtml(url);
+    const $ = cheerio.load(html);
+
+    title = $('meta[property="og:title"]').attr("content") || title;
+    description = $('meta[property="og:description"]').attr("content") || "";
+    metaDescription = $('meta[name="description"]').attr("content") || "";
+
     $('script[type="application/ld+json"]').each((_, elem) => {
       try {
         const jsonText = $(elem).html();
-        if (jsonText) {
-          const data = JSON.parse(jsonText);
-          if (data.description) {
-            jsonData += data.description + "\n";
-          }
-          if (data.caption) {
-            jsonData += data.caption + "\n";
-          }
+        if (!jsonText) {
+          return;
+        }
+        const data = JSON.parse(jsonText);
+        if (typeof data.description === "string") {
+          jsonData += data.description + "\n";
+        }
+        if (typeof data.caption === "string") {
+          jsonData += data.caption + "\n";
         }
       } catch (e) {
-        // Ignorar errores de parsing JSON
+        // Ignore JSON parse errors
       }
     });
-
-    // Combinar todo el texto extraído
-    const rawText = `${title}\n\n${description}\n${metaDescription}\n${jsonData}`.trim();
-
-    if (!rawText || rawText.length < 20) {
-      throw new Error(
-        "No se pudo extraer suficiente información de Instagram. " +
-        "Por favor, copia la descripción del post y pégala en el campo 'Texto manual' en la app."
-      );
-    }
-
-    return { rawText, recipeTitle: title };
   } catch (error: any) {
-    console.error("Error extrayendo de Instagram:", error.message);
-    // Si falla, dar instrucciones claras al usuario
+    console.warn(`Scraping de Instagram incompleto: ${error.message}`);
+  }
+
+  const audioText = await transcribeWithWhisper(url);
+  const rawText = combineTextParts([title, description, metaDescription, jsonData, audioText]);
+
+  if (rawText.length < 20) {
     throw new Error(
-      "Instagram tiene protecciones que dificultan la extracción automática. " +
-      "Por favor, copia la descripción/ingredientes del post y pégalos en el campo 'Texto manual' en la app."
+      "No se pudo extraer suficiente información de Instagram/Reels. " +
+      "Por favor, usa texto manual con descripción/ingredientes."
     );
   }
+
+  return { rawText, recipeTitle: title };
 }
 
-/**
- * Extrae información de videos de TikTok
- * Nota: TikTok tiene protecciones anti-scraping, esta implementación
- * intenta extraer metadatos básicos del HTML
- */
 async function extractFromTikTok(url: string): Promise<{ rawText: string; recipeTitle: string }> {
+  let title = "Receta de TikTok";
+  let description = "";
+  let jsonData = "";
+
   try {
-    const response = await axios.get(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
-      },
-      timeout: 30000,
-    });
+    const html = await fetchPageHtml(url);
+    const $ = cheerio.load(html);
 
-    const $ = cheerio.load(response.data);
+    title =
+      $('meta[property="og:title"]').attr("content") ||
+      $('meta[name="twitter:title"]').attr("content") ||
+      title;
 
-    // Intentar extraer título del video
-    const title = $('meta[property="og:title"]').attr("content") ||
-                  $('meta[name="twitter:title"]').attr("content") ||
-                  "Receta de TikTok";
+    description =
+      $('meta[property="og:description"]').attr("content") ||
+      $('meta[name="twitter:description"]').attr("content") ||
+      $('meta[name="description"]').attr("content") ||
+      "";
 
-    // Intentar extraer descripción
-    const description = $('meta[property="og:description"]').attr("content") ||
-                        $('meta[name="twitter:description"]').attr("content") ||
-                        $('meta[name="description"]').attr("content") || "";
-
-    // Buscar scripts JSON que TikTok a veces incluye
-    let jsonData = "";
     $('script[id*="__UNIVERSAL_DATA_FOR_REHYDRATION__"]').each((_, elem) => {
       try {
         const jsonText = $(elem).html();
-        if (jsonText) {
-          const data = JSON.parse(jsonText);
-          // TikTok a veces tiene la descripción en __DEFAULT_SCOPE__
-          if (data.__DEFAULT_SCOPE__?.["webapp.video-detail"]?.itemInfo?.itemStruct?.desc) {
-            jsonData = data.__DEFAULT_SCOPE__["webapp.video-detail"].itemInfo.itemStruct.desc;
-          }
+        if (!jsonText) {
+          return;
+        }
+        const data = JSON.parse(jsonText);
+        const desc = data.__DEFAULT_SCOPE__?.["webapp.video-detail"]?.itemInfo?.itemStruct?.desc;
+        if (typeof desc === "string" && desc.length > 0) {
+          jsonData = desc;
         }
       } catch (e) {
-        // Ignorar errores de parsing JSON
+        // Ignore JSON parse errors
       }
     });
-
-    // Combinar todo el texto extraído
-    const rawText = `${title}\n\n${description}\n${jsonData}`.trim();
-
-    if (!rawText || rawText.length < 20) {
-      throw new Error(
-        "No se pudo extraer suficiente información de TikTok. " +
-        "Por favor, copia la descripción del video y pégala en el campo 'Texto manual' en la app."
-      );
-    }
-
-    return { rawText, recipeTitle: title };
   } catch (error: any) {
-    console.error("Error extrayendo de TikTok:", error.message);
-    // Si falla, dar instrucciones claras al usuario
+    console.warn(`Scraping de TikTok incompleto: ${error.message}`);
+  }
+
+  const audioText = await transcribeWithWhisper(url);
+  const rawText = combineTextParts([title, description, jsonData, audioText]);
+
+  if (rawText.length < 20) {
     throw new Error(
-      "TikTok tiene protecciones que dificultan la extracción automática. " +
-      "Por favor, copia la descripción/ingredientes del video y pégalos en el campo 'Texto manual' en la app."
+      "No se pudo extraer suficiente información de TikTok. " +
+      "Por favor, usa texto manual con descripción/ingredientes."
     );
   }
+
+  return { rawText, recipeTitle: title };
 }
 
-/**
- * Extrae contenido de blogs/páginas web de recetas
- */
 async function extractFromBlog(url: string): Promise<{ rawText: string; recipeTitle: string }> {
   try {
-    const response = await axios.get(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-      },
-      timeout: 30000,
-    });
+    const html = await fetchPageHtml(url);
+    const $ = cheerio.load(html);
 
-    const $ = cheerio.load(response.data);
-
-    // Extraer título
     const title =
       $('h1[class*="recipe"]').first().text() ||
       $('meta[property="og:title"]').attr("content") ||
@@ -333,16 +300,13 @@ async function extractFromBlog(url: string): Promise<{ rawText: string; recipeTi
       $("title").text() ||
       "";
 
-    // Buscar secciones de ingredientes (patrones comunes)
     let ingredientsText = "";
-
-    // Buscar elementos que probablemente contengan ingredientes
     const ingredientSelectors = [
       '[class*="ingredient"]',
       '[id*="ingredient"]',
       'ul[class*="recipe"]',
-      '.recipe-ingredients',
-      '#ingredients',
+      ".recipe-ingredients",
+      "#ingredients",
       'div[class*="ingredients"]',
     ];
 
@@ -353,84 +317,116 @@ async function extractFromBlog(url: string): Promise<{ rawText: string; recipeTi
           ingredientsText += $(elem).text() + "\n";
         });
         if (ingredientsText.length > 50) {
-          break; // Ya encontramos suficiente contenido
+          break;
         }
       }
     }
 
-    // Si no encontramos ingredientes específicos, extraer todo el texto visible
     if (ingredientsText.length < 50) {
-      // Remover scripts, styles, etc.
       $("script, style, nav, header, footer, aside").remove();
-
-      // Extraer texto del body
       ingredientsText = $("body").text().replace(/\s+/g, " ").trim();
     }
 
     const rawText = `${title}\n\n${ingredientsText}`.trim();
-
     if (!rawText || rawText.length < 20) {
       throw new Error("No se pudo extraer suficiente contenido de la página web");
     }
 
-    return { rawText: rawText.substring(0, 2000), recipeTitle: title.trim() }; // Limitar a 2000 caracteres
+    return { rawText: rawText.substring(0, 2000), recipeTitle: title.trim() };
   } catch (error: any) {
-    console.error("Error extrayendo de blog:", error.message);
     throw new Error(`Error al procesar la página web: ${error.message}`);
   }
 }
 
-/**
- * Llama a Ollama en Cloud Run para extraer ingredientes del texto
- */
-async function extractIngredientsWithOllama(text: string): Promise<string[]> {
-  try {
-    const prompt = `Extrae SOLO los ingredientes de esta receta. Lista cada ingrediente en una línea separada, sin cantidades, solo el nombre del ingrediente en español. No incluyas instrucciones ni pasos de preparación.
+function parseIngredientsFromModelOutput(output: string): string[] {
+  return output
+    .split("\n")
+    .map((line: string) => line.trim())
+    .filter((line: string) => line.length > 0)
+    .map((line: string) => line.replace(/^[\d\-\*\.\)\(]+\s*/, "").trim())
+    .filter((line: string) => line.length > 2 && line.length < 100)
+    .slice(0, 30);
+}
+
+function parseStepsFromModelOutput(output: string): string[] {
+  return output
+    .split("\n")
+    .map((line: string) => line.trim())
+    .filter((line: string) => line.length > 0)
+    .map((line: string) => line.replace(/^(paso\s*\d+[:.)-]*\s*|[\d\-\*\.)\(]+\s*)/i, "").trim())
+    .filter((line: string) => line.length > 8 && line.length < 240)
+    .slice(0, 20);
+}
+
+function buildOllamaPrompt(inputText: string): string {
+  return `Extrae SOLO los ingredientes de esta receta. Lista cada ingrediente en una línea separada, sin cantidades, solo el nombre del ingrediente en español. No incluyas instrucciones ni pasos de preparación.
 
 Texto de la receta:
-${text.substring(0, 1500)}
+${inputText}
 
 Ingredientes:`;
+}
 
-    console.log(`🤖 Llamando a Ollama en ${OLLAMA_URL}...`);
-
-    const response = await axios.post(
-      `${OLLAMA_URL}/api/generate`,
-      {
-        model: OLLAMA_MODEL,
-        prompt: prompt,
-        stream: false,
+async function callOllama(prompt: string, timeoutMs: number): Promise<string> {
+  const response = await axios.post(
+    `${OLLAMA_URL}/api/generate`,
+    {
+      model: OLLAMA_MODEL,
+      prompt,
+      stream: false,
+    },
+    {
+      timeout: timeoutMs,
+      headers: {
+        "Content-Type": "application/json",
       },
-      {
-        timeout: 90000, // 90 segundos
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    }
+  );
+  return response.data.response || "";
+}
 
-    const ollamaResponse = response.data.response;
-    console.log(`🤖 Respuesta de Ollama: ${ollamaResponse}`);
-
-    // Parsear la respuesta de Ollama
-    const ingredients = ollamaResponse
-      .split("\n")
-      .map((line: string) => line.trim())
-      .filter((line: string) => line.length > 0)
-      .map((line: string) => {
-        // Remover números, guiones, asteriscos al inicio
-        return line.replace(/^[\d\-\*\.\)\(]+\s*/, "").trim();
-      })
-      .filter((line: string) => line.length > 2 && line.length < 100) // Filtrar líneas muy cortas o muy largas
-      .slice(0, 30); // Máximo 30 ingredientes
-
-    if (ingredients.length === 0) {
-      throw new Error("Ollama no pudo extraer ingredientes del texto");
+async function extractIngredientsWithOllama(text: string): Promise<string[]> {
+  try {
+    const primaryPrompt = buildOllamaPrompt(text.substring(0, 1500));
+    const primaryOutput = await callOllama(primaryPrompt, 180000);
+    const primaryIngredients = parseIngredientsFromModelOutput(primaryOutput);
+    if (primaryIngredients.length > 0) {
+      return primaryIngredients;
     }
 
-    return ingredients;
+    const retryPrompt = buildOllamaPrompt(text.substring(0, 900));
+    const retryOutput = await callOllama(retryPrompt, 180000);
+    const retryIngredients = parseIngredientsFromModelOutput(retryOutput);
+    if (retryIngredients.length > 0) {
+      return retryIngredients;
+    }
+
+    throw new Error("Ollama no pudo extraer ingredientes del texto");
   } catch (error: any) {
-    console.error("Error llamando a Ollama:", error.message);
     throw new Error(`Error al extraer ingredientes con Ollama: ${error.message}`);
+  }
+}
+
+async function extractStepsWithOllama(text: string): Promise<string[]> {
+  const stepsPrompt = `Extrae SOLO los pasos de preparación de esta receta.
+Devuelve una lista de pasos, un paso por línea, en orden y en español.
+No incluyas ingredientes ni cantidades.
+
+Texto de la receta:
+${text.substring(0, 1800)}
+
+Pasos:`;
+
+  try {
+    const output = await callOllama(stepsPrompt, 120000);
+    const steps = parseStepsFromModelOutput(output);
+    if (steps.length > 0) {
+      return steps;
+    }
+    return [];
+  } catch (error: any) {
+    // Los pasos son valor agregado: si falla, no tumbamos toda la función
+    console.warn(`No se pudieron extraer pasos: ${error.message}`);
+    return [];
   }
 }

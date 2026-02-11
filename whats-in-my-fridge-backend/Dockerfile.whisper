@@ -8,9 +8,10 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar faster-whisper y Flask para API
+# Instalar faster-whisper, yt-dlp y Flask para API
 RUN pip install --no-cache-dir \
     faster-whisper==1.0.3 \
+    yt-dlp==2026.* \
     flask==3.0.0 \
     gunicorn==21.2.0 \
     requests==2.31.0
@@ -29,4 +30,4 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 8080
 
 # Comando de inicio con Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--threads", "2", "--timeout", "300", "whisper_api:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--threads", "2", "--timeout", "900", "whisper_api:app"]
