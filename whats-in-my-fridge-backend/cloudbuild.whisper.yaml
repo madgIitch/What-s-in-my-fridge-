@@ -1,0 +1,6 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/what-s-in-my-fridge-a2a07/whisper-service', '-f', 'Dockerfile.whisper', '.']
+images:
+  - 'gcr.io/what-s-in-my-fridge-a2a07/whisper-service'
+timeout: 1200s

@@ -3,6 +3,7 @@ import * as functions from "firebase-functions";
 import {parseReceipt} from "./parseReceipt";
 import {getRecipeSuggestions} from "./recipeMatcher";
 import {normalizeScannedIngredient, normalizeScannedIngredientsBatch} from "./normalizeScannedIngredient";
+import {parseRecipeFromUrl} from "./parseRecipeFromUrl";
 
 // Inicializar Firebase Admin
 admin.initializeApp();
@@ -17,6 +18,9 @@ export {getRecipeSuggestions};
 
 // Funciones de normalización de ingredientes
 export {normalizeScannedIngredient, normalizeScannedIngredientsBatch};
+
+// Función de parsing de recetas desde URLs (YouTube, Instagram, TikTok, blogs)
+export {parseRecipeFromUrl};
 
 // Función de migración para normalizar items existentes
 export const migrateInventoryNormalization = functions

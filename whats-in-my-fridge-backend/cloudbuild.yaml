@@ -1,0 +1,6 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/what-s-in-my-fridge-a2a07/ollama-service', '-f', 'Dockerfile.ollama', '.']
+images:
+  - 'gcr.io/what-s-in-my-fridge-a2a07/ollama-service'
+timeout: 1800s

@@ -1,0 +1,27 @@
+FROM ollama/ollama:latest
+
+# Variables de entorno - CRÍTICO: Cloud Run usa PORT env var
+ENV OLLAMA_HOST=0.0.0.0:8080
+ENV PORT=8080
+
+# Exponer puerto
+EXPOSE 8080
+
+# Pre-descargar el modelo durante el build (esto tarda ~8 minutos)
+RUN ollama serve & \
+    pid=$! && \
+    echo "Esperando a que Ollama inicie..." && \
+    sleep 15 && \
+    echo "Descargando modelo qwen2.5:3b..." && \
+    ollama pull qwen2.5:3b && \
+    echo "Modelo descargado exitosamente" && \
+    kill $pid && \
+    wait $pid || true
+
+# Health check (opcional pero ayuda)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:${PORT}/api/tags || exit 1
+
+# Resetear ENTRYPOINT y ejecutar ollama serve directamente
+ENTRYPOINT []
+CMD ["ollama", "serve"]
