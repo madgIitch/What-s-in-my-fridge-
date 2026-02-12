@@ -71,7 +71,7 @@ export const parseRecipeFromUrl = functions
         ingredients,
         steps,
         sourceType,
-        rawText: rawText.substring(0, 500),
+        rawText, // ✅ Devolver texto completo para debugging
         recipeTitle,
       };
     } catch (error: any) {
@@ -359,12 +359,14 @@ function parseStepsFromModelOutput(output: string): string[] {
 }
 
 function buildOllamaPrompt(inputText: string): string {
-  return `Extrae SOLO los ingredientes de esta receta. Lista cada ingrediente en una línea separada, sin cantidades, solo el nombre del ingrediente en español. No incluyas instrucciones ni pasos de preparación.
+  return `Extract ONLY the ingredients from this recipe. The text may be a video transcription.
+List each ingredient on a separate line, without quantities, only the ingredient name.
+Do not include instructions or preparation steps.
 
-Texto de la receta:
+Recipe text:
 ${inputText}
 
-Ingredientes:`;
+Ingredients:`;
 }
 
 async function callOllama(prompt: string, timeoutMs: number): Promise<string> {
@@ -387,14 +389,15 @@ async function callOllama(prompt: string, timeoutMs: number): Promise<string> {
 
 async function extractIngredientsWithOllama(text: string): Promise<string[]> {
   try {
-    const primaryPrompt = buildOllamaPrompt(text.substring(0, 1500));
+    // ✅ Aumentado a 3000 caracteres para capturar más contenido
+    const primaryPrompt = buildOllamaPrompt(text.substring(0, 3000));
     const primaryOutput = await callOllama(primaryPrompt, 180000);
     const primaryIngredients = parseIngredientsFromModelOutput(primaryOutput);
     if (primaryIngredients.length > 0) {
       return primaryIngredients;
     }
 
-    const retryPrompt = buildOllamaPrompt(text.substring(0, 900));
+    const retryPrompt = buildOllamaPrompt(text.substring(0, 1500));
     const retryOutput = await callOllama(retryPrompt, 180000);
     const retryIngredients = parseIngredientsFromModelOutput(retryOutput);
     if (retryIngredients.length > 0) {
@@ -408,14 +411,16 @@ async function extractIngredientsWithOllama(text: string): Promise<string[]> {
 }
 
 async function extractStepsWithOllama(text: string): Promise<string[]> {
-  const stepsPrompt = `Extrae SOLO los pasos de preparación de esta receta.
-Devuelve una lista de pasos, un paso por línea, en orden y en español.
-No incluyas ingredientes ni cantidades.
+  // ✅ Prompt mejorado para transcripciones de video
+  const stepsPrompt = `Extract the cooking steps from this recipe. The text may be a video transcription.
+Return a list of steps, one step per line, in the order they appear.
+Only include preparation/cooking instructions, not ingredients or quantities.
+Keep each step clear and concise.
 
-Texto de la receta:
-${text.substring(0, 1800)}
+Recipe text:
+${text.substring(0, 4000)}
 
-Pasos:`;
+Steps:`;
 
   try {
     const output = await callOllama(stepsPrompt, 120000);

@@ -370,61 +370,370 @@ npm install --save-dev @types/cheerio
 
 ---
 
-## 📋 Estado del Proyecto en Pasos (actualizado)
+## 📋 Estado del Proyecto (ACTUALIZADO)
 
-### **Paso 1: Infraestructura IA (Cloud Run)**
+### **✅ BACKEND COMPLETADO (11 Feb 2026)**
+
+#### **Infraestructura IA (Cloud Run)**
 - ✅ Ollama service desplegado y operativo (`qwen2.5:3b`)
-- ✅ Whisper service desplegado y operativo (`faster-whisper base`)
-- ✅ Whisper reforzado con `yt-dlp` dentro del contenedor
-- ✅ Test real validado: `/transcribe` con URL pública de TikTok (`audio_source: "yt-dlp"`)
+- ✅ Whisper service desplegado y operativo (`faster-whisper base + yt-dlp`)
+- ✅ Ambos servicios testeados y validados
 
-### **Paso 2: Parsing de URL en backend (Firebase Functions)**
-- ✅ `parseRecipeFromUrl` desplegada y funcionando
-- ✅ Entrada por texto manual funcional
-- ✅ Salida estructurada con `ingredients + steps`
-- ⚠️ YouTube con `youtube-transcript` presenta casos de bloqueo regional/captcha
-- 🔄 Pendiente: fallback automático a Whisper (`url social -> yt-dlp -> audio -> transcripción`)
+#### **Cloud Function: parseRecipeFromUrl**
+- ✅ Desplegada y funcionando
+- ✅ Extracción de `ingredients + steps` con Ollama
+- ✅ Prompts optimizados para transcripciones de video (inglés/español)
+- ✅ Límites aumentados (3000 chars para ingredientes, 4000 para pasos)
+- ✅ Fallback automático YouTube → Whisper
+- ✅ Instagram Reels validado con caso real (metadata + audio → pasos completos)
+- ✅ TikTok funcional (metadata + audio)
+- ✅ Blogs funcional (scraping HTML)
 
-### **Paso 3: Cobertura de redes sociales al 100%**
-- 🔄 YouTube: completar fallback robusto
-- ✅ TikTok: extracción `metadata + audio` validada end-to-end
-- 🔄 Instagram Reels: asegurar extracción `metadata + audio`
-- ⏳ Validar con URLs públicas reales por plataforma
-
-### **Paso 4: Integración app + UX de errores**
-- ⏳ Mensajes claros en frontend cuando falle una fuente específica
-- ⏳ Mostrar al usuario qué estrategia se usó (`transcript`, `scraping`, `whisper`)
-
-### **Paso 5: Validación final de hackathon**
-- ⏳ Suite mínima de pruebas E2E por plataforma
-- ⏳ Checklist de demo con 1 caso exitoso por fuente
+#### **Contrato Backend → Frontend**
+```typescript
+type ParseRecipeFromUrlResult = {
+  ingredients: string[];     // ["potatoes", "eggs", "olive oil", ...]
+  steps: string[];           // ["Peel the potatoes", "Heat the oil", ...]
+  sourceType: "youtube" | "instagram" | "tiktok" | "blog" | "manual";
+  rawText: string;           // Transcripción completa (para debugging)
+  recipeTitle?: string;      // "Spanish Tortilla Recipe"
+};
+```
 
 ---
 
-## 🚀 Pasos Siguientes INMEDIATOS
+### **🔄 FRONTEND EN PROGRESO**
 
-### **Paso 1: Deploy final de parseRecipeFromUrl con fallback automático** (10-20 minutos)
+#### **Objetivo:** Pantalla de "Add Recipe from URL"
 
+**User Story:**
+> Como usuario, quiero pegar una URL de YouTube/Instagram/TikTok/Blog y que la app extraiga automáticamente los ingredientes y pasos, me muestre cuáles tengo en mi nevera, y me permita guardar la receta.
+
+**Flujo UX:**
+1. Usuario abre pantalla "Add Recipe"
+2. Ve dos opciones:
+   - 📝 "Manual Entry" (existente)
+   - 🔗 **"From URL" (NUEVO)**
+3. Usuario pega URL de video/blog
+4. App muestra loading (~20-30 seg)
+5. App muestra resultado:
+   - ✅ Ingredientes extraídos (con match vs inventario)
+   - ✅ Pasos de preparación
+   - ℹ️ Fuente detectada (YouTube/Instagram/TikTok/Blog)
+6. Usuario puede:
+   - Editar ingredientes/pasos
+   - Guardar receta en Firestore
+   - Ver qué ingredientes le faltan → Lista de compras
+
+---
+
+## 🎨 PLAN DE INTEGRACIÓN FRONTEND
+
+### **Fase 1: Setup y Estructura (30-45 min)**
+
+#### 1.1. Crear componente de pantalla
 ```bash
-cd whats-in-my-fridge-backend/functions
-
-# Build
-npm run build
-
-# Deploy
-firebase deploy --only functions:parseRecipeFromUrl
+# Ubicación sugerida
+whats-in-my-fridge/src/screens/AddRecipeFromUrlScreen.tsx
 ```
 
-### **Paso 2: Testing de regresión por plataforma** (20-30 minutos)
+#### 1.2. Estructura de la pantalla
+```typescript
+import React, { useState } from 'react';
+import { View, TextInput, Button, ActivityIndicator, ScrollView, Text } from 'react-native';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
-Pruebas recomendadas:
+interface ParseRecipeFromUrlResult {
+  ingredients: string[];
+  steps: string[];
+  sourceType: "youtube" | "instagram" | "tiktok" | "blog" | "manual";
+  rawText: string;
+  recipeTitle?: string;
+}
 
-- YouTube: 5 URLs (mínimo 2 sin transcript accesible)
-- Instagram Reels: 3 URLs públicas
-- TikTok: 3 URLs públicas
-- Blogs: 3 URLs
+export default function AddRecipeFromUrlScreen() {
+  const [url, setUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<ParseRecipeFromUrlResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-Criterio de éxito: en cada plataforma retorna `rawText` útil, `ingredients` y `steps`.
+  const handleParseUrl = async () => {
+    // Llamar a Firebase Function
+    // Mostrar resultado
+    // Permitir edición y guardado
+  };
+
+  return (
+    <ScrollView>
+      {/* Input de URL */}
+      {/* Loading indicator */}
+      {/* Resultado con ingredientes y pasos */}
+      {/* Botón de guardar */}
+    </ScrollView>
+  );
+}
+```
+
+---
+
+### **Fase 2: Integración con Firebase Function (20-30 min)**
+
+#### 2.1. Configurar llamada a Cloud Function
+```typescript
+const functions = getFunctions();
+const parseRecipeFromUrl = httpsCallable<
+  { url: string; manualText?: string },
+  ParseRecipeFromUrlResult
+>(functions, 'parseRecipeFromUrl');
+
+const handleParseUrl = async () => {
+  if (!url.trim()) {
+    setError('Please enter a valid URL');
+    return;
+  }
+
+  setLoading(true);
+  setError(null);
+  setResult(null);
+
+  try {
+    const response = await parseRecipeFromUrl({ url: url.trim() });
+    setResult(response.data);
+  } catch (err: any) {
+    setError(err.message || 'Failed to parse recipe. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+#### 2.2. Manejo de estados
+- **Loading:** Mostrar spinner + mensaje "Analyzing video... (20-30 sec)"
+- **Success:** Mostrar ingredientes + pasos extraídos
+- **Error:** Mostrar mensaje de error con sugerencias
+
+---
+
+### **Fase 3: UI de Resultado (30-45 min)**
+
+#### 3.1. Sección de ingredientes extraídos
+```typescript
+{result && (
+  <View style={styles.resultContainer}>
+    {/* Header */}
+    <Text style={styles.recipeTitle}>
+      {result.recipeTitle || 'Recipe'}
+    </Text>
+    <Text style={styles.sourceType}>
+      Source: {result.sourceType}
+    </Text>
+
+    {/* Ingredientes */}
+    <Text style={styles.sectionTitle}>
+      Ingredients ({result.ingredients.length})
+    </Text>
+    {result.ingredients.map((ingredient, index) => (
+      <View key={index} style={styles.ingredientRow}>
+        <Text>{ingredient}</Text>
+        {/* TODO: Mostrar si el usuario lo tiene en inventario */}
+      </View>
+    ))}
+
+    {/* Pasos */}
+    <Text style={styles.sectionTitle}>
+      Steps ({result.steps.length})
+    </Text>
+    {result.steps.map((step, index) => (
+      <View key={index} style={styles.stepRow}>
+        <Text>{index + 1}. {step}</Text>
+      </View>
+    ))}
+  </View>
+)}
+```
+
+#### 3.2. Match con inventario del usuario
+```typescript
+// Obtener inventario del usuario desde Firestore
+const [userInventory, setUserInventory] = useState<string[]>([]);
+
+useEffect(() => {
+  // Fetch user inventory from Firestore
+  // const inventory = await getUserInventory(userId);
+  // setUserInventory(inventory);
+}, []);
+
+// Comparar ingredientes extraídos con inventario
+const matchedIngredients = result.ingredients.filter(ing =>
+  userInventory.some(inv =>
+    inv.toLowerCase().includes(ing.toLowerCase()) ||
+    ing.toLowerCase().includes(inv.toLowerCase())
+  )
+);
+
+const missingIngredients = result.ingredients.filter(ing =>
+  !matchedIngredients.includes(ing)
+);
+```
+
+---
+
+### **Fase 4: Guardar Receta en Firestore (20-30 min)**
+
+#### 4.1. Estructura de datos en Firestore
+```typescript
+interface Recipe {
+  id: string;
+  title: string;
+  ingredients: string[];
+  steps: string[];
+  sourceType: string;
+  sourceUrl?: string;
+  createdAt: Date;
+  userId: string;
+}
+```
+
+#### 4.2. Función de guardado
+```typescript
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { db } from '../firebase/config';
+
+const handleSaveRecipe = async () => {
+  if (!result) return;
+
+  try {
+    await addDoc(collection(db, 'recipes'), {
+      title: result.recipeTitle || 'Untitled Recipe',
+      ingredients: result.ingredients,
+      steps: result.steps,
+      sourceType: result.sourceType,
+      sourceUrl: url,
+      createdAt: Timestamp.now(),
+      userId: currentUser.uid,
+    });
+
+    // Navegar de vuelta o mostrar éxito
+    navigation.goBack();
+  } catch (error) {
+    console.error('Error saving recipe:', error);
+    setError('Failed to save recipe');
+  }
+};
+```
+
+---
+
+### **Fase 5: Navegación e Integración (15-20 min)**
+
+#### 5.1. Agregar ruta en navegador
+```typescript
+// En tu Stack Navigator
+<Stack.Screen
+  name="AddRecipeFromUrl"
+  component={AddRecipeFromUrlScreen}
+  options={{ title: 'Add Recipe from URL' }}
+/>
+```
+
+#### 5.2. Botón en pantalla principal
+```typescript
+// En HomeScreen o RecipesScreen
+<Button
+  title="Add Recipe from URL"
+  onPress={() => navigation.navigate('AddRecipeFromUrl')}
+/>
+```
+
+---
+
+### **Fase 6: Polish & UX (20-30 min)**
+
+#### 6.1. Mejoras UX
+- ✅ Placeholder en input: "Paste YouTube, Instagram, TikTok, or blog URL"
+- ✅ Validación de URL antes de enviar
+- ✅ Loading con mensaje específico: "Analyzing video... This may take 20-30 seconds"
+- ✅ Iconos por tipo de fuente (📺 YouTube, 📸 Instagram, 🎵 TikTok, 📰 Blog)
+- ✅ Chips visuales para ingredientes: Verde (tengo) / Rojo (falta)
+- ✅ Botón "Add to Shopping List" para ingredientes faltantes
+
+#### 6.2. Manejo de errores mejorado
+```typescript
+const getErrorMessage = (error: any): string => {
+  if (error.message.includes('unauthenticated')) {
+    return 'Please log in to use this feature';
+  }
+  if (error.message.includes('No se pudo extraer texto')) {
+    return 'Could not extract recipe from this URL. Try a different video or use manual entry.';
+  }
+  return 'Something went wrong. Please try again or use manual entry.';
+};
+```
+
+---
+
+## 🚀 Pasos de Implementación (Orden Sugerido)
+
+### **Día 1 - Tarde (3-4 horas)**
+
+1. **Setup básico (45 min)**
+   - Crear `AddRecipeFromUrlScreen.tsx`
+   - Estructura básica con input y botón
+   - Integrar en navegación
+
+2. **Integración con Firebase Function (30 min)**
+   - Configurar llamada a `parseRecipeFromUrl`
+   - Manejo de loading/error/success
+
+3. **UI de resultado básica (1 hora)**
+   - Mostrar ingredientes extraídos
+   - Mostrar pasos de preparación
+   - Styling básico
+
+4. **Match con inventario (45 min)**
+   - Fetch inventario del usuario
+   - Comparar ingredientes
+   - Visual feedback (colores/chips)
+
+5. **Guardar en Firestore (30 min)**
+   - Función de guardado
+   - Navegación post-guardado
+
+6. **Testing & debugging (30 min)**
+   - Probar con URL real de cada plataforma
+   - Fix bugs menores
+
+---
+
+## ✅ Checklist de Deployment ACTUALIZADO
+
+### **Cloud Run Services**
+- [x] Ollama service deployed ✅
+- [x] Whisper service deployed ✅
+- [x] Whisper actualizado con `yt-dlp` ✅
+- [x] URLs guardadas en código base ✅
+- [x] Testing validado por plataforma ✅
+
+### **Firebase Functions**
+- [x] parseRecipeFromUrl creada ✅
+- [x] Integración con Ollama ✅
+- [x] Respuesta con `ingredients + steps` ✅
+- [x] Fallback automático YouTube → Whisper ✅
+- [x] Integración metadata + audio para TikTok ✅
+- [x] Integración metadata + audio para Instagram Reels ✅
+- [x] Prompts optimizados para video transcriptions ✅
+- [x] Build + deploy final completado ✅
+
+### **Frontend (React Native App)**
+- [ ] Crear `AddRecipeFromUrlScreen.tsx` ⏳
+- [ ] Integración con Firebase Function ⏳
+- [ ] UI de resultado (ingredientes + pasos) ⏳
+- [ ] Match con inventario del usuario ⏳
+- [ ] Guardar receta en Firestore ⏳
+- [ ] Navegación e integración ⏳
+- [ ] Polish & UX improvements ⏳
+- [ ] Testing E2E con URLs reales ⏳
+
 ---
 
 ## 💰 Costos Totales Estimados
@@ -581,22 +890,55 @@ whats-in-my-fridge-backend/
 
 ---
 
-## 🎉 Siguiente Paso AHORA
+## 🎉 SIGUIENTE PASO: FRONTEND INTEGRATION
 
-**Orden recomendado de ejecución:**
+### **Paso 1: Crear estructura base (ahora)**
+```bash
+# Crear archivo de pantalla
+touch whats-in-my-fridge/src/screens/AddRecipeFromUrlScreen.tsx
 
-```powershell
-cd functions
-npm run build
-firebase deploy --only functions:parseRecipeFromUrl
-
-# 2) Correr testing por plataforma (YouTube, Reels, TikTok, Blogs)
+# Estructura básica con:
+# - Input para URL
+# - Botón de "Analyze"
+# - Loading state
+# - Resultado (ingredientes + pasos)
 ```
+
+### **Paso 2: Integrar con Firebase Function**
+```typescript
+import { getFunctions, httpsCallable } from 'firebase/functions';
+
+const functions = getFunctions();
+const parseRecipeFromUrl = httpsCallable(functions, 'parseRecipeFromUrl');
+
+// Llamar con { url: "https://..." }
+```
+
+### **Paso 3: Mostrar resultado y guardar**
+- Mostrar ingredientes con match vs inventario
+- Mostrar pasos de preparación
+- Botón para guardar en Firestore
+- Navegación de vuelta
 
 ---
 
-**Última actualización:** 11 Febrero 2026
-**Arquitectura:** Ollama (qwen2.5:3b) + Whisper (faster-whisper base) + yt-dlp
-**Plataformas objetivo:** YouTube 📺 | Instagram Reels 📸 | TikTok 🎵 | Blogs 📰
-**Estado actual:** Backend devuelve ingredients + steps; TikTok E2E validado; pendiente cierre E2E en YouTube/Reels/Blogs
-**Deployment:** Cloud Run + Firebase Functions
+## 📊 Estimación de Tiempo
+
+| Fase | Duración | Prioridad |
+|------|----------|-----------|
+| Setup básico | 45 min | 🔴 Critical |
+| Integración Firebase | 30 min | 🔴 Critical |
+| UI de resultado | 1 hora | 🔴 Critical |
+| Match con inventario | 45 min | 🟡 Important |
+| Guardar en Firestore | 30 min | 🔴 Critical |
+| Polish & UX | 30 min | 🟢 Nice-to-have |
+| **TOTAL** | **~4 horas** | |
+
+---
+
+**Última actualización:** 11 Febrero 2026 - 23:30
+**Backend Status:** ✅ COMPLETADO Y VALIDADO
+**Frontend Status:** 🔄 EN PROGRESO
+**Arquitectura:** Ollama (qwen2.5:3b) + Whisper (faster-whisper base + yt-dlp)
+**Plataformas soportadas:** YouTube 📺 | Instagram Reels 📸 | TikTok 🎵 | Blogs 📰
+**Próximo hito:** Pantalla "Add Recipe from URL" funcional en app
