@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
-  FlatList,
+  SectionList,
   StyleSheet,
   Alert,
   RefreshControl,
@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../types';
+import { RootStackParamList, FOOD_CATEGORIES } from '../types';
 import { useInventory } from '../hooks/useInventory';
 import { useAuthStore } from '../stores/useAuthStore';
 import { signOut } from '../services/firebase/auth';
@@ -41,7 +41,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   // Wiggle animation for emoji
   useEffect(() => {
-    Animated.loop(
+    const anim = Animated.loop(
       Animated.sequence([
         Animated.timing(wiggleAnim, {
           toValue: -3,
@@ -60,7 +60,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         }),
         Animated.delay(2000),
       ])
-    ).start();
+    );
+    anim.start();
+    return () => anim.stop();
   }, [wiggleAnim]);
 
   // Start Firestore sync when user is logged in
@@ -71,22 +73,64 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [user?.uid]);
 
-  // Filter items based on active filter
-  const filteredItems = React.useMemo(() => {
-    if (!activeFilter) return items;
+  // Category emoji map for section headers
+  const categoryEmoji: Record<string, string> = {
+    'Lácteos': '🥛', 'Carnes': '🥩', 'Pescados': '🐟', 'Frutas': '🍎',
+    'Verduras': '🥬', 'Granos': '🌾', 'Agua': '💧', 'Jugos': '🧃',
+    'Refrescos': '🥤', 'Café y Té': '☕', 'Vinos': '🍷', 'Cervezas': '🍺',
+    'Licores': '🥃', 'Snacks': '🍿', 'Condimentos': '🧂', 'Aceites': '🫒',
+    'Harinas': '🌾', 'Huevos': '🥚', 'Frutos Secos': '🥜', 'Embutidos': '🌭',
+    'Congelados': '🧊', 'Conservas': '🥫', 'Salsas': '🍯', 'Postres': '🍰',
+    'Pan': '🍞', 'Platos preparados': '🍲', 'Otros': '📦',
+  };
 
-    switch (activeFilter) {
-      case 'fresh':
-        return items.filter(item => item.expiryState === 'OK');
-      case 'soon':
-        return items.filter(item => item.expiryState === 'SOON');
-      case 'expired':
-        return items.filter(item => item.expiryState === 'EXPIRED');
-      case 'prepared':
-        return items.filter(item => item.category === 'Platos preparados');
-      default:
-        return items;
+  // Filter items based on active filter, then group by category sorted by expiry
+  const sections = React.useMemo(() => {
+    let filtered = items;
+
+    if (activeFilter) {
+      switch (activeFilter) {
+        case 'fresh':
+          filtered = items.filter(item => item.expiryState === 'OK');
+          break;
+        case 'soon':
+          filtered = items.filter(item => item.expiryState === 'SOON');
+          break;
+        case 'expired':
+          filtered = items.filter(item => item.expiryState === 'EXPIRED');
+          break;
+        case 'prepared':
+          filtered = items.filter(item => item.category === 'Platos preparados');
+          break;
+      }
     }
+
+    // Group by category
+    const groups: Record<string, FoodItem[]> = {};
+    for (const item of filtered) {
+      const cat = item.category || 'Otros';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(item);
+    }
+
+    // Sort items within each group by expiry date ascending (soonest first)
+    for (const cat of Object.keys(groups)) {
+      groups[cat].sort((a, b) => a.expiryDate - b.expiryDate);
+    }
+
+    // Build ordered category list: "Platos preparados" first, then follow FOOD_CATEGORIES order
+    const orderedCategories = Object.keys(groups).sort((a, b) => {
+      if (a === 'Platos preparados') return -1;
+      if (b === 'Platos preparados') return 1;
+      const idxA = FOOD_CATEGORIES.indexOf(a as any);
+      const idxB = FOOD_CATEGORIES.indexOf(b as any);
+      return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+    });
+
+    return orderedCategories.map(cat => ({
+      title: `${categoryEmoji[cat] || '🍱'} ${cat}`,
+      data: groups[cat],
+    }));
   }, [items, activeFilter]);
 
   // Toggle filter (deactivate if already active)
@@ -249,12 +293,18 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       )}
 
-      <FlatList
-        data={filteredItems}
+      <SectionList
+        sections={sections}
         renderItem={renderItem}
+        renderSectionHeader={({ section: { title } }) => (
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionHeaderText}>{title}</Text>
+          </View>
+        )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={renderEmpty}
+        stickySectionHeadersEnabled={false}
         refreshControl={
           <RefreshControl refreshing={loading} colors={[colors.primary]} />
         }
@@ -393,6 +443,17 @@ const styles = StyleSheet.create({
   errorText: {
     ...typography.bodyMedium,
     color: colors.onErrorContainer,
+  },
+  sectionHeader: {
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
+    paddingHorizontal: spacing.xs,
+  },
+  sectionHeaderText: {
+    ...typography.titleMedium,
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.onSurface,
   },
   listContent: {
     padding: spacing.md,

@@ -131,7 +131,7 @@ export const deleteMealEntryFromFirestore = async (entryId: string) => {
  * Equivalent to InventoryRepository.startFirestoreSync()
  */
 export const startFirestoreSync = (userId: string) => {
-  console.log('Starting Firestore sync for user:', userId);
+  const BATCH_SIZE = 20;
 
   const unsubscribe = firestore()
     .collection('users')
@@ -139,82 +139,78 @@ export const startFirestoreSync = (userId: string) => {
     .collection('inventory')
     .onSnapshot(
       async (snapshot) => {
-        console.log('Firestore snapshot received:', snapshot.docChanges().length, 'changes');
+        const changes = snapshot.docChanges();
+        if (changes.length === 0) return;
 
-        await database.write(async () => {
-          for (const change of snapshot.docChanges()) {
-            const data = change.doc.data();
-            const itemId = change.doc.id;
-            const expiryDate =
-              typeof data.expiryDate === 'number'
-                ? data.expiryDate
-                : typeof data.expiryAt === 'number'
-                  ? data.expiryAt
-                  : undefined;
+        // Process in batches to avoid holding too much in memory
+        for (let i = 0; i < changes.length; i += BATCH_SIZE) {
+          const batch = changes.slice(i, i + BATCH_SIZE);
 
-            if (change.type === 'added' || change.type === 'modified') {
-              try {
-                // Check if item already exists locally
-                const existingItem = await collections.foodItems
-                  .find(itemId)
-                  .catch(() => null);
+          await database.write(async () => {
+            for (const change of batch) {
+              const data = change.doc.data();
+              const itemId = change.doc.id;
+              const expiryDate =
+                typeof data.expiryDate === 'number'
+                  ? data.expiryDate
+                  : typeof data.expiryAt === 'number'
+                    ? data.expiryAt
+                    : undefined;
 
-                if (existingItem) {
-                  // Update existing item
-                  await existingItem.update(() => {
-                    if (data.name !== undefined) existingItem.name = data.name;
-                    if (data.normalizedName !== undefined) {
-                      existingItem.normalizedName = data.normalizedName || undefined;
-                    }
-                    if (expiryDate !== undefined) existingItem.expiryDate = expiryDate;
-                    if (data.category !== undefined) existingItem.category = data.category;
-                    if (data.quantity !== undefined) existingItem.quantity = data.quantity;
-                    if (data.notes !== undefined) existingItem.notes = data.notes;
-                    if (data.unit !== undefined) existingItem.unit = data.unit;
-                    if (data.addedAt !== undefined) existingItem.addedAt = data.addedAt;
-                    if (data.source !== undefined) existingItem.source = data.source;
-                  });
-                  console.log('Updated item from Firestore:', itemId);
-                } else {
-                  // Create new item
-                  await collections.foodItems.create((item) => {
-                    if (expiryDate === undefined) {
-                      console.warn('Missing expiryDate in Firestore item, defaulting to now:', itemId);
-                    }
-                    (item as any)._raw.id = itemId;
-                    item.name = data.name;
-                    item.normalizedName = data.normalizedName || undefined;
-                    item.expiryDate = expiryDate ?? Date.now();
-                    item.category = data.category;
-                    item.quantity = data.quantity;
-                    item.notes = data.notes;
-                    item.unit = data.unit;
-                    item.addedAt = data.addedAt ?? Date.now();
-                    item.source = data.source;
-                  });
-                  console.log('Created item from Firestore:', itemId);
+              if (change.type === 'added' || change.type === 'modified') {
+                try {
+                  const existingItem = await collections.foodItems
+                    .find(itemId)
+                    .catch(() => null);
+
+                  if (existingItem) {
+                    await existingItem.update(() => {
+                      if (data.name !== undefined) existingItem.name = data.name;
+                      if (data.normalizedName !== undefined) {
+                        existingItem.normalizedName = data.normalizedName || undefined;
+                      }
+                      if (expiryDate !== undefined) existingItem.expiryDate = expiryDate;
+                      if (data.category !== undefined) existingItem.category = data.category;
+                      if (data.quantity !== undefined) existingItem.quantity = data.quantity;
+                      if (data.notes !== undefined) existingItem.notes = data.notes;
+                      if (data.unit !== undefined) existingItem.unit = data.unit;
+                      if (data.addedAt !== undefined) existingItem.addedAt = data.addedAt;
+                      if (data.source !== undefined) existingItem.source = data.source;
+                    });
+                  } else {
+                    await collections.foodItems.create((item) => {
+                      (item as any)._raw.id = itemId;
+                      item.name = data.name;
+                      item.normalizedName = data.normalizedName || undefined;
+                      item.expiryDate = expiryDate ?? Date.now();
+                      item.category = data.category;
+                      item.quantity = data.quantity;
+                      item.notes = data.notes;
+                      item.unit = data.unit;
+                      item.addedAt = data.addedAt ?? Date.now();
+                      item.source = data.source;
+                    });
+                  }
+                } catch (error) {
+                  console.error('Error syncing item:', itemId, error);
                 }
-              } catch (error) {
-                console.error('Error syncing item from Firestore:', error);
+              }
+
+              if (change.type === 'removed') {
+                try {
+                  const item = await collections.foodItems
+                    .find(itemId)
+                    .catch(() => null);
+                  if (item) {
+                    await item.destroyPermanently();
+                  }
+                } catch (error) {
+                  console.error('Error deleting item:', itemId, error);
+                }
               }
             }
-
-            if (change.type === 'removed') {
-              try {
-                const item = await collections.foodItems
-                  .find(itemId)
-                  .catch(() => null);
-
-                if (item) {
-                  await item.destroyPermanently();
-                  console.log('Deleted item from local DB (Firestore removal):', itemId);
-                }
-              } catch (error) {
-                console.error('Error deleting item from local DB:', error);
-              }
-            }
-          }
-        });
+          });
+        }
       },
       (error) => {
         console.error('Firestore sync error:', error);
@@ -228,7 +224,7 @@ export const startFirestoreSync = (userId: string) => {
  * Start bidirectional Firestore sync for meal entries
  */
 export const startMealEntriesSync = (userId: string) => {
-  console.log('Starting MealEntry Firestore sync for user:', userId);
+  const BATCH_SIZE = 20;
 
   const unsubscribe = firestore()
     .collection('users')
@@ -236,82 +232,87 @@ export const startMealEntriesSync = (userId: string) => {
     .collection('meal_entries')
     .onSnapshot(
       async (snapshot) => {
-        console.log('MealEntry snapshot received:', snapshot.docChanges().length, 'changes');
-        await database.write(async () => {
-          for (const change of snapshot.docChanges()) {
-            const data = change.doc.data();
-            const entryId = change.doc.id;
+        const changes = snapshot.docChanges();
+        if (changes.length === 0) return;
 
-            const ingredientsConsumed = Array.isArray(data.ingredientsConsumed)
-              ? JSON.stringify(data.ingredientsConsumed)
-              : typeof data.ingredientsConsumed === 'string'
-                ? data.ingredientsConsumed
-                : '[]';
+        for (let i = 0; i < changes.length; i += BATCH_SIZE) {
+          const batch = changes.slice(i, i + BATCH_SIZE);
 
-            const toMillis = (value: any): number | undefined => {
-              if (typeof value === 'number') return value;
-              if (value && typeof value.toMillis === 'function') return value.toMillis();
-              if (value && typeof value.seconds === 'number') return value.seconds * 1000;
-              return undefined;
-            };
+          await database.write(async () => {
+            for (const change of batch) {
+              const data = change.doc.data();
+              const entryId = change.doc.id;
 
-            const mealDate = toMillis(data.mealDate);
-            const consumedAt = toMillis(data.consumedAt);
+              const ingredientsConsumed = Array.isArray(data.ingredientsConsumed)
+                ? JSON.stringify(data.ingredientsConsumed)
+                : typeof data.ingredientsConsumed === 'string'
+                  ? data.ingredientsConsumed
+                  : '[]';
 
-            if (change.type === 'added' || change.type === 'modified') {
-              try {
-                const existingEntry = await collections.mealEntries
-                  .find(entryId)
-                  .catch(() => null);
+              const toMillis = (value: any): number | undefined => {
+                if (typeof value === 'number') return value;
+                if (value && typeof value.toMillis === 'function') return value.toMillis();
+                if (value && typeof value.seconds === 'number') return value.seconds * 1000;
+                return undefined;
+              };
 
-                if (existingEntry) {
-                  await existingEntry.update(() => {
-                    if (data.mealType !== undefined) existingEntry.mealType = data.mealType;
-                    if (mealDate !== undefined) existingEntry.mealDate = mealDate;
-                    if (data.recipeId !== undefined) existingEntry.recipeId = data.recipeId || undefined;
-                    if (data.customName !== undefined) existingEntry.customName = data.customName || undefined;
-                    existingEntry.ingredientsConsumed = ingredientsConsumed;
-                    if (data.notes !== undefined) existingEntry.notes = data.notes || undefined;
-                    if (data.caloriesEstimate !== undefined) {
-                      existingEntry.caloriesEstimate = data.caloriesEstimate ?? undefined;
-                    }
-                    if (data.userId !== undefined) existingEntry.userId = data.userId;
-                    if (consumedAt !== undefined) existingEntry.consumedAt = consumedAt;
-                  });
-                } else {
-                  await collections.mealEntries.create((entry) => {
-                    (entry as any)._raw.id = entryId;
-                    entry.mealType = data.mealType;
-                    entry.mealDate = mealDate ?? Date.now();
-                    entry.recipeId = data.recipeId || undefined;
-                    entry.customName = data.customName || undefined;
-                    entry.ingredientsConsumed = ingredientsConsumed;
-                    entry.notes = data.notes || undefined;
-                    entry.caloriesEstimate = data.caloriesEstimate ?? undefined;
-                    entry.userId = data.userId;
-                    entry.consumedAt = consumedAt ?? Date.now();
-                  });
+              const mealDate = toMillis(data.mealDate);
+              const consumedAt = toMillis(data.consumedAt);
+
+              if (change.type === 'added' || change.type === 'modified') {
+                try {
+                  const existingEntry = await collections.mealEntries
+                    .find(entryId)
+                    .catch(() => null);
+
+                  if (existingEntry) {
+                    await existingEntry.update(() => {
+                      if (data.mealType !== undefined) existingEntry.mealType = data.mealType;
+                      if (mealDate !== undefined) existingEntry.mealDate = mealDate;
+                      if (data.recipeId !== undefined) existingEntry.recipeId = data.recipeId || undefined;
+                      if (data.customName !== undefined) existingEntry.customName = data.customName || undefined;
+                      existingEntry.ingredientsConsumed = ingredientsConsumed;
+                      if (data.notes !== undefined) existingEntry.notes = data.notes || undefined;
+                      if (data.caloriesEstimate !== undefined) {
+                        existingEntry.caloriesEstimate = data.caloriesEstimate ?? undefined;
+                      }
+                      if (data.userId !== undefined) existingEntry.userId = data.userId;
+                      if (consumedAt !== undefined) existingEntry.consumedAt = consumedAt;
+                    });
+                  } else {
+                    await collections.mealEntries.create((entry) => {
+                      (entry as any)._raw.id = entryId;
+                      entry.mealType = data.mealType;
+                      entry.mealDate = mealDate ?? Date.now();
+                      entry.recipeId = data.recipeId || undefined;
+                      entry.customName = data.customName || undefined;
+                      entry.ingredientsConsumed = ingredientsConsumed;
+                      entry.notes = data.notes || undefined;
+                      entry.caloriesEstimate = data.caloriesEstimate ?? undefined;
+                      entry.userId = data.userId;
+                      entry.consumedAt = consumedAt ?? Date.now();
+                    });
+                  }
+                } catch (error) {
+                  console.error('Error syncing meal entry:', entryId, error);
                 }
-              } catch (error) {
-                console.error('Error syncing meal entry from Firestore:', error);
+              }
+
+              if (change.type === 'removed') {
+                try {
+                  const entry = await collections.mealEntries
+                    .find(entryId)
+                    .catch(() => null);
+                  if (entry) {
+                    await entry.destroyPermanently();
+                  }
+                } catch (error) {
+                  console.error('Error deleting meal entry:', entryId, error);
+                }
               }
             }
-
-            if (change.type === 'removed') {
-              try {
-                const entry = await collections.mealEntries
-                  .find(entryId)
-                  .catch(() => null);
-
-                if (entry) {
-                  await entry.destroyPermanently();
-                }
-              } catch (error) {
-                console.error('Error deleting meal entry from local DB:', error);
-              }
-            }
-          }
-        });
+          });
+        }
       },
       (error) => {
         console.error('MealEntry Firestore sync error:', error);

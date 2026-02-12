@@ -9,18 +9,20 @@ import {
   Animated,
   StatusBar,
   Image,
+  TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Slider from '@react-native-community/slider';
-import { ArrowLeft, Heart, Shuffle, Link as LinkIcon } from 'lucide-react-native';
+import { ArrowLeft, Heart, Shuffle, Link as LinkIcon, CheckCircle } from 'lucide-react-native';
+import { parseRecipeFromUrl, ParseRecipeFromUrlResult } from '../services/firebase/functions';
 import { colors, typography, spacing } from '../theme';
 import { borderRadius } from '../theme/spacing';
 import { useInventoryStore } from '../stores/useInventoryStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
 import { useRecipes } from '../hooks/useRecipes';
-import { useInventory } from '../hooks/useInventory';
 import { useFavorites } from '../hooks/useFavorites';
 import { RecipeUi } from '../database/models/RecipeCache';
 import { RootStackParamList } from '../types';
@@ -52,24 +54,27 @@ const RecipesProScreen = () => {
     availableUtensils,
     setCookingTime,
     setAvailableUtensils,
-    setProStatus,
   } = usePreferencesStore();
 
-  const { recipes, loading, error, getRecipeSuggestions, clearAllCaches } = useRecipes();
-  const { forceSyncAllToFirestore } = useInventory();
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { recipes, loading, error, getRecipeSuggestions } = useRecipes();
+  const { isFavorite, toggleFavorite, addFavorite } = useFavorites();
 
   const [selectedUtensils, setSelectedUtensils] = useState<string[]>(availableUtensils);
-  const [syncing, setSyncing] = useState(false);
   const [localCookingTime, setLocalCookingTime] = useState<number>(cookingTime);
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [selectedIngredientFilters, setSelectedIngredientFilters] = useState<string[]>([]);
   const [selectedCategoryFilters, setSelectedCategoryFilters] = useState<string[]>([]);
+  const [recipeMode, setRecipeMode] = useState<'local' | 'url'>('local');
+  // URL mode state
+  const [urlInput, setUrlInput] = useState('');
+  const [urlLoading, setUrlLoading] = useState(false);
+  const [urlResult, setUrlResult] = useState<ParseRecipeFromUrlResult | null>(null);
+  const [urlError, setUrlError] = useState<string | null>(null);
   const wiggleAnim = useRef(new Animated.Value(0)).current;
 
   // Wiggle animation for emoji
   useEffect(() => {
-    Animated.loop(
+    const anim = Animated.loop(
       Animated.sequence([
         Animated.timing(wiggleAnim, {
           toValue: -3,
@@ -88,29 +93,10 @@ const RecipesProScreen = () => {
         }),
         Animated.delay(2000),
       ])
-    ).start();
+    );
+    anim.start();
+    return () => anim.stop();
   }, [wiggleAnim]);
-
-  // Debug: Log recipes state
-  useEffect(() => {
-    console.log('Recipes state updated:', recipes.length, 'recipes');
-  }, [recipes]);
-
-  // Debug: Log loading state
-  useEffect(() => {
-    console.log('🔄 Loading state changed:', loading);
-    if (loading) {
-      console.log('✨ LoadingNeverito overlay should be visible now!');
-    }
-  }, [loading]);
-
-  // Debug: Log overlay visibility
-  useEffect(() => {
-    console.log('👁️ [Screen] showLoadingOverlay changed:', showLoadingOverlay);
-    if (showLoadingOverlay) {
-      console.log('🎨 LoadingNeverito overlay IS NOW VISIBLE!');
-    }
-  }, [showLoadingOverlay]);
 
   const maxCalls = isPro ? 100 : 10;
   const remainingCalls = maxCalls - monthlyRecipeCallsUsed;
@@ -214,33 +200,6 @@ const RecipesProScreen = () => {
     );
   };
 
-  const handleClearCache = async () => {
-    await clearAllCaches();
-    Alert.alert('Caché limpiado', 'Ahora puedes obtener nuevas recetas');
-  };
-
-  const handleForceSync = async () => {
-    setSyncing(true);
-    try {
-      await forceSyncAllToFirestore();
-      await clearAllCaches();
-      Alert.alert('Sincronización completada', 'Items sincronizados con nombres normalizados. Caché limpiado.');
-    } catch (err) {
-      Alert.alert('Error', 'No se pudo sincronizar los items');
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  const handleToggleProStatus = () => {
-    const newStatus = !isPro;
-    setProStatus(newStatus);
-    Alert.alert(
-      'Estado actualizado',
-      `Ahora eres ${newStatus ? 'Pro ⭐' : 'Gratuito 🎯'}`,
-      [{ text: 'OK' }]
-    );
-  };
 
   const normalized = (value: string) => value.trim().toLowerCase();
 
@@ -339,6 +298,71 @@ const RecipesProScreen = () => {
     navigation.navigate('RecipeSteps', { recipe: randomRecipe });
   };
 
+  // --- URL mode handlers ---
+  const handleParseUrl = async () => {
+    if (!urlInput.trim()) {
+      setUrlError('Por favor ingresa una URL válida');
+      return;
+    }
+    setUrlLoading(true);
+    setUrlError(null);
+    setUrlResult(null);
+    try {
+      const data = await parseRecipeFromUrl({ url: urlInput.trim() });
+      setUrlResult(data);
+    } catch (err: any) {
+      setUrlError(err.message || 'Error al procesar la receta. Intenta con otra URL.');
+    } finally {
+      setUrlLoading(false);
+    }
+  };
+
+  const urlMatchedIngredients = urlResult?.ingredients.filter((ing) =>
+    ingredientNames.some((inv) =>
+      inv.toLowerCase().includes(ing.toLowerCase()) ||
+      ing.toLowerCase().includes(inv.toLowerCase())
+    )
+  ) || [];
+
+  const urlMissingIngredients = urlResult?.ingredients.filter(
+    (ing) => !urlMatchedIngredients.includes(ing)
+  ) || [];
+
+  const urlMatchPercentage = urlResult
+    ? Math.round((urlMatchedIngredients.length / urlResult.ingredients.length) * 100)
+    : 0;
+
+  const getSourceIcon = (sourceType?: string) => {
+    switch (sourceType) {
+      case 'youtube': return '📺';
+      case 'instagram': return '📸';
+      case 'tiktok': return '🎵';
+      case 'blog': return '📰';
+      default: return '🍽️';
+    }
+  };
+
+  const handleSaveUrlRecipe = async () => {
+    if (!urlResult) return;
+    const recipe: RecipeUi = {
+      id: `url_${Date.now()}`,
+      name: urlResult.recipeTitle || 'Receta desde URL',
+      matchPercentage: urlMatchPercentage,
+      matchedIngredients: urlMatchedIngredients,
+      missingIngredients: urlMissingIngredients,
+      ingredientsWithMeasures: urlResult.ingredients,
+      instructions: urlResult.steps.join('\n'),
+    };
+    try {
+      await addFavorite(recipe);
+      Alert.alert('Guardada', 'Receta guardada en favoritos');
+      setUrlResult(null);
+      setUrlInput('');
+    } catch (err: any) {
+      Alert.alert('Error al guardar', err?.message || 'No se pudo guardar la receta.');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -360,13 +384,6 @@ const RecipesProScreen = () => {
             activeOpacity={0.7}
           >
             <Heart size={24} color={colors.error} fill={colors.error} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('AddRecipeFromUrl')}
-            style={styles.addFromUrlButton}
-            activeOpacity={0.7}
-          >
-            <LinkIcon size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
         <Text style={styles.headerSubtitle}>
@@ -396,6 +413,142 @@ const RecipesProScreen = () => {
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
 
+      {/* Mode Switch */}
+      <View style={styles.modeSwitchContainer}>
+        <TouchableOpacity
+          style={[styles.modeSwitchTab, recipeMode === 'local' && styles.modeSwitchTabActive]}
+          onPress={() => setRecipeMode('local')}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.modeSwitchText, recipeMode === 'local' && styles.modeSwitchTextActive]}>
+            ✨ Mi Nevera
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.modeSwitchTab, recipeMode === 'url' && styles.modeSwitchTabActive]}
+          onPress={() => setRecipeMode('url')}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.modeSwitchText, recipeMode === 'url' && styles.modeSwitchTextActive]}>
+            🔗 Desde URL
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {recipeMode === 'url' ? (
+        <>
+          {/* URL Input */}
+          <Card style={styles.urlInputCard}>
+            <Text style={styles.sectionTitle}>🔗 Pega la URL</Text>
+            <Text style={styles.urlSubtitle}>
+              YouTube, Instagram Reels, TikTok o blog de recetas
+            </Text>
+            <View style={styles.urlInputRow}>
+              <LinkIcon size={20} color={colors.primary} />
+              <TextInput
+                style={styles.urlInput}
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={urlInput}
+                onChangeText={setUrlInput}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+                editable={!urlLoading}
+              />
+            </View>
+            <Button
+              title={urlLoading ? 'Analizando... (20-30 seg)' : '✨ Analizar Receta'}
+              onPress={handleParseUrl}
+              disabled={urlLoading || !urlInput.trim()}
+            />
+          </Card>
+
+          {/* URL Error */}
+          {urlError && (
+            <Card style={styles.urlErrorCard}>
+              <Text style={styles.errorEmoji}>⚠️</Text>
+              <Text style={styles.errorText}>{urlError}</Text>
+            </Card>
+          )}
+
+          {/* URL Loading */}
+          {urlLoading && (
+            <Card style={styles.urlLoadingCard}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.loadingText}>Analizando video...</Text>
+              <Text style={styles.loadingSubtext}>Esto puede tomar 20-30 segundos</Text>
+            </Card>
+          )}
+
+          {/* URL Result */}
+          {urlResult && !urlLoading && (
+            <>
+              <Card style={styles.urlResultCard}>
+                <View style={styles.urlRecipeHeader}>
+                  <Text style={styles.urlRecipeEmoji}>{getSourceIcon(urlResult.sourceType)}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.urlRecipeTitle}>{urlResult.recipeTitle || 'Receta'}</Text>
+                    <Text style={styles.urlRecipeSource}>Fuente: {urlResult.sourceType}</Text>
+                  </View>
+                </View>
+                <View style={styles.urlMatchBadge}>
+                  <Text style={{ fontSize: 16 }}>❤️</Text>
+                  <Text style={styles.urlMatchText}>{urlMatchPercentage}% de compatibilidad</Text>
+                </View>
+              </Card>
+
+              {/* Ingredients */}
+              <Card style={styles.urlIngredientsCard}>
+                <Text style={styles.sectionTitle}>📋 Ingredientes ({urlResult.ingredients.length})</Text>
+                {urlMatchedIngredients.length > 0 && (
+                  <View style={styles.urlIngredientGroup}>
+                    <Text style={styles.urlIngredientGroupTitle}>✅ Tienes ({urlMatchedIngredients.length})</Text>
+                    {urlMatchedIngredients.map((ingredient, index) => (
+                      <View key={`m-${index}`} style={styles.urlIngredientRow}>
+                        <CheckCircle size={18} color={colors.primary} />
+                        <Text style={styles.urlIngredientText}>{ingredient}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+                {urlMissingIngredients.length > 0 && (
+                  <View style={styles.urlIngredientGroup}>
+                    <Text style={styles.urlIngredientGroupTitle}>🛒 Te faltan ({urlMissingIngredients.length})</Text>
+                    {urlMissingIngredients.map((ingredient, index) => (
+                      <View key={`f-${index}`} style={styles.urlIngredientRow}>
+                        <Text style={{ fontSize: 18 }}>🛒</Text>
+                        <Text style={[styles.urlIngredientText, { color: colors.onSurfaceVariant }]}>{ingredient}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </Card>
+
+              {/* Steps */}
+              {urlResult.steps.length > 0 && (
+                <Card style={styles.urlStepsCard}>
+                  <Text style={styles.sectionTitle}>👨‍🍳 Pasos ({urlResult.steps.length})</Text>
+                  {urlResult.steps.map((step, index) => (
+                    <View key={index} style={styles.urlStepRow}>
+                      <View style={styles.urlStepNumber}>
+                        <Text style={styles.urlStepNumberText}>{index + 1}</Text>
+                      </View>
+                      <Text style={styles.urlStepText}>{step}</Text>
+                    </View>
+                  ))}
+                </Card>
+              )}
+
+              <Button
+                title="💾 Guardar en Favoritos"
+                onPress={handleSaveUrlRecipe}
+                style={{ marginBottom: spacing.md }}
+              />
+            </>
+          )}
+        </>
+      ) : (
+      <>
       {/* Usage Stats */}
       <Card style={styles.statsCard}>
         <View style={styles.statsHeader}>
@@ -434,73 +587,6 @@ const RecipesProScreen = () => {
             style={styles.upgradeButton}
           />
         )}
-      </Card>
-
-      {/* Preferences Section */}
-      <Card style={styles.preferencesCard}>
-        <Text style={styles.sectionTitle}>👨‍🍳 Preferencias de Cocina</Text>
-
-        {/* Cooking Time Slider */}
-        <View style={styles.preferenceItem}>
-          <View style={styles.sliderHeader}>
-            <Text style={styles.preferenceLabel}>⏰ Tiempo de cocción</Text>
-            <View style={styles.timeDisplay}>
-              <Text style={styles.timeEmoji}>⏱️</Text>
-              <Text style={styles.timeValue}>{localCookingTime}</Text>
-              <Text style={styles.timeUnit}>min</Text>
-            </View>
-          </View>
-          <Slider
-            style={styles.slider}
-            minimumValue={10}
-            maximumValue={120}
-            step={5}
-            value={localCookingTime}
-            onValueChange={setLocalCookingTime}
-            onSlidingComplete={(value) => {
-              // Save to Firebase when user finishes sliding
-              setCookingTime(value);
-            }}
-            minimumTrackTintColor={colors.primary}
-            maximumTrackTintColor={colors.surfaceVariant}
-            thumbTintColor={colors.primary}
-          />
-          <View style={styles.sliderLabels}>
-            <Text style={styles.sliderLabel}>10 min</Text>
-            <Text style={styles.sliderLabel}>120 min</Text>
-          </View>
-        </View>
-
-        {/* Utensils Selection */}
-        <View style={styles.preferenceItem}>
-          <Text style={styles.preferenceLabel}>✨ Utensilios disponibles</Text>
-          <View style={styles.utensilsContainer}>
-            {COMMON_UTENSILS.map((utensil) => {
-              const isSelected = selectedUtensils.includes(utensil.name);
-              return (
-                <TouchableOpacity
-                  key={utensil.name}
-                  style={[
-                    styles.utensilChip,
-                    isSelected && styles.utensilChipSelected,
-                  ]}
-                  onPress={() => handleUtensilToggle(utensil.name)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.utensilEmoji}>{utensil.emoji}</Text>
-                  <Text
-                    style={[
-                      styles.utensilChipText,
-                      isSelected && styles.utensilChipTextSelected,
-                    ]}
-                  >
-                    {utensil.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
       </Card>
 
       <Card style={styles.filtersCard}>
@@ -585,27 +671,6 @@ const RecipesProScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Debug Buttons */}
-      <View style={styles.debugButtonsContainer}>
-        <TouchableOpacity onPress={handleToggleProStatus} style={styles.clearCacheButton}>
-          <Text style={styles.clearCacheText}>
-            {isPro ? '⭐ → 🎯 Cambiar a Free' : '🎯 → ⭐ Cambiar a Pro'}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleClearCache} style={styles.clearCacheButton}>
-          <Text style={styles.clearCacheText}>🗑️ Limpiar Caché</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={handleForceSync}
-          style={styles.clearCacheButton}
-          disabled={syncing}
-        >
-          <Text style={styles.clearCacheText}>
-            {syncing ? '⏳ Sincronizando...' : '🔄 Forzar Sync Firestore'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Error Message */}
       {error && (
         <View style={styles.errorContainer}>
@@ -655,6 +720,8 @@ const RecipesProScreen = () => {
             Ajusta los filtros para ver más recetas.
           </Text>
         </View>
+      )}
+      </>
       )}
       </ScrollView>
 
@@ -1347,6 +1414,159 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: colors.onSurfaceVariant,
     textAlign: 'center',
+  },
+  // --- Mode Switch ---
+  modeSwitchContainer: {
+    flexDirection: 'row',
+    backgroundColor: colors.surfaceVariant,
+    borderRadius: borderRadius.full,
+    padding: 4,
+    marginBottom: spacing.md,
+  },
+  modeSwitchTab: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+  },
+  modeSwitchTabActive: {
+    backgroundColor: colors.surface,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  modeSwitchText: {
+    ...typography.labelMedium,
+    fontWeight: '600',
+    color: colors.onSurfaceVariant,
+  },
+  modeSwitchTextActive: {
+    color: colors.onSurface,
+    fontWeight: '700',
+  },
+  // --- URL Mode ---
+  urlInputCard: {
+    marginBottom: spacing.md,
+  },
+  urlSubtitle: {
+    ...typography.bodySmall,
+    color: colors.onSurfaceVariant,
+    marginBottom: spacing.md,
+  },
+  urlInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 2,
+    borderColor: colors.outline,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  urlInput: {
+    flex: 1,
+    ...typography.bodyMedium,
+    color: colors.onSurface,
+  },
+  urlErrorCard: {
+    backgroundColor: colors.errorContainer,
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  urlLoadingCard: {
+    alignItems: 'center',
+    padding: spacing.xl,
+    marginBottom: spacing.md,
+  },
+  urlResultCard: {
+    marginBottom: spacing.md,
+  },
+  urlRecipeHeader: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  urlRecipeEmoji: {
+    fontSize: 48,
+  },
+  urlRecipeTitle: {
+    ...typography.titleLarge,
+    fontWeight: '700',
+    color: colors.onSurface,
+    marginBottom: spacing.xs,
+  },
+  urlRecipeSource: {
+    ...typography.bodySmall,
+    color: colors.onSurfaceVariant,
+  },
+  urlMatchBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.primaryContainer,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.full,
+  },
+  urlMatchText: {
+    ...typography.labelMedium,
+    fontWeight: '700',
+    color: colors.onPrimaryContainer,
+  },
+  urlIngredientsCard: {
+    marginBottom: spacing.md,
+  },
+  urlIngredientGroup: {
+    marginBottom: spacing.md,
+  },
+  urlIngredientGroupTitle: {
+    ...typography.labelLarge,
+    fontWeight: '600',
+    color: colors.onSurface,
+    marginBottom: spacing.sm,
+  },
+  urlIngredientRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  urlIngredientText: {
+    ...typography.bodyMedium,
+    color: colors.onSurface,
+    flex: 1,
+  },
+  urlStepsCard: {
+    marginBottom: spacing.md,
+  },
+  urlStepRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  urlStepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  urlStepNumberText: {
+    ...typography.labelMedium,
+    fontWeight: '700',
+    color: colors.onPrimary,
+  },
+  urlStepText: {
+    ...typography.bodyMedium,
+    color: colors.onSurface,
+    flex: 1,
   },
 });
 

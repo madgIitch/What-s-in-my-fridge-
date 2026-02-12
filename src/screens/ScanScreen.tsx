@@ -40,7 +40,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
 
   // Wiggle animation for emoji
   useEffect(() => {
-    Animated.loop(
+    const anim = Animated.loop(
       Animated.sequence([
         Animated.timing(wiggleAnim, {
           toValue: -3,
@@ -59,7 +59,9 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
         }),
         Animated.delay(2000),
       ])
-    ).start();
+    );
+    anim.start();
+    return () => anim.stop();
   }, [wiggleAnim]);
   /**
    * Take photo with camera
