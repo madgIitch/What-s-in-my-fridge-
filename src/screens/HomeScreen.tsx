@@ -22,7 +22,7 @@ import FoodItem from '../database/models/FoodItem';
 import { Button } from '../components/common/Button';
 import { KawaiiFAB, FABGroup } from '../components/common/KawaiiFAB';
 import { FoodItemCard } from '../components/food/FoodItemCard';
-import { Plus, Camera, ChefHat, Calendar, Settings } from 'lucide-react-native';
+import { Plus, Camera, ChefHat, Calendar, Settings, ShoppingCart } from 'lucide-react-native';
 import { colors, typography, spacing } from '../theme';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'HomeTab'>;
@@ -185,6 +185,13 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               activeOpacity={0.8}
             >
               <Calendar size={20} color={colors.onSurface} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => navigation.navigate('ShoppingList')}
+              activeOpacity={0.8}
+            >
+              <ShoppingCart size={20} color={colors.onSurface} />
             </TouchableOpacity>
           </View>
         </View>

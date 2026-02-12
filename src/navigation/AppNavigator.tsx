@@ -23,6 +23,7 @@ import CalendarScreen from '../screens/CalendarScreen';
 import AddMealScreen from '../screens/AddMealScreen';
 import MealDetailScreen from '../screens/MealDetailScreen';
 import AddRecipeFromUrlScreen from '../screens/AddRecipeFromUrlScreen';
+import ShoppingListScreen from '../screens/ShoppingListScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -161,6 +162,11 @@ export const AppNavigator = () => {
                 headerShown: false,
                 presentation: 'modal'
               }}
+            />
+            <Stack.Screen
+              name="ShoppingList"
+              component={ShoppingListScreen}
+              options={{ headerShown: false }}
             />
           </>
         )}
