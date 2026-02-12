@@ -10,18 +10,17 @@ import {
   StatusBar,
   Image,
   TextInput,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Slider from '@react-native-community/slider';
 import { ArrowLeft, Heart, Shuffle, Link as LinkIcon, CheckCircle } from 'lucide-react-native';
-import { parseRecipeFromUrl, ParseRecipeFromUrlResult } from '../services/firebase/functions';
 import { colors, typography, spacing } from '../theme';
 import { borderRadius } from '../theme/spacing';
 import { useInventoryStore } from '../stores/useInventoryStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
+import { useUrlRecipeStore } from '../stores/useUrlRecipeStore';
 import { useRecipes } from '../hooks/useRecipes';
 import { useFavorites } from '../hooks/useFavorites';
 import { RecipeUi } from '../database/models/RecipeCache';
@@ -59,17 +58,17 @@ const RecipesProScreen = () => {
   const { recipes, loading, error, getRecipeSuggestions } = useRecipes();
   const { isFavorite, toggleFavorite, addFavorite } = useFavorites();
 
+  const {
+    urlInput, setUrlInput,
+    urlLoading, urlResult, urlError,
+    parseUrlRecipe, clearUrlState,
+  } = useUrlRecipeStore();
+
   const [selectedUtensils, setSelectedUtensils] = useState<string[]>(availableUtensils);
   const [localCookingTime, setLocalCookingTime] = useState<number>(cookingTime);
-  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [selectedIngredientFilters, setSelectedIngredientFilters] = useState<string[]>([]);
   const [selectedCategoryFilters, setSelectedCategoryFilters] = useState<string[]>([]);
   const [recipeMode, setRecipeMode] = useState<'local' | 'url'>('local');
-  // URL mode state
-  const [urlInput, setUrlInput] = useState('');
-  const [urlLoading, setUrlLoading] = useState(false);
-  const [urlResult, setUrlResult] = useState<ParseRecipeFromUrlResult | null>(null);
-  const [urlError, setUrlError] = useState<string | null>(null);
   const wiggleAnim = useRef(new Animated.Value(0)).current;
 
   // Wiggle animation for emoji
@@ -147,46 +146,11 @@ const RecipesProScreen = () => {
   };
 
   const handleGetRecipes = async () => {
-    console.log('🍳 handleGetRecipes called');
     if (items.length === 0) {
       Alert.alert('Sin ingredientes', 'Añade ingredientes a tu inventario primero');
       return;
     }
-
-    console.log('📝 Calling getRecipeSuggestions with:', {
-      ingredients: ingredientNames.length,
-      cookingTime: localCookingTime,
-      utensils: selectedUtensils.length,
-    });
-
-    const MIN_LOADING_TIME = 800; // ms
-    const startTime = Date.now();
-
-    try {
-      // Show loading overlay immediately
-      console.log('🎬 [Screen] Showing loading overlay');
-      setShowLoadingOverlay(true);
-
-      // Small delay to ensure React renders the overlay
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Get recipe suggestions
-      await getRecipeSuggestions(ingredientNames, localCookingTime, selectedUtensils);
-
-      console.log('✅ getRecipeSuggestions completed');
-
-      // Ensure minimum loading time
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = MIN_LOADING_TIME - elapsedTime;
-
-      if (remainingTime > 0) {
-        console.log(`⏰ [Screen] Waiting ${remainingTime}ms more for animation`);
-        await new Promise(resolve => setTimeout(resolve, remainingTime));
-      }
-    } finally {
-      console.log('🎬 [Screen] Hiding loading overlay');
-      setShowLoadingOverlay(false);
-    }
+    await getRecipeSuggestions(ingredientNames, localCookingTime, selectedUtensils);
   };
 
   const handleUpgradeToPro = () => {
@@ -299,22 +263,9 @@ const RecipesProScreen = () => {
   };
 
   // --- URL mode handlers ---
-  const handleParseUrl = async () => {
-    if (!urlInput.trim()) {
-      setUrlError('Por favor ingresa una URL válida');
-      return;
-    }
-    setUrlLoading(true);
-    setUrlError(null);
-    setUrlResult(null);
-    try {
-      const data = await parseRecipeFromUrl({ url: urlInput.trim() });
-      setUrlResult(data);
-    } catch (err: any) {
-      setUrlError(err.message || 'Error al procesar la receta. Intenta con otra URL.');
-    } finally {
-      setUrlLoading(false);
-    }
+  const handleParseUrl = () => {
+    if (!urlInput.trim()) return;
+    parseUrlRecipe(urlInput.trim());
   };
 
   const urlMatchedIngredients = urlResult?.ingredients.filter((ing) =>
@@ -356,8 +307,7 @@ const RecipesProScreen = () => {
     try {
       await addFavorite(recipe);
       Alert.alert('Guardada', 'Receta guardada en favoritos');
-      setUrlResult(null);
-      setUrlInput('');
+      clearUrlState();
     } catch (err: any) {
       Alert.alert('Error al guardar', err?.message || 'No se pudo guardar la receta.');
     }
@@ -473,8 +423,8 @@ const RecipesProScreen = () => {
 
           {/* URL Loading */}
           {urlLoading && (
-            <Card style={styles.urlLoadingCard}>
-              <ActivityIndicator size="large" color={colors.primary} />
+            <Card style={styles.inlineLoadingCard}>
+              <LoadingNeverito size={80} speed={120} />
               <Text style={styles.loadingText}>Analizando video...</Text>
               <Text style={styles.loadingSubtext}>Esto puede tomar 20-30 segundos</Text>
             </Card>
@@ -671,6 +621,17 @@ const RecipesProScreen = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Inline Loading */}
+      {loading && (
+        <Card style={styles.inlineLoadingCard}>
+          <LoadingNeverito size={80} speed={120} />
+          <Text style={styles.loadingText}>Generando recetas mágicas...</Text>
+          <Text style={styles.loadingSubtext}>
+            Neverito está cocinando ideas ✨
+          </Text>
+        </Card>
+      )}
+
       {/* Error Message */}
       {error && (
         <View style={styles.errorContainer}>
@@ -724,19 +685,6 @@ const RecipesProScreen = () => {
       </>
       )}
       </ScrollView>
-
-      {/* Loading Overlay */}
-      {showLoadingOverlay && (
-        <View style={styles.loadingOverlay}>
-          <Card style={styles.loadingCard}>
-            <LoadingNeverito size={80} speed={120} />
-            <Text style={styles.loadingText}>Generando recetas mágicas...</Text>
-            <Text style={styles.loadingSubtext}>
-              Neverito está cocinando ideas ✨
-            </Text>
-          </Card>
-        </View>
-      )}
     </SafeAreaView>
   );
 };
@@ -1179,22 +1127,10 @@ const styles = StyleSheet.create({
     color: colors.onErrorContainer,
     textAlign: 'center',
   },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#FFE5EC',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-    zIndex: 1000,
-  },
-  loadingCard: {
+  inlineLoadingCard: {
     alignItems: 'center',
     padding: spacing.xl,
-    minWidth: 280,
+    marginBottom: spacing.md,
     backgroundColor: '#B5EAD7',
   },
   loadingText: {
@@ -1475,11 +1411,6 @@ const styles = StyleSheet.create({
   urlErrorCard: {
     backgroundColor: colors.errorContainer,
     alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  urlLoadingCard: {
-    alignItems: 'center',
-    padding: spacing.xl,
     marginBottom: spacing.md,
   },
   urlResultCard: {

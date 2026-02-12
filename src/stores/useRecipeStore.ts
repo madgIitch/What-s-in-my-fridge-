@@ -38,7 +38,7 @@ export const useRecipeStore = create<RecipeStore>((set) => ({
 
   setError: (error) => {
     console.log('❌ [RecipeStore] setError called:', error);
-    set({ error, loading: false });
+    set({ error });
   },
 
   setLastFetchTime: (time) => set({ lastFetchTime: time }),

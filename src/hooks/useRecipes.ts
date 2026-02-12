@@ -150,7 +150,6 @@ export function useRecipes() {
           !isPro ? 'Actualiza a Pro para más llamadas.' : ''
         }`;
         setError(errorMsg);
-        setLoading(false);
         return;
       }
 
@@ -161,7 +160,6 @@ export function useRecipes() {
         console.log('✅ [useRecipes] Found cached recipes, setting loading to FALSE');
         console.log('Setting recipes from cache:', cachedRecipes.length, 'recipes');
         setRecipes(cachedRecipes);
-        setLoading(false);
         return;
       }
 

@@ -156,31 +156,35 @@ async function extractFromYouTube(url: string): Promise<{ rawText: string; recip
     console.warn(`No se pudo extraer título de YouTube: ${error.message}`);
   }
 
-  let transcriptText = "";
-  try {
-    const transcriptEs = await YoutubeTranscript.fetchTranscript(url, { lang: "es" });
-    transcriptText = transcriptItemsToText(transcriptEs);
-  } catch (error: any) {
-    console.warn(`youtube-transcript (es) falló: ${error.message}`);
-  }
+  // Siempre priorizar audio (Whisper) para ingredientes y pasos
+  let audioText = await transcribeWithWhisper(url);
 
-  if (transcriptText.length < 50) {
+  // Solo usar subtítulos como fallback si Whisper no devuelve suficiente texto
+  if (audioText.length < 50) {
+    let transcriptText = "";
     try {
-      const transcriptAny = await YoutubeTranscript.fetchTranscript(url);
-      transcriptText = transcriptItemsToText(transcriptAny);
+      const transcriptEs = await YoutubeTranscript.fetchTranscript(url, { lang: "es" });
+      transcriptText = transcriptItemsToText(transcriptEs);
     } catch (error: any) {
-      console.warn(`youtube-transcript (auto) falló: ${error.message}`);
+      console.warn(`youtube-transcript (es) falló: ${error.message}`);
     }
+
+    if (transcriptText.length < 50) {
+      try {
+        const transcriptAny = await YoutubeTranscript.fetchTranscript(url);
+        transcriptText = transcriptItemsToText(transcriptAny);
+      } catch (error: any) {
+        console.warn(`youtube-transcript (auto) falló: ${error.message}`);
+      }
+    }
+
+    audioText = transcriptText;
   }
 
-  if (transcriptText.length < 50) {
-    transcriptText = await transcribeWithWhisper(url);
-  }
-
-  const rawText = combineTextParts([title, transcriptText]);
+  const rawText = combineTextParts([title, audioText]);
   if (rawText.length < 30) {
     throw new Error(
-      "No se pudo extraer texto útil del video de YouTube (ni subtítulos ni audio). " +
+      "No se pudo extraer texto útil del video de YouTube (ni audio ni subtítulos). " +
       "Prueba con otra URL pública o usa texto manual."
     );
   }
@@ -190,45 +194,22 @@ async function extractFromYouTube(url: string): Promise<{ rawText: string; recip
 
 async function extractFromInstagram(url: string): Promise<{ rawText: string; recipeTitle: string }> {
   let title = "Receta de Instagram";
-  let description = "";
-  let metaDescription = "";
-  let jsonData = "";
 
   try {
     const html = await fetchPageHtml(url);
     const $ = cheerio.load(html);
-
     title = $('meta[property="og:title"]').attr("content") || title;
-    description = $('meta[property="og:description"]').attr("content") || "";
-    metaDescription = $('meta[name="description"]').attr("content") || "";
-
-    $('script[type="application/ld+json"]').each((_, elem) => {
-      try {
-        const jsonText = $(elem).html();
-        if (!jsonText) {
-          return;
-        }
-        const data = JSON.parse(jsonText);
-        if (typeof data.description === "string") {
-          jsonData += data.description + "\n";
-        }
-        if (typeof data.caption === "string") {
-          jsonData += data.caption + "\n";
-        }
-      } catch (e) {
-        // Ignore JSON parse errors
-      }
-    });
   } catch (error: any) {
     console.warn(`Scraping de Instagram incompleto: ${error.message}`);
   }
 
+  // Siempre usar audio (Whisper) - los ingredientes y pasos están en el video
   const audioText = await transcribeWithWhisper(url);
-  const rawText = combineTextParts([title, description, metaDescription, jsonData, audioText]);
+  const rawText = combineTextParts([title, audioText]);
 
   if (rawText.length < 20) {
     throw new Error(
-      "No se pudo extraer suficiente información de Instagram/Reels. " +
+      "No se pudo extraer el audio del video de Instagram/Reels. " +
       "Por favor, usa texto manual con descripción/ingredientes."
     );
   }
@@ -238,49 +219,25 @@ async function extractFromInstagram(url: string): Promise<{ rawText: string; rec
 
 async function extractFromTikTok(url: string): Promise<{ rawText: string; recipeTitle: string }> {
   let title = "Receta de TikTok";
-  let description = "";
-  let jsonData = "";
 
   try {
     const html = await fetchPageHtml(url);
     const $ = cheerio.load(html);
-
     title =
       $('meta[property="og:title"]').attr("content") ||
       $('meta[name="twitter:title"]').attr("content") ||
       title;
-
-    description =
-      $('meta[property="og:description"]').attr("content") ||
-      $('meta[name="twitter:description"]').attr("content") ||
-      $('meta[name="description"]').attr("content") ||
-      "";
-
-    $('script[id*="__UNIVERSAL_DATA_FOR_REHYDRATION__"]').each((_, elem) => {
-      try {
-        const jsonText = $(elem).html();
-        if (!jsonText) {
-          return;
-        }
-        const data = JSON.parse(jsonText);
-        const desc = data.__DEFAULT_SCOPE__?.["webapp.video-detail"]?.itemInfo?.itemStruct?.desc;
-        if (typeof desc === "string" && desc.length > 0) {
-          jsonData = desc;
-        }
-      } catch (e) {
-        // Ignore JSON parse errors
-      }
-    });
   } catch (error: any) {
     console.warn(`Scraping de TikTok incompleto: ${error.message}`);
   }
 
+  // Siempre usar audio (Whisper) - los ingredientes y pasos están en el video
   const audioText = await transcribeWithWhisper(url);
-  const rawText = combineTextParts([title, description, jsonData, audioText]);
+  const rawText = combineTextParts([title, audioText]);
 
   if (rawText.length < 20) {
     throw new Error(
-      "No se pudo extraer suficiente información de TikTok. " +
+      "No se pudo extraer el audio del video de TikTok. " +
       "Por favor, usa texto manual con descripción/ingredientes."
     );
   }
