@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Alert, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { Button } from '../components/common/Button';
 import { signOut } from '../services/firebase/auth';
 import { migrateInventoryNormalization } from '../services/firebase/functions';
 import { useIngredientNormalizer } from '../hooks/useIngredientNormalizer';
 import { colors, typography, spacing } from '../theme';
+import { RootStackParamList } from '../types';
+
+type SettingsNavigationProp = StackNavigationProp<RootStackParamList, 'SettingsTab'>;
 
 const SettingsScreen = () => {
+  const navigation = useNavigation<SettingsNavigationProp>();
   const [migrating, setMigrating] = useState(false);
   const [clearingCache, setClearingCache] = useState(false);
   const { clearCache } = useIngredientNormalizer();
@@ -119,6 +125,12 @@ const SettingsScreen = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>👤 Cuenta</Text>
+        <Button
+          title="Neverito Pro"
+          onPress={() => navigation.navigate('Paywall', { source: 'settings' })}
+          style={styles.button}
+        />
+
         <Button
           title="Cerrar Sesión"
           onPress={handleSignOut}

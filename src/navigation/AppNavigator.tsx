@@ -24,6 +24,7 @@ import AddMealScreen from '../screens/AddMealScreen';
 import MealDetailScreen from '../screens/MealDetailScreen';
 import AddRecipeFromUrlScreen from '../screens/AddRecipeFromUrlScreen';
 import ShoppingListScreen from '../screens/ShoppingListScreen';
+import PaywallScreen from '../screens/PaywallScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -167,6 +168,14 @@ export const AppNavigator = () => {
               name="ShoppingList"
               component={ShoppingListScreen}
               options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Paywall"
+              component={PaywallScreen}
+              options={{
+                headerShown: false,
+                presentation: 'modal',
+              }}
             />
           </>
         )}

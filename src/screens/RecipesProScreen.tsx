@@ -23,11 +23,13 @@ import { usePreferencesStore } from '../stores/usePreferencesStore';
 import { useUrlRecipeStore } from '../stores/useUrlRecipeStore';
 import { useRecipes } from '../hooks/useRecipes';
 import { useFavorites } from '../hooks/useFavorites';
+import { useSubscription } from '../hooks/useSubscription';
 import { RecipeUi } from '../database/models/RecipeCache';
 import { RootStackParamList } from '../types';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { LoadingNeverito } from '../components/common';
+import { FREE_RECIPE_LIMIT } from '../services/revenuecat';
 
 // Common kitchen utensils (Spanish) with emojis
 const COMMON_UTENSILS = [
@@ -47,13 +49,17 @@ const RecipesProScreen = () => {
   const navigation = useNavigation<RecipesNavigationProp>();
   const { items } = useInventoryStore();
   const {
-    isPro,
-    monthlyRecipeCallsUsed,
     cookingTime,
     availableUtensils,
     setCookingTime,
     setAvailableUtensils,
   } = usePreferencesStore();
+  const {
+    isPro,
+    monthlyRecipeCallsUsed,
+    remainingRecipeCalls,
+    canUseRecipeSuggestions,
+  } = useSubscription();
 
   const { recipes, loading, error, getRecipeSuggestions } = useRecipes();
   const { isFavorite, toggleFavorite, addFavorite } = useFavorites();
@@ -97,8 +103,7 @@ const RecipesProScreen = () => {
     return () => anim.stop();
   }, [wiggleAnim]);
 
-  const maxCalls = isPro ? 100 : 10;
-  const remainingCalls = maxCalls - monthlyRecipeCallsUsed;
+  const maxCalls = FREE_RECIPE_LIMIT;
 
   // Get normalized ingredient names from inventory for recipe matching
   // Falls back to original name if normalization hasn't been done yet
@@ -147,21 +152,34 @@ const RecipesProScreen = () => {
 
   const handleGetRecipes = async () => {
     if (items.length === 0) {
-      Alert.alert('Sin ingredientes', 'Añade ingredientes a tu inventario primero');
+      Alert.alert('Sin ingredientes', 'Anade ingredientes a tu inventario primero');
+      return;
+    }
+    if (!canUseRecipeSuggestions) {
+      navigation.navigate('Paywall', { source: 'recipes_limit' });
       return;
     }
     await getRecipeSuggestions(ingredientNames, localCookingTime, selectedUtensils);
   };
 
   const handleUpgradeToPro = () => {
-    Alert.alert(
-      'Actualizar a Pro',
-      '¿Deseas actualizar a la versión Pro para obtener más recetas?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Actualizar', onPress: () => console.log('Upgrade to Pro') },
-      ]
-    );
+    navigation.navigate('Paywall', { source: 'recipes' });
+  };
+
+  const handleRecipeModeChange = (mode: 'local' | 'url') => {
+    if (mode === 'url' && !isPro) {
+      Alert.alert(
+        'Funcion Pro',
+        'Importar recetas desde URL es una Funcion Pro.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Ver planes', onPress: () => navigation.navigate('Paywall', { source: 'url_recipes' }) },
+        ]
+      );
+      return;
+    }
+
+    setRecipeMode(mode);
   };
 
 
@@ -264,6 +282,10 @@ const RecipesProScreen = () => {
 
   // --- URL mode handlers ---
   const handleParseUrl = () => {
+    if (!isPro) {
+      navigation.navigate('Paywall', { source: 'url_recipes' });
+      return;
+    }
     if (!urlInput.trim()) return;
     parseUrlRecipe(urlInput.trim());
   };
@@ -367,7 +389,7 @@ const RecipesProScreen = () => {
       <View style={styles.modeSwitchContainer}>
         <TouchableOpacity
           style={[styles.modeSwitchTab, recipeMode === 'local' && styles.modeSwitchTabActive]}
-          onPress={() => setRecipeMode('local')}
+          onPress={() => handleRecipeModeChange('local')}
           activeOpacity={0.7}
         >
           <Text style={[styles.modeSwitchText, recipeMode === 'local' && styles.modeSwitchTextActive]}>
@@ -376,7 +398,7 @@ const RecipesProScreen = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.modeSwitchTab, recipeMode === 'url' && styles.modeSwitchTabActive]}
-          onPress={() => setRecipeMode('url')}
+          onPress={() => handleRecipeModeChange('url')}
           activeOpacity={0.7}
         >
           <Text style={[styles.modeSwitchText, recipeMode === 'url' && styles.modeSwitchTextActive]}>
@@ -506,7 +528,7 @@ const RecipesProScreen = () => {
             {isPro ? '⭐ Plan Pro' : '🎯 Plan Gratuito'}
           </Text>
           <Text style={styles.statsCount}>
-            {monthlyRecipeCallsUsed} / {maxCalls}
+            {isPro ? 'Ilimitado' : `${monthlyRecipeCallsUsed} / ${maxCalls}`}
           </Text>
         </View>
 
@@ -516,9 +538,9 @@ const RecipesProScreen = () => {
             style={[
               styles.progressBar,
               {
-                width: `${(monthlyRecipeCallsUsed / maxCalls) * 100}%`,
+                width: isPro ? '100%' : `${(monthlyRecipeCallsUsed / maxCalls) * 100}%`,
                 backgroundColor:
-                  monthlyRecipeCallsUsed / maxCalls >= 0.9
+                  !isPro && monthlyRecipeCallsUsed / maxCalls >= 0.9
                     ? colors.error
                     : colors.primary,
               },
@@ -527,7 +549,9 @@ const RecipesProScreen = () => {
         </View>
 
         <Text style={styles.statsSubtext}>
-          {remainingCalls} {remainingCalls === 1 ? 'llamada restante' : 'llamadas restantes'} este mes
+          {isPro
+            ? 'Recetas ilimitadas activas'
+            : `${remainingRecipeCalls} ${remainingRecipeCalls === 1 ? 'llamada restante' : 'llamadas restantes'} este mes`}
         </Text>
 
         {!isPro && (
@@ -605,7 +629,7 @@ const RecipesProScreen = () => {
         <Button
           title={loading ? '⏳ Obteniendo recetas...' : '✨ Obtener Recetas Mágicas'}
           onPress={handleGetRecipes}
-          disabled={loading || remainingCalls <= 0}
+          disabled={loading || (!isPro && remainingRecipeCalls <= 0)}
           style={styles.getRecipesButton}
         />
         <TouchableOpacity

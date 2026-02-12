@@ -22,6 +22,7 @@ import { useInventoryStore } from '../stores/useInventoryStore';
 import { RootStackParamList } from '../types';
 import { useFavorites } from '../hooks/useFavorites';
 import { RecipeUi } from '../database/models/RecipeCache';
+import { useSubscription } from '../hooks/useSubscription';
 
 type AddRecipeFromUrlNavigationProp = StackNavigationProp<RootStackParamList, 'AddRecipeFromUrl'>;
 
@@ -29,6 +30,7 @@ const AddRecipeFromUrlScreen = () => {
   const navigation = useNavigation<AddRecipeFromUrlNavigationProp>();
   const { items } = useInventoryStore();
   const { addFavorite } = useFavorites();
+  const { isPro } = useSubscription();
 
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,6 +43,10 @@ const AddRecipeFromUrlScreen = () => {
     .filter((name) => name && name.trim() !== '');
 
   const handleParseUrl = async () => {
+    if (!isPro) {
+      navigation.navigate('Paywall', { source: 'url_recipes' });
+      return;
+    }
     if (!url.trim()) {
       setError('Por favor ingresa una URL válida');
       return;

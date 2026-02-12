@@ -40,6 +40,16 @@ export type RootStackParamList = {
   };
   AddRecipeFromUrl: undefined;
   ShoppingList: undefined;
+  Paywall:
+    | {
+        source?:
+          | 'recipes'
+          | 'recipes_limit'
+          | 'url_recipes'
+          | 'ocr'
+          | 'settings';
+      }
+    | undefined;
 };
 
 // Mantener para compatibilidad con componentes existentes

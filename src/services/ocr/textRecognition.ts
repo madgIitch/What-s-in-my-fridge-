@@ -1,4 +1,3 @@
-import TextRecognition from 'react-native-text-recognition';
 import storage from '@react-native-firebase/storage';
 import auth from '@react-native-firebase/auth';
 import functions from '@react-native-firebase/functions';
@@ -33,55 +32,8 @@ export interface TextBlock {
  * Note: ML Kit may not work well on emulators without Google Play Services
  */
 export const recognizeTextLocal = async (imageUri: string): Promise<OCRResult> => {
-  try {
-    console.log('📸 Starting local OCR with ML Kit...');
-    console.log('📸 Image URI:', imageUri);
-
-    // Validate image URI
-    if (!imageUri || typeof imageUri !== 'string') {
-      throw new Error('URI de imagen inválida');
-    }
-
-    const result = await TextRecognition.recognize(imageUri);
-
-    console.log('📸 ML Kit returned:', result?.length || 0, 'blocks');
-
-    // Check if result is valid
-    if (!result || !Array.isArray(result)) {
-      console.warn('📸 ML Kit returned invalid result:', result);
-      throw new Error('ML Kit no devolvió resultados válidos');
-    }
-
-    // Debug: Log each block
-    result.forEach((block, index) => {
-      const blockText = block.text || '';
-      console.log(`📸 Block ${index}: "${blockText.substring(0, 50)}..." (${blockText.length} chars)`);
-    });
-
-    // Filter out empty blocks and combine text
-    const nonEmptyBlocks = result.filter((block) => block.text && block.text.trim().length > 0);
-    const fullText = nonEmptyBlocks.map((block) => block.text.trim()).join('\n');
-
-    console.log('📸 Non-empty blocks:', nonEmptyBlocks.length);
-    console.log('✅ Local OCR completed. Text length:', fullText.length);
-    if (fullText.length > 0) {
-      console.log('📸 First 200 chars:', fullText.substring(0, 200));
-    } else {
-      console.warn('📸 All blocks were empty or whitespace-only');
-    }
-
-    return {
-      text: fullText,
-      blocks: result.map((block) => ({
-        text: block.text,
-        boundingBox: block.boundingBox,
-      })),
-    };
-  } catch (error: any) {
-    console.error('❌ Error in local OCR:', error);
-    console.error('❌ Error details:', JSON.stringify(error, null, 2));
-    throw new Error('Error al procesar la imagen con OCR local: ' + error.message);
-  }
+  console.log('[OCR] Local OCR disabled in this build. Falling back to cloud OCR.');
+  return recognizeTextCloud(imageUri);
 };
 
 /**

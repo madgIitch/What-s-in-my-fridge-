@@ -3,7 +3,8 @@ import { database } from '../database';
 import RecipeCache, { RecipeUi } from '../database/models/RecipeCache';
 import { Q } from '@nozbe/watermelondb';
 import functions from '@react-native-firebase/functions';
-import { usePreferencesStore } from '../stores/usePreferencesStore';
+import { FREE_RECIPE_LIMIT } from '../services/revenuecat';
+import { useSubscriptionStore } from '../stores/useSubscriptionStore';
 import { useRecipeStore } from '../stores/useRecipeStore';
 
 /**
@@ -22,8 +23,9 @@ export function useRecipes() {
   const {
     isPro,
     monthlyRecipeCallsUsed,
-    incrementRecipeCalls
-  } = usePreferencesStore();
+    incrementRecipeCalls,
+    checkAndResetMonthlyCounters,
+  } = useSubscriptionStore();
 
   /**
    * Get cached recipes for given ingredients
@@ -143,7 +145,8 @@ export function useRecipes() {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Check monthly limit
-      const maxCalls = isPro ? 100 : 10;
+      checkAndResetMonthlyCounters();
+      const maxCalls = isPro ? Number.POSITIVE_INFINITY : FREE_RECIPE_LIMIT;
       if (monthlyRecipeCallsUsed >= maxCalls) {
         console.log('🚫 [useRecipes] Monthly limit reached, setting loading to FALSE');
         const errorMsg = `Límite mensual alcanzado (${maxCalls} llamadas). ${
@@ -213,6 +216,7 @@ export function useRecipes() {
   }, [
     isPro,
     monthlyRecipeCallsUsed,
+    checkAndResetMonthlyCounters,
     getCachedRecipes,
     cacheRecipes,
     incrementRecipeCalls,

@@ -23,6 +23,7 @@ import { borderRadius } from '../theme/spacing';
 import { recognizeText } from '../services/ocr/textRecognition';
 import { parseReceiptText } from '../services/ocr/receiptParser';
 import { useDrafts } from '../hooks/useDrafts';
+import { useSubscription } from '../hooks/useSubscription';
 
 type ScanScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ScanTab'>;
 
@@ -32,6 +33,7 @@ interface Props {
 
 const ScanScreen: React.FC<Props> = ({ navigation }) => {
   const { saveDraft } = useDrafts();
+  const { canUseOcrScans, incrementOcrScans } = useSubscription();
   const wiggleAnim = useRef(new Animated.Value(0)).current;
 
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -139,6 +141,19 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert('Error', 'Selecciona o toma una foto primero');
       return;
     }
+    if (!canUseOcrScans) {
+      Alert.alert(
+        'LÃ­mite del plan Free',
+        'Has alcanzado el lÃ­mite mensual de escaneos OCR.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Ver planes', onPress: () => navigation.navigate('Paywall', { source: 'ocr' }) },
+        ]
+      );
+      return;
+    }
+
+    incrementOcrScans();
 
     setProcessing(true);
 
