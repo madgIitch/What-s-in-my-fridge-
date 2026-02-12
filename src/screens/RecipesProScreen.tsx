@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Slider from '@react-native-community/slider';
-import { ArrowLeft, Heart, Shuffle } from 'lucide-react-native';
+import { ArrowLeft, Heart, Shuffle, Link as LinkIcon } from 'lucide-react-native';
 import { colors, typography, spacing } from '../theme';
 import { borderRadius } from '../theme/spacing';
 import { useInventoryStore } from '../stores/useInventoryStore';
@@ -360,6 +360,13 @@ const RecipesProScreen = () => {
             activeOpacity={0.7}
           >
             <Heart size={24} color={colors.error} fill={colors.error} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('AddRecipeFromUrl')}
+            style={styles.addFromUrlButton}
+            activeOpacity={0.7}
+          >
+            <LinkIcon size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
         <Text style={styles.headerSubtitle}>
@@ -1258,6 +1265,10 @@ const styles = StyleSheet.create({
   },
   favoritesButton: {
     padding: 4,
+  },
+  addFromUrlButton: {
+    padding: 4,
+    marginLeft: 8,
   },
   expandText: {
     ...typography.labelMedium,

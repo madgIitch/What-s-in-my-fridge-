@@ -38,6 +38,7 @@ export type RootStackParamList = {
     matchedIngredients: string[];
     ingredientsWithMeasures: string[];
   };
+  AddRecipeFromUrl: undefined;
 };
 
 // Mantener para compatibilidad con componentes existentes

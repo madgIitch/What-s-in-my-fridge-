@@ -22,6 +22,7 @@ import ConsumeRecipeIngredientsScreen from '../screens/ConsumeRecipeIngredientsS
 import CalendarScreen from '../screens/CalendarScreen';
 import AddMealScreen from '../screens/AddMealScreen';
 import MealDetailScreen from '../screens/MealDetailScreen';
+import AddRecipeFromUrlScreen from '../screens/AddRecipeFromUrlScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -151,6 +152,14 @@ export const AppNavigator = () => {
               options={{
                 title: 'Detalle de comida',
                 presentation: 'card'
+              }}
+            />
+            <Stack.Screen
+              name="AddRecipeFromUrl"
+              component={AddRecipeFromUrlScreen}
+              options={{
+                headerShown: false,
+                presentation: 'modal'
               }}
             />
           </>

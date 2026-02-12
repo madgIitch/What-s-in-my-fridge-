@@ -280,3 +280,65 @@ export const migrateInventoryNormalization = async (): Promise<{
     throw new Error('Error al migrar normalización del inventario');
   }
 };
+
+/**
+ * Parameters for parseRecipeFromUrl Cloud Function
+ */
+export interface ParseRecipeFromUrlParams {
+  url: string;
+  manualText?: string;
+}
+
+/**
+ * Result from parseRecipeFromUrl Cloud Function
+ */
+export interface ParseRecipeFromUrlResult {
+  ingredients: string[];
+  steps: string[];
+  sourceType: 'youtube' | 'instagram' | 'tiktok' | 'blog' | 'manual';
+  rawText: string;
+  recipeTitle?: string;
+}
+
+/**
+ * Parse recipe from URL (YouTube, Instagram, TikTok, Blog)
+ * Uses Whisper + Ollama for video transcription and ingredient/step extraction
+ *
+ * @param params - URL to parse and optional manual text
+ * @returns Parsed recipe with ingredients and steps
+ *
+ * @example
+ * const result = await parseRecipeFromUrl({ url: "https://www.youtube.com/watch?v=..." });
+ * // { ingredients: ["potatoes", "eggs"], steps: [...], sourceType: "youtube" }
+ */
+export const parseRecipeFromUrl = async (
+  params: ParseRecipeFromUrlParams
+): Promise<ParseRecipeFromUrlResult> => {
+  try {
+    const callable = functions().httpsCallableFromUrl(
+      getCallableUrl('europe-west1', 'parseRecipeFromUrl'),
+      {
+        timeout: 540000, // 9 minutes (transcripción puede tardar)
+      }
+    );
+    const result = await callable(params);
+
+    if (!result.data) {
+      throw new Error('Invalid response from Cloud Function');
+    }
+
+    return result.data;
+  } catch (error: any) {
+    console.error('Error calling parseRecipeFromUrl:', error);
+
+    if (error.code === 'functions/unauthenticated') {
+      throw new Error('Debes iniciar sesión para parsear recetas');
+    } else if (error.code === 'functions/invalid-argument') {
+      throw new Error('URL inválida');
+    } else if (error.code === 'functions/failed-precondition') {
+      throw new Error('No se pudo extraer información de esta URL. Prueba con otra o usa entrada manual.');
+    }
+
+    throw new Error(error.message || 'Error al procesar la receta');
+  }
+};
