@@ -3,10 +3,13 @@ import { View, Text, StyleSheet, Alert, ScrollView } from 'react-native';
 import { Button } from '../components/common/Button';
 import { signOut } from '../services/firebase/auth';
 import { migrateInventoryNormalization } from '../services/firebase/functions';
+import { useIngredientNormalizer } from '../hooks/useIngredientNormalizer';
 import { colors, typography, spacing } from '../theme';
 
 const SettingsScreen = () => {
   const [migrating, setMigrating] = useState(false);
+  const [clearingCache, setClearingCache] = useState(false);
+  const { clearCache } = useIngredientNormalizer();
 
   const handleSignOut = async () => {
     try {
@@ -54,6 +57,39 @@ const SettingsScreen = () => {
     );
   };
 
+  const handleClearCache = async () => {
+    Alert.alert(
+      'Limpiar Caché',
+      'Esta acción eliminará todas las normalizaciones de ingredientes guardadas en caché. La próxima vez que escanees un ingrediente, se volverá a normalizar con el vocabulario actualizado. ¿Deseas continuar?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Limpiar',
+          style: 'destructive',
+          onPress: async () => {
+            setClearingCache(true);
+            try {
+              console.log('🗑️ Clearing ingredient normalization cache...');
+              await clearCache();
+              console.log('✅ Cache cleared successfully');
+              Alert.alert('Caché Limpiada', 'Todas las normalizaciones en caché han sido eliminadas.', [
+                { text: 'OK' },
+              ]);
+            } catch (error: any) {
+              console.error('❌ Error clearing cache:', error);
+              Alert.alert('Error', 'Error al limpiar la caché');
+            } finally {
+              setClearingCache(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.text}>⚙️ Settings Screen</Text>
@@ -68,6 +104,16 @@ const SettingsScreen = () => {
         />
         <Text style={styles.helperText}>
           Actualiza los nombres de tus items para mejorar las sugerencias de recetas
+        </Text>
+
+        <Button
+          title={clearingCache ? "Limpiando..." : "🗑️ Limpiar Caché de Normalizaciones"}
+          onPress={handleClearCache}
+          style={[styles.button, styles.clearCacheButton]}
+          disabled={clearingCache}
+        />
+        <Text style={styles.helperText}>
+          Elimina todas las normalizaciones guardadas localmente para forzar actualización desde el servidor
         </Text>
       </View>
 
@@ -106,6 +152,9 @@ const styles = StyleSheet.create({
   },
   button: {
     marginBottom: spacing.sm,
+  },
+  clearCacheButton: {
+    marginTop: spacing.lg,
   },
   helperText: {
     ...typography.bodySmall,
