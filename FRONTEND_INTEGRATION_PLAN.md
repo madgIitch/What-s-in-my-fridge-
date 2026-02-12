@@ -809,4 +809,529 @@ addFromUrlButton: {
 # Copiar el código completo de la pantalla
 ```
 
-¿Quieres que empiece con el **Paso 1** y creemos los archivos juntos?
+---
+---
+
+# FASE 2: Guardado de Recetas + Recetas Vivas + Lista de la Compra
+
+**Fecha:** 12 Febrero 2026
+**Objetivo:** Implementar 3 funcionalidades conectadas entre sí:
+1. Guardar recetas desde URL en local (WatermelonDB) + nube (Firestore)
+2. Actualización dinámica de recetas guardadas cuando cambia el inventario
+3. Nueva pantalla "Lista de la Compra" con ingredientes faltantes
+
+---
+
+## Contexto: Cómo Funciona Actualmente
+
+### Persistencia actual de favoritos
+- **Solo local**: WatermelonDB tabla `favorite_recipes`
+- **Sin sync a Firestore**: si el usuario cambia de dispositivo, pierde favoritos
+- **Datos estáticos**: `matchedIngredients` y `missingIngredients` se guardan como snapshots y NUNCA se recalculan
+
+### Patrón de capas existente
+```
+UI (Screens)
+  → Hooks (useFavorites, useInventory)
+    → Zustand Stores (useFavoritesStore, useInventoryStore)
+      → WatermelonDB (local SQLite)
+        → Firestore (nube, solo para inventario hoy)
+```
+
+### Modelo FavoriteRecipe actual (WatermelonDB v8)
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| recipeId | string | ID único (indexado) |
+| name | string | Nombre de la receta |
+| matchPercentage | number | % match al momento de guardar |
+| matchedIngredients | string (JSON) | Ingredientes disponibles (snapshot) |
+| missingIngredients | string (JSON) | Ingredientes faltantes (snapshot) |
+| ingredientsWithMeasures | string (JSON) | Ingredientes con cantidades |
+| instructions | string | Pasos de preparación |
+| userId | string (indexado) | UID del usuario |
+| savedAt | number | Timestamp de guardado |
+
+### Colecciones Firestore actuales
+```
+/users/{userId}/
+  ├── /drafts/{draftId}
+  ├── /inventory/{itemId}
+  ├── /preferences/{prefId}
+  ├── /usage/{document}
+  ├── /subscription/{document}
+  ├── /recipeCache/{document}
+  └── /scans/{scanId}
+```
+
+**No existe** colección para favoritos ni lista de la compra.
+
+---
+
+## FEATURE 1: Guardar Recetas desde URL (Local + Firestore)
+
+### Problema actual
+En `AddRecipeFromUrlScreen.tsx`, la función `handleSaveRecipe()` tiene un TODO:
+```typescript
+const handleSaveRecipe = () => {
+  // TODO: Guardar receta en Firestore o WatermelonDB
+  Alert.alert('Receta guardada', ...); // Solo muestra alert, NO guarda nada
+};
+```
+
+### Solución
+
+#### 1.1 Añadir colección Firestore para recetas guardadas
+
+**Archivo:** `whats-in-my-fridge-backend/firestore.rules`
+
+Añadir reglas para nueva colección:
+```
+/users/{userId}/savedRecipes/{recipeId}
+```
+
+Reglas:
+- Solo el owner puede leer/escribir
+- Validar campos requeridos: `name`, `ingredientsWithMeasures`, `instructions`, `savedAt`
+
+#### 1.2 Crear servicio de sync para recetas
+
+**Archivo nuevo:** `src/services/firebase/recipesSync.ts`
+
+Funciones:
+```typescript
+// Guardar receta en Firestore
+export const saveRecipeToFirestore = async (
+  userId: string,
+  recipe: RecipeUi
+): Promise<void>
+
+// Eliminar receta de Firestore
+export const deleteRecipeFromFirestore = async (
+  userId: string,
+  recipeId: string
+): Promise<void>
+
+// Cargar recetas desde Firestore (para sync inicial en nuevo dispositivo)
+export const loadRecipesFromFirestore = async (
+  userId: string
+): Promise<RecipeUi[]>
+```
+
+Patrón: Seguir el mismo patrón que `src/services/firebase/firestoreSync.ts` usa para inventario.
+
+#### 1.3 Modificar hook `useFavorites.ts`
+
+Actualizar `addFavorite()`:
+```typescript
+const addFavorite = async (recipe: RecipeUi) => {
+  // 1. Guardar en WatermelonDB (ya existe)
+  await database.write(async () => {
+    await favoriteRecipesCollection.create(...)
+  });
+
+  // 2. NUEVO: Guardar en Firestore
+  await saveRecipeToFirestore(user.uid, recipe);
+
+  // 3. Actualizar store (ya existe)
+  addToStore(recipe);
+};
+```
+
+Actualizar `removeFavorite()`:
+```typescript
+const removeFavorite = async (recipeId: string) => {
+  // 1. Eliminar de WatermelonDB (ya existe)
+  await database.write(async () => { ... });
+
+  // 2. NUEVO: Eliminar de Firestore
+  await deleteRecipeFromFirestore(user.uid, recipeId);
+
+  // 3. Actualizar store (ya existe)
+  removeFromStore(recipeId);
+};
+```
+
+Añadir `syncFavorites()` (nuevo):
+```typescript
+const syncFavorites = async () => {
+  // Al primer login o cambio de dispositivo:
+  // 1. Cargar favoritos de Firestore
+  // 2. Comparar con WatermelonDB local
+  // 3. Merge: lo que esté en Firestore pero no en local → crear local
+  // 4. Lo que esté en local pero no en Firestore → subir a Firestore
+};
+```
+
+#### 1.4 Completar `handleSaveRecipe` en AddRecipeFromUrlScreen
+
+Reemplazar el TODO actual:
+```typescript
+const handleSaveRecipe = async () => {
+  if (!result) return;
+
+  const recipe: RecipeUi = {
+    id: `url_${Date.now()}`,
+    name: result.recipeTitle || 'Receta desde URL',
+    matchPercentage,
+    matchedIngredients,
+    missingIngredients,
+    ingredientsWithMeasures: result.ingredients,
+    instructions: result.steps.join('\n'),
+  };
+
+  await addFavorite(recipe);  // Guarda en WatermelonDB + Firestore
+  navigation.goBack();
+};
+```
+
+### Archivos a modificar (Feature 1)
+| Archivo | Cambio |
+|---------|--------|
+| `whats-in-my-fridge-backend/firestore.rules` | Añadir reglas para `/savedRecipes/` |
+| `src/services/firebase/recipesSync.ts` | **NUEVO** - Servicio sync Firestore |
+| `src/hooks/useFavorites.ts` | Añadir sync a Firestore en add/remove |
+| `src/screens/AddRecipeFromUrlScreen.tsx` | Completar handleSaveRecipe() |
+
+---
+
+## FEATURE 2: Recetas "Vivas" (Actualización Dinámica con Inventario)
+
+### Problema actual
+Cuando guardas una receta, `matchedIngredients` y `missingIngredients` son **snapshots estáticos**. Si compras ingredientes nuevos, la receta no se actualiza.
+
+### Solución
+
+#### 2.1 Función de recálculo de match
+
+**Archivo nuevo:** `src/utils/recipeMatchCalculator.ts`
+
+```typescript
+interface RecipeMatchResult {
+  matchPercentage: number;
+  matchedIngredients: string[];
+  missingIngredients: string[];
+}
+
+/**
+ * Recalcula el match de una receta contra el inventario actual.
+ * Usa normalizedName de los items del inventario para comparar
+ * contra ingredientsWithMeasures de la receta.
+ */
+export const calculateRecipeMatch = (
+  recipe: RecipeUi,
+  inventoryItems: FoodItem[]
+): RecipeMatchResult => {
+  const inventoryNames = inventoryItems
+    .map(item => (item.normalizedName || item.name).toLowerCase())
+    .filter(name => name.trim() !== '');
+
+  const matched: string[] = [];
+  const missing: string[] = [];
+
+  for (const ingredient of recipe.ingredientsWithMeasures) {
+    const normalized = ingredient.toLowerCase();
+    const isInInventory = inventoryNames.some(inv =>
+      normalized.includes(inv) || inv.includes(normalized)
+    );
+
+    if (isInInventory) {
+      matched.push(ingredient);
+    } else {
+      missing.push(ingredient);
+    }
+  }
+
+  const total = matched.length + missing.length;
+  return {
+    matchPercentage: total > 0 ? Math.round((matched.length / total) * 100) : 0,
+    matchedIngredients: matched,
+    missingIngredients: missing,
+  };
+};
+```
+
+#### 2.2 Hook que reacciona a cambios de inventario
+
+**Modificar:** `src/hooks/useFavorites.ts`
+
+Añadir dependencia de `useInventoryStore`:
+```typescript
+export const useFavorites = () => {
+  const { items: inventoryItems } = useInventoryStore();
+  const { favorites, setFavorites } = useFavoritesStore();
+
+  // Recalcular matches cuando cambia el inventario
+  useEffect(() => {
+    if (favorites.length === 0 || inventoryItems.length === 0) return;
+
+    const updatedFavorites = favorites.map(recipe => {
+      const { matchPercentage, matchedIngredients, missingIngredients } =
+        calculateRecipeMatch(recipe, inventoryItems);
+
+      return {
+        ...recipe,
+        matchPercentage,
+        matchedIngredients,
+        missingIngredients,
+      };
+    });
+
+    setFavorites(updatedFavorites);
+  }, [inventoryItems]); // Se ejecuta cada vez que cambia el inventario
+
+  // ... resto del hook
+};
+```
+
+#### 2.3 Actualizar WatermelonDB cuando cambia el match
+
+Opción: **NO actualizar WatermelonDB en cada cambio de inventario** (sería demasiado I/O). En su lugar:
+- Mantener el recálculo solo en memoria (Zustand store)
+- Actualizar WatermelonDB solo cuando el usuario abre FavoritesScreen (lazy)
+- Sync a Firestore solo cuando hay cambios significativos (>10% de variación en match)
+
+```typescript
+// En useFavorites.ts
+const persistUpdatedMatches = async (updatedRecipes: RecipeUi[]) => {
+  await database.write(async () => {
+    for (const recipe of updatedRecipes) {
+      const records = await favoriteRecipesCollection
+        .query(Q.where('recipe_id', recipe.id))
+        .fetch();
+
+      if (records.length > 0) {
+        await records[0].update(fav => {
+          fav.matchPercentage = recipe.matchPercentage;
+          fav.matchedIngredients = JSON.stringify(recipe.matchedIngredients);
+          fav.missingIngredients = JSON.stringify(recipe.missingIngredients);
+        });
+      }
+    }
+  });
+};
+```
+
+#### 2.4 UI: Indicador visual en FavoritesScreen
+
+En `FavoritesScreen.tsx`, el `RecipeCard` ya muestra `matchPercentage`. Como ahora es dinámico, se actualizará automáticamente. Opcionalmente añadir:
+- Badge "Listo para cocinar" cuando matchPercentage === 100
+- Animación sutil cuando sube el porcentaje
+- Ordenar favoritos por matchPercentage descendente
+
+### Archivos a modificar (Feature 2)
+| Archivo | Cambio |
+|---------|--------|
+| `src/utils/recipeMatchCalculator.ts` | **NUEVO** - Lógica de matching |
+| `src/hooks/useFavorites.ts` | Añadir recálculo reactivo con inventario |
+| `src/screens/FavoritesScreen.tsx` | Badge "Listo para cocinar", reordenación |
+
+---
+
+## FEATURE 3: Pantalla "Lista de la Compra"
+
+### Concepto
+Pantalla nueva que agrega los `missingIngredients` de TODAS las recetas favoritas en una lista unificada. El usuario la consulta en el supermercado.
+
+### Arquitectura
+
+#### 3.1 Nuevo store Zustand
+
+**Archivo nuevo:** `src/stores/useShoppingListStore.ts`
+
+```typescript
+interface ShoppingItem {
+  ingredientName: string;      // Nombre normalizado del ingrediente
+  neededBy: string[];           // IDs de recetas que lo necesitan
+  recipeNames: string[];        // Nombres de recetas (para mostrar)
+  checked: boolean;             // Si ya lo has metido al carrito
+}
+
+interface ShoppingListStore {
+  items: ShoppingItem[];
+  showChecked: boolean;         // Mostrar/ocultar items marcados
+
+  // Actions
+  generateFromFavorites: (favorites: RecipeUi[]) => void;
+  toggleItem: (ingredientName: string) => void;
+  clearChecked: () => void;
+  setShowChecked: (show: boolean) => void;
+}
+```
+
+La lista se **genera dinámicamente** a partir de los `missingIngredients` de los favoritos. No necesita persistencia propia porque se recalcula.
+
+#### 3.2 Lógica de generación de lista
+
+```typescript
+generateFromFavorites: (favorites: RecipeUi[]) => {
+  const ingredientMap = new Map<string, ShoppingItem>();
+
+  for (const recipe of favorites) {
+    for (const ingredient of recipe.missingIngredients) {
+      const normalized = ingredient.toLowerCase().trim();
+      const existing = ingredientMap.get(normalized);
+
+      if (existing) {
+        existing.neededBy.push(recipe.id);
+        existing.recipeNames.push(recipe.name);
+      } else {
+        ingredientMap.set(normalized, {
+          ingredientName: ingredient,
+          neededBy: [recipe.id],
+          recipeNames: [recipe.name],
+          checked: false,
+        });
+      }
+    }
+  }
+
+  set({ items: Array.from(ingredientMap.values()) });
+}
+```
+
+#### 3.3 Nueva pantalla ShoppingListScreen
+
+**Archivo nuevo:** `src/screens/ShoppingListScreen.tsx`
+
+**Estructura de UI:**
+
+```
+┌─────────────────────────────────┐
+│  ← Lista de la Compra           │
+├─────────────────────────────────┤
+│  📊 Resumen                     │
+│  12 ingredientes · 3 recetas    │
+├─────────────────────────────────┤
+│                                 │
+│  🥕 Verduras                    │
+│  ☐ Patatas      (Tortilla, ..) │
+│  ☐ Cebollas     (Tortilla)     │
+│  ☐ Pimientos    (Paella)       │
+│                                 │
+│  🥩 Carnes                      │
+│  ☐ Pollo        (Curry)        │
+│                                 │
+│  🥛 Lácteos                     │
+│  ☐ Nata         (Carbonara)    │
+│  ☐ Queso        (Carbonara)    │
+│                                 │
+│  ─── Comprados ───              │
+│  ☑ Huevos       (Tortilla)     │
+│  ☑ Ajo          (Paella)       │
+│                                 │
+├─────────────────────────────────┤
+│  [Limpiar comprados]            │
+└─────────────────────────────────┘
+```
+
+**Funcionalidades:**
+- Agrupar por categoría (usando `categorySpanish` de `normalized-ingredients.json`)
+- Checkbox para marcar como "comprado"
+- Mostrar qué recetas necesitan cada ingrediente
+- Filtro para ocultar/mostrar ya comprados
+- Botón "Limpiar comprados" (resetea checks)
+
+#### 3.4 Registrar en navegación
+
+**Modificar:** `src/navigation/AppNavigator.tsx`
+
+Añadir nueva pantalla:
+```typescript
+<Stack.Screen
+  name="ShoppingList"
+  component={ShoppingListScreen}
+  options={{ headerShown: false }}
+/>
+```
+
+**Modificar:** `src/types/index.ts`
+
+Añadir al RootStackParamList:
+```typescript
+ShoppingList: undefined;
+```
+
+#### 3.5 Punto de acceso a la lista
+
+Dos puntos de entrada:
+
+1. **Desde FavoritesScreen**: Botón flotante o en header
+```typescript
+// En FavoritesScreen.tsx header
+<TouchableOpacity onPress={() => navigation.navigate('ShoppingList')}>
+  <ShoppingCart size={24} color={colors.primary} />
+</TouchableOpacity>
+```
+
+2. **Desde RecipesProScreen**: Junto al botón de favoritos
+```typescript
+// Botón "Lista de compra" en la barra superior
+<TouchableOpacity onPress={() => navigation.navigate('ShoppingList')}>
+  <ShoppingCart size={24} color={colors.primary} />
+</TouchableOpacity>
+```
+
+### Archivos a modificar (Feature 3)
+| Archivo | Cambio |
+|---------|--------|
+| `src/stores/useShoppingListStore.ts` | **NUEVO** - Store Zustand |
+| `src/screens/ShoppingListScreen.tsx` | **NUEVO** - Pantalla completa |
+| `src/navigation/AppNavigator.tsx` | Registrar nueva pantalla |
+| `src/types/index.ts` | Añadir ShoppingList a RootStackParamList |
+| `src/screens/FavoritesScreen.tsx` | Botón de acceso a lista |
+| `src/screens/RecipesProScreen.tsx` | Botón de acceso a lista |
+
+---
+
+## Orden de Implementación Recomendado
+
+```
+FASE 2A: Guardado de recetas (Feature 1)
+  ├── 1. Firestore rules para /savedRecipes/
+  ├── 2. recipesSync.ts (servicio)
+  ├── 3. Modificar useFavorites.ts (sync)
+  └── 4. Completar handleSaveRecipe en AddRecipeFromUrlScreen
+
+FASE 2B: Recetas vivas (Feature 2)
+  ├── 5. recipeMatchCalculator.ts (utilidad)
+  ├── 6. Recálculo reactivo en useFavorites.ts
+  └── 7. UI updates en FavoritesScreen
+
+FASE 2C: Lista de la compra (Feature 3)
+  ├── 8. useShoppingListStore.ts (store)
+  ├── 9. ShoppingListScreen.tsx (pantalla)
+  ├── 10. Navegación + tipos
+  └── 11. Puntos de acceso (botones)
+```
+
+### Dependencias entre features
+```
+Feature 1 (Guardado) ──→ Feature 2 (Recetas vivas) ──→ Feature 3 (Lista compra)
+     │                         │                              │
+     │ Se necesita primero     │ missingIngredients           │ Usa missingIngredients
+     │ para tener recetas      │ dinámicos alimentan          │ actualizados de
+     │ guardadas               │ la lista de compra           │ Feature 2
+     └─────────────────────────┴──────────────────────────────┘
+```
+
+---
+
+## Resumen de Archivos
+
+### Archivos nuevos (4)
+| Archivo | Descripción |
+|---------|-------------|
+| `src/services/firebase/recipesSync.ts` | Sync de recetas con Firestore |
+| `src/utils/recipeMatchCalculator.ts` | Lógica de matching dinámico |
+| `src/stores/useShoppingListStore.ts` | Store para lista de compra |
+| `src/screens/ShoppingListScreen.tsx` | Pantalla lista de compra |
+
+### Archivos a modificar (6)
+| Archivo | Cambio |
+|---------|--------|
+| `firestore.rules` | Reglas para `/savedRecipes/` |
+| `src/hooks/useFavorites.ts` | Sync Firestore + recálculo reactivo |
+| `src/screens/AddRecipeFromUrlScreen.tsx` | Completar guardado real |
+| `src/screens/FavoritesScreen.tsx` | Badge "listo" + botón lista compra |
+| `src/navigation/AppNavigator.tsx` | Registrar ShoppingListScreen |
+| `src/types/index.ts` | Añadir ShoppingList a navegación |

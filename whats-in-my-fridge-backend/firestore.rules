@@ -1,72 +1,94 @@
-rules_version = '2';  
-service cloud.firestore {  
-  match /databases/{database}/documents {  
-      
-    // Función helper para verificar autenticación  
-    function isAuthenticated() {  
-      return request.auth != null;  
-    }  
-      
-    // Función helper para verificar ownership  
-    function isOwner(userId) {  
-      return isAuthenticated() && request.auth.uid == userId;  
-    }  
-      
-    // Colección de usuarios  
-    match /users/{userId} {  
-      // Solo el usuario puede leer/escribir su propio documento  
-      allow read, write: if isOwner(userId);  
-        
-      // Subcolección de borradores (drafts)  
-      match /drafts/{draftId} {  
-        allow read, write: if isOwner(userId);  
-      }  
-        
-      // Subcolección de inventario  
-      match /inventory/{itemId} {  
-        allow read, write: if isOwner(userId);  
-          
-        // Validar estructura de datos en escritura  
-        allow create: if isOwner(userId)  
-          && request.resource.data.keys().hasAll(['name', 'expiryDate', 'quantity'])  
-          && request.resource.data.name is string  
-          && request.resource.data.quantity is number  
-          && request.resource.data.quantity > 0;  
-          
-        allow update: if isOwner(userId)  
-          && request.resource.data.keys().hasAll(['name', 'expiryDate', 'quantity']);  
-      }  
-        
-      // Subcolección de preferencias  
-      match /preferences/{prefId} {  
-        allow read, write: if isOwner(userId);  
-      }  
-        
-      // Subcolección de uso mensual  
-      match /usage/{document=**} {  
-        allow read, write: if isOwner(userId);  
-      }  
-        
-      // Subcolección de suscripción (solo lectura para cliente)  
-      match /subscription/{document=**} {  
-        allow read: if isOwner(userId);  
-        allow write: if false; // Solo Cloud Functions pueden escribir  
-      }  
-        
-      // Subcolección de caché de recetas  
-      match /recipeCache/{document=**} {  
-        allow read, write: if isOwner(userId);  
-      }  
-        
-      // Subcolección de historial de escaneos  
-      match /scans/{scanId} {  
-        allow read, write: if isOwner(userId);  
-      }  
-    }  
-      
-    // Denegar acceso a cualquier otra ruta  
-    match /{document=**} {  
-      allow read, write: if false;  
-    }  
-  }  
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper to verify authentication
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper to verify ownership
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Validation helper for saved recipes
+    function isValidSavedRecipe() {
+      return request.resource.data.keys().hasAll(['name', 'ingredientsWithMeasures', 'instructions', 'savedAt'])
+        && request.resource.data.name is string
+        && request.resource.data.ingredientsWithMeasures is list
+        && request.resource.data.instructions is string
+        && request.resource.data.savedAt is number;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Only the owner can read/write user document
+      allow read, write: if isOwner(userId);
+
+      // Drafts subcollection
+      match /drafts/{draftId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Inventory subcollection
+      match /inventory/{itemId} {
+        allow read, write: if isOwner(userId);
+
+        // Validate structure on write
+        allow create: if isOwner(userId)
+          && request.resource.data.keys().hasAll(['name', 'expiryDate', 'quantity'])
+          && request.resource.data.name is string
+          && request.resource.data.quantity is number
+          && request.resource.data.quantity > 0;
+
+        allow update: if isOwner(userId)
+          && request.resource.data.keys().hasAll(['name', 'expiryDate', 'quantity']);
+      }
+
+      // Preferences subcollection
+      match /preferences/{prefId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Monthly usage subcollection
+      match /usage/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Subscription subcollection (client read-only)
+      match /subscription/{document=**} {
+        allow read: if isOwner(userId);
+        allow write: if false; // Only Cloud Functions can write
+      }
+
+      // Recipe cache subcollection
+      match /recipeCache/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Meal entries subcollection
+      match /meal_entries/{entryId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Scan history subcollection
+      match /scans/{scanId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Saved recipes subcollection
+      match /savedRecipes/{recipeId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidSavedRecipe();
+        allow update: if isOwner(userId) && isValidSavedRecipe();
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // Deny access to any other path
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
 }

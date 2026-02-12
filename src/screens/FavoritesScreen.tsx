@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ArrowLeft, Heart } from 'lucide-react-native';
 import { colors, typography, spacing } from '../theme';
@@ -24,7 +24,17 @@ type FavoritesNavigationProp = StackNavigationProp<RootStackParamList, 'Favorite
 
 const FavoritesScreen = () => {
   const navigation = useNavigation<FavoritesNavigationProp>();
-  const { favorites, loading, removeFavorite } = useFavorites();
+  const { favorites, loading, removeFavorite, persistUpdatedMatches } = useFavorites();
+  const sortedFavorites = useMemo(
+    () => [...favorites].sort((a, b) => b.matchPercentage - a.matchPercentage),
+    [favorites]
+  );
+
+  useFocusEffect(
+    React.useCallback(() => {
+      persistUpdatedMatches();
+    }, [persistUpdatedMatches])
+  );
 
   const handleRemoveFavorite = (recipe: RecipeUi) => {
     Alert.alert(
@@ -97,7 +107,7 @@ const FavoritesScreen = () => {
         {/* Favorites List */}
         {favorites.length > 0 && (
           <View style={styles.recipesContainer}>
-            {favorites.map((recipe) => (
+            {sortedFavorites.map((recipe) => (
               <RecipeCard
                 key={recipe.id}
                 recipe={recipe}
@@ -150,6 +160,11 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onRemove, onOpenSteps }
                 <Text style={styles.matchText}>{recipe.matchPercentage}%</Text>
               </View>
             </View>
+            {recipe.matchPercentage === 100 && (
+              <View style={styles.readyBadge}>
+                <Text style={styles.readyBadgeText}>Listo para cocinar</Text>
+              </View>
+            )}
 
             {/* Quick Stats */}
             <View style={styles.ingredientsRow}>
@@ -387,6 +402,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#FF6B9D',
     fontWeight: 'bold',
+  },
+  readyBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primaryContainer,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    marginBottom: spacing.xs,
+  },
+  readyBadgeText: {
+    ...typography.labelSmall,
+    color: colors.primary,
+    fontWeight: '700',
   },
   ingredientsRow: {
     flexDirection: 'row',

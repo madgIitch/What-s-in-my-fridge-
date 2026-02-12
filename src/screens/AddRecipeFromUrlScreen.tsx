@@ -20,12 +20,15 @@ import { Button } from '../components/common/Button';
 import { parseRecipeFromUrl, ParseRecipeFromUrlResult } from '../services/firebase/functions';
 import { useInventoryStore } from '../stores/useInventoryStore';
 import { RootStackParamList } from '../types';
+import { useFavorites } from '../hooks/useFavorites';
+import { RecipeUi } from '../database/models/RecipeCache';
 
 type AddRecipeFromUrlNavigationProp = StackNavigationProp<RootStackParamList, 'AddRecipeFromUrl'>;
 
 const AddRecipeFromUrlScreen = () => {
   const navigation = useNavigation<AddRecipeFromUrlNavigationProp>();
   const { items } = useInventoryStore();
+  const { addFavorite } = useFavorites();
 
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -58,20 +61,28 @@ const AddRecipeFromUrlScreen = () => {
     }
   };
 
-  const handleSaveRecipe = () => {
+  const handleSaveRecipe = async () => {
     if (!result) return;
 
-    // TODO: Guardar receta en Firestore o WatermelonDB
-    Alert.alert(
-      'Receta guardada',
-      `${result.recipeTitle || 'Receta'} guardada exitosamente`,
-      [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]
-    );
+    const recipe: RecipeUi = {
+      id: `url_${Date.now()}`,
+      name: result.recipeTitle || 'Receta desde URL',
+      matchPercentage,
+      matchedIngredients,
+      missingIngredients,
+      ingredientsWithMeasures: result.ingredients,
+      instructions: result.steps.join('\n'),
+    };
+
+    try {
+      await addFavorite(recipe);
+      navigation.goBack();
+    } catch (err: any) {
+      Alert.alert(
+        'Error al guardar',
+        err?.message || 'No se pudo guardar la receta. Intenta de nuevo.'
+      );
+    }
   };
 
   // Calculate match with inventory
