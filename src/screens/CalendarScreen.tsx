@@ -115,7 +115,7 @@ const CalendarScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Comidas del dia</Text>
           <View style={styles.mealList}>
             {mealsForDay.length === 0 ? (
-              <Text style={styles.emptyText}>No hay comidas registradas</Text>
+              <Text style={styles.emptyText}>No meals logged</Text>
             ) : (
               mealsForDay.map((meal) => (
                 <MealCard

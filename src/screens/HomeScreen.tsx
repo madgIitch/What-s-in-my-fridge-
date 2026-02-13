@@ -140,12 +140,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleDeleteItem = (item: FoodItem) => {
     Alert.alert(
-      'Eliminar Item',
-      `¿Seguro que quieres eliminar "${item.name}"?`,
+      'Delete Item',
+      `Are you sure you want to delete "${item.name}"?`,
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Eliminar',
+          text: 'Delete',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -171,18 +171,18 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyTitle}>🍎 Inventario vacío</Text>
+      <Text style={styles.emptyTitle}>🍎 Empty inventory</Text>
       <Text style={styles.emptyText}>
-        Añade items manualmente o escanea un recibo
+        Add items manually or scan a receipt
       </Text>
       <View style={styles.emptyButtons}>
         <Button
-          title="Añadir Item"
+          title="Add Item"
           onPress={() => navigation.navigate('AddItem')}
           style={styles.emptyButton}
         />
         <Button
-          title="Escanear Recibo"
+          title="Scan Receipt"
           onPress={() => navigation.navigate('ScanTab')}
           variant="secondary"
           style={styles.emptyButton}

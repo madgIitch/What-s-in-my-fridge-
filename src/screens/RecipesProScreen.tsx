@@ -36,7 +36,7 @@ const COMMON_UTENSILS = [
   { name: 'horno', emoji: '🔥' },
   { name: 'microondas', emoji: '📡' },
   { name: 'batidora', emoji: '🥄' },
-  { name: 'olla a presión', emoji: '🍲' },
+  { name: 'pressure cooker', emoji: '🍲' },
   { name: 'freidora', emoji: '🍟' },
   { name: 'licuadora', emoji: '🥤' },
   { name: 'procesador', emoji: '⚙️' },
@@ -152,7 +152,7 @@ const RecipesProScreen = () => {
 
   const handleGetRecipes = async () => {
     if (items.length === 0) {
-      Alert.alert('Sin ingredientes', 'Anade ingredientes a tu inventario primero');
+      Alert.alert('No ingredients', 'Add ingredients to your inventory first');
       return;
     }
     if (!canUseRecipeSuggestions) {
@@ -169,10 +169,10 @@ const RecipesProScreen = () => {
   const handleRecipeModeChange = (mode: 'local' | 'url') => {
     if (mode === 'url' && !isPro) {
       Alert.alert(
-        'Funcion Pro',
-        'Importar recetas desde URL es una Funcion Pro.',
+        'Pro feature',
+        'Importar recipes desde URL es una Pro feature.',
         [
-          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Cancel', style: 'cancel' },
           { text: 'Ver planes', onPress: () => navigation.navigate('Paywall', { source: 'url_recipes' }) },
         ]
       );
@@ -260,13 +260,13 @@ const RecipesProScreen = () => {
   };
 
   const handleShuffleRecipe = () => {
-    // Filtrar recetas con 100% de compatibilidad
+    // Filtrar recipes con 100% de compatibilidad
     const perfectRecipes = filteredRecipes.filter((recipe) => recipe.matchPercentage === 100);
 
     if (perfectRecipes.length === 0) {
       Alert.alert(
-        'Sin recetas perfectas',
-        'No hay recetas con 100% de compatibilidad. Intenta obtener nuevas recetas o añade más ingredientes a tu inventario.',
+        'No perfect recipes',
+        'There are no recipes with 100% compatibility. Try getting new recipes or add more ingredients to your inventory.',
         [{ text: 'OK' }]
       );
       return;
@@ -319,7 +319,7 @@ const RecipesProScreen = () => {
     if (!urlResult) return;
     const recipe: RecipeUi = {
       id: `url_${Date.now()}`,
-      name: urlResult.recipeTitle || 'Receta desde URL',
+      name: urlResult.recipeTitle || 'Recipe from URL',
       matchPercentage: urlMatchPercentage,
       matchedIngredients: urlMatchedIngredients,
       missingIngredients: urlMissingIngredients,
@@ -328,10 +328,10 @@ const RecipesProScreen = () => {
     };
     try {
       await addFavorite(recipe);
-      Alert.alert('Guardada', 'Receta guardada en favoritos');
+      Alert.alert('Saved', 'Recipe saved to favorites');
       clearUrlState();
     } catch (err: any) {
-      Alert.alert('Error al guardar', err?.message || 'No se pudo guardar la receta.');
+      Alert.alert('Error saving', err?.message || 'Could not save recipe.');
     }
   };
 
@@ -349,7 +349,7 @@ const RecipesProScreen = () => {
           >
             <ArrowLeft size={24} color={colors.onSurface} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Recetas</Text>
+          <Text style={styles.headerTitle}>Recipes</Text>
           <TouchableOpacity
             onPress={() => navigation.navigate('FavoritesTab')}
             style={styles.favoritesButton}
@@ -413,7 +413,7 @@ const RecipesProScreen = () => {
           <Card style={styles.urlInputCard}>
             <Text style={styles.sectionTitle}>🔗 Pega la URL</Text>
             <Text style={styles.urlSubtitle}>
-              YouTube, Instagram Reels, TikTok o blog de recetas
+              YouTube, Instagram Reels, TikTok o blog de recipes
             </Text>
             <View style={styles.urlInputRow}>
               <LinkIcon size={20} color={colors.primary} />
@@ -429,7 +429,7 @@ const RecipesProScreen = () => {
               />
             </View>
             <Button
-              title={urlLoading ? 'Analizando... (20-30 seg)' : '✨ Analizar Receta'}
+              title={urlLoading ? 'Analyzing... (20-30 sec)' : '✨ Analyze Recipe'}
               onPress={handleParseUrl}
               disabled={urlLoading || !urlInput.trim()}
             />
@@ -459,7 +459,7 @@ const RecipesProScreen = () => {
                 <View style={styles.urlRecipeHeader}>
                   <Text style={styles.urlRecipeEmoji}>{getSourceIcon(urlResult.sourceType)}</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.urlRecipeTitle}>{urlResult.recipeTitle || 'Receta'}</Text>
+                    <Text style={styles.urlRecipeTitle}>{urlResult.recipeTitle || 'Recipe'}</Text>
                     <Text style={styles.urlRecipeSource}>Fuente: {urlResult.sourceType}</Text>
                   </View>
                 </View>
@@ -512,7 +512,7 @@ const RecipesProScreen = () => {
               )}
 
               <Button
-                title="💾 Guardar en Favoritos"
+                title="💾 Save en Favoritos"
                 onPress={handleSaveUrlRecipe}
                 style={{ marginBottom: spacing.md }}
               />
@@ -550,7 +550,7 @@ const RecipesProScreen = () => {
 
         <Text style={styles.statsSubtext}>
           {isPro
-            ? 'Recetas ilimitadas activas'
+            ? 'Recipes ilimitadas activas'
             : `${remainingRecipeCalls} ${remainingRecipeCalls === 1 ? 'llamada restante' : 'llamadas restantes'} este mes`}
         </Text>
 
@@ -565,7 +565,7 @@ const RecipesProScreen = () => {
 
       <Card style={styles.filtersCard}>
           <View style={styles.filtersHeader}>
-            <Text style={styles.sectionTitle}>🔎 Filtros de recetas</Text>
+            <Text style={styles.sectionTitle}>🔎 Filtros de recipes</Text>
             {(selectedIngredientFilters.length > 0 || selectedCategoryFilters.length > 0) && (
               <TouchableOpacity onPress={handleClearFilters} activeOpacity={0.7}>
                 <Text style={styles.clearFiltersText}>Limpiar</Text>
@@ -596,13 +596,13 @@ const RecipesProScreen = () => {
             </View>
           ) : (
             <Text style={styles.filtersEmptyText}>
-              Añade ingredientes o genera recetas para ver opciones de filtro.
+              Add ingredients or generate recipes to see filter options.
             </Text>
           )}
 
           {categoryOptions.length > 0 && (
             <View style={styles.filterGroup}>
-              <Text style={styles.preferenceLabel}>🧺 Categorías</Text>
+              <Text style={styles.preferenceLabel}>🧺 Categories</Text>
               <View style={styles.filtersContainer}>
                 {categoryOptions.map((category) => {
                   const isSelected = selectedCategoryFilters.includes(category);
@@ -627,7 +627,7 @@ const RecipesProScreen = () => {
       {/* Get Recipes Button */}
       <View style={styles.mainButtonsContainer}>
         <Button
-          title={loading ? '⏳ Obteniendo recetas...' : '✨ Obtener Recetas Mágicas'}
+          title={loading ? '⏳ Getting recipes...' : '✨ Get Magic Recipes'}
           onPress={handleGetRecipes}
           disabled={loading || (!isPro && remainingRecipeCalls <= 0)}
           style={styles.getRecipesButton}
@@ -640,7 +640,7 @@ const RecipesProScreen = () => {
         >
           <Shuffle size={24} color={filteredRecipes.length === 0 ? colors.outline : colors.onPrimary} />
           <Text style={[styles.shuffleButtonText, filteredRecipes.length === 0 && styles.shuffleButtonTextDisabled]}>
-            Sorpréndeme
+            Surprise me
           </Text>
         </TouchableOpacity>
       </View>
@@ -649,9 +649,9 @@ const RecipesProScreen = () => {
       {loading && (
         <Card style={styles.inlineLoadingCard}>
           <LoadingNeverito size={80} speed={120} />
-          <Text style={styles.loadingText}>Generando recetas mágicas...</Text>
+          <Text style={styles.loadingText}>Generating magic recipes...</Text>
           <Text style={styles.loadingSubtext}>
-            Neverito está cocinando ideas ✨
+            Neverito is cooking up ideas ✨
           </Text>
         </Card>
       )}
@@ -669,7 +669,7 @@ const RecipesProScreen = () => {
         <View style={styles.recipesContainer}>
           <View style={styles.recipesTitleContainer}>
             <Text style={styles.recipesTitle}>
-              ✨ Recetas Sugeridas
+              ✨ Recipes Sugeridas
             </Text>
             <View style={styles.recipesCount}>
               <Text style={styles.recipesCountText}>{filteredRecipes.length}</Text>
@@ -691,18 +691,18 @@ const RecipesProScreen = () => {
       {!loading && recipes.length === 0 && !error && (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateEmoji}>👨‍🍳</Text>
-          <Text style={styles.emptyStateTitle}>¡Listo para cocinar!</Text>
+          <Text style={styles.emptyStateTitle}>Ready to cook!</Text>
           <Text style={styles.emptyStateText}>
-            Configura tus preferencias y obtén recetas mágicas personalizadas ✨
+            Set your preferences and get personalized magic recipes ✨
           </Text>
         </View>
       )}
       {!loading && recipes.length > 0 && filteredRecipes.length === 0 && (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateEmoji}>🧽</Text>
-          <Text style={styles.emptyStateTitle}>Sin resultados</Text>
+          <Text style={styles.emptyStateTitle}>No results</Text>
           <Text style={styles.emptyStateText}>
-            Ajusta los filtros para ver más recetas.
+            Adjust filters to see more recipes.
           </Text>
         </View>
       )}
@@ -797,7 +797,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isFavorite, onToggleFav
             {/* Full Ingredients with Measures */}
             {ingredientsWithMeasures.length > 0 && (
               <View style={styles.detailSection}>
-                <Text style={styles.detailTitle}>🥄 Cantidades</Text>
+                <Text style={styles.detailTitle}>🥄 Quantityes</Text>
                 <View style={styles.ingredientsList}>
                   {ingredientsWithMeasures.map((ing, index) => (
                     <View key={index} style={styles.ingredientRow}>
@@ -812,7 +812,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isFavorite, onToggleFav
             {/* Instructions */}
             {instructions && (
               <View style={styles.detailSection}>
-                <Text style={styles.detailTitle}>👨‍🍳 Preparación</Text>
+                <Text style={styles.detailTitle}>👨‍🍳 Preparation</Text>
                 <Text style={styles.instructionsText}>{instructions}</Text>
               </View>
             )}
@@ -821,7 +821,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isFavorite, onToggleFav
       </TouchableOpacity>
 
       <Button
-        title="Cocinar paso a paso"
+        title="Cook step by step"
         onPress={onOpenSteps}
         style={styles.stepsButton}
       />
@@ -832,11 +832,11 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isFavorite, onToggleFav
           fill={isFavorite ? colors.error : 'transparent'}
         />
         <Text style={[styles.favoriteButtonText, isFavorite && styles.favoriteButtonTextActive]}>
-          {isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+          {isFavorite ? 'Remove from favorites' : 'Save to favorites'}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
-        <Text style={styles.expandText}>{expanded ? 'Ver menos ▲' : 'Ver más ▼'}</Text>
+        <Text style={styles.expandText}>{expanded ? 'Show less ▲' : 'Show more ▼'}</Text>
       </TouchableOpacity>
     </Card>
   );

@@ -65,7 +65,7 @@ const ConsumeIngredientsScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleSave = async () => {
     if (consumptions.size === 0) {
-      Alert.alert('Sin cambios', 'No has consumido ningún ingrediente');
+      Alert.alert('No changes', "You haven't consumed any ingredients");
       return;
     }
 
@@ -83,7 +83,7 @@ const ConsumeIngredientsScreen: React.FC<Props> = ({ navigation }) => {
       }
 
       if (updates.length === 0) {
-        Alert.alert('Sin cambios', 'No has consumido ningún ingrediente');
+        Alert.alert('No changes', "You haven't consumed any ingredients");
         setSaving(false);
         return;
       }
@@ -105,7 +105,7 @@ const ConsumeIngredientsScreen: React.FC<Props> = ({ navigation }) => {
 
       Alert.alert(
         'Actualizado',
-        `Se actualizaron ${updates.length} ingrediente(s)`,
+        `Updated ${updates.length} ingrediente(s)`,
         [
           {
             text: 'Registrar en calendario',
@@ -169,7 +169,7 @@ const ConsumeIngredientsScreen: React.FC<Props> = ({ navigation }) => {
         {items.length === 0 ? (
           <Card style={styles.emptyCard}>
             <Text style={styles.emptyEmoji}>🍎</Text>
-            <Text style={styles.emptyText}>No hay ingredientes en tu nevera</Text>
+            <Text style={styles.emptyText}>No ingredients in your fridge</Text>
           </Card>
         ) : (
           <View style={styles.itemsList}>
@@ -191,7 +191,7 @@ const ConsumeIngredientsScreen: React.FC<Props> = ({ navigation }) => {
       {totalConsumed > 0 && (
         <View style={styles.footer}>
           <Button
-            title={saving ? 'Guardando...' : 'Guardar Cambios'}
+            title={saving ? 'Saving...' : 'Save Changes'}
             onPress={handleSave}
             disabled={saving}
             icon={<Check size={20} color="#000000" />}
@@ -279,7 +279,7 @@ const ConsumptionCard: React.FC<ConsumptionCardProps> = ({
 
       {isFullyConsumed && (
         <View style={styles.fullyConsumedBadge}>
-          <Text style={styles.fullyConsumedText}>Se eliminará</Text>
+          <Text style={styles.fullyConsumedText}>Will be removed</Text>
         </View>
       )}
     </Card>

@@ -34,10 +34,10 @@ const MealDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   }, [mealId]);
 
   const handleDelete = async () => {
-    Alert.alert('Eliminar comida', '¿Seguro que quieres eliminar esta comida?', [
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert('Delete meal', 'Are you sure you want to delete this meal?', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Eliminar',
+        text: 'Delete',
         style: 'destructive',
         onPress: async () => {
           try {
@@ -80,7 +80,7 @@ const MealDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           ) : null}
         </View>
 
-        <Button title="Eliminar comida" variant="secondary" onPress={handleDelete} />
+        <Button title="Delete meal" variant="secondary" onPress={handleDelete} />
       </ScrollView>
     </SafeAreaView>
   );

@@ -73,7 +73,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
       // Request camera permission
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permiso necesario', 'Necesitamos acceso a tu cámara');
+        Alert.alert('Permission required', 'We need access to your camera');
         return;
       }
 
@@ -94,7 +94,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
         });
       }
     } catch (error: any) {
-      Alert.alert('Error', 'No se pudo tomar la foto');
+      Alert.alert('Error', 'Could not take the photo');
       console.error('Camera error:', error);
     }
   };
@@ -107,7 +107,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
       // Request media library permission
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permiso necesario', 'Necesitamos acceso a tu galería');
+        Alert.alert('Permission required', 'We need access to your gallery');
         return;
       }
 
@@ -128,7 +128,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
         });
       }
     } catch (error: any) {
-      Alert.alert('Error', 'No se pudo seleccionar la imagen');
+      Alert.alert('Error', 'Could not select the image');
       console.error('Image picker error:', error);
     }
   };
@@ -138,7 +138,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
    */
   const processImage = async () => {
     if (!imageUri) {
-      Alert.alert('Error', 'Selecciona o toma una foto primero');
+      Alert.alert('Error', 'Select or take a photo first');
       return;
     }
     if (!canUseOcrScans) {
@@ -146,7 +146,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
         'LÃ­mite del plan Free',
         'Has alcanzado el lÃ­mite mensual de escaneos OCR.',
         [
-          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Cancel', style: 'cancel' },
           { text: 'Ver planes', onPress: () => navigation.navigate('Paywall', { source: 'ocr' }) },
         ]
       );
@@ -168,8 +168,8 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
 
       if (!extractedText || extractedText.trim().length === 0) {
         Alert.alert(
-          'Sin Texto',
-          'No se pudo extraer texto de la imagen. Intenta con otra foto más clara.'
+          'No text',
+          'Could not extract text from the image. Try a clearer photo.'
         );
         setProcessing(false);
         return;
@@ -183,14 +183,14 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
 
       if (parsedInfo.items.length === 0) {
         Alert.alert(
-          'Sin Items',
-          'No se pudieron detectar items en el recibo. ¿Quieres revisar el texto manualmente?',
+          'No items',
+          'Could not detect items in the receipt. Do you want to review the text manually?',
           [
-            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Cancel', style: 'cancel' },
             {
               text: 'Ver Texto',
               onPress: () => {
-                Alert.alert('Texto Extraído', extractedText);
+                Alert.alert('Extracted Text', extractedText);
               },
             },
           ]
@@ -212,7 +212,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
       });
 
       if (!draft) {
-        throw new Error('No se pudo guardar el borrador');
+        throw new Error('Could not save draft');
       }
 
       console.log('Draft saved with ID:', draft.id);
@@ -232,7 +232,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
       );
     } catch (error: any) {
       console.error('Error processing image:', error);
-      Alert.alert('Error', error.message || 'No se pudo procesar la imagen');
+      Alert.alert('Error', error.message || 'Could not process image');
     } finally {
       setProcessing(false);
     }
@@ -260,7 +260,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
           >
             <ArrowLeft size={24} color={colors.onSurface} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Escanear</Text>
+          <Text style={styles.headerTitle}>Scan</Text>
         </View>
         <Text style={styles.headerSubtitle}>
           Captura tu recibo de compra ✨
@@ -294,7 +294,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
 
           {ocrText && (
             <View style={styles.ocrPreview}>
-              <Text style={styles.ocrPreviewTitle}>Texto Extraído:</Text>
+              <Text style={styles.ocrPreviewTitle}>Extracted Text:</Text>
               <Text style={styles.ocrPreviewText} numberOfLines={5}>
                 {ocrText}
               </Text>
@@ -331,7 +331,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
               style={styles.primaryButton}
             />
             <Button
-              title="🖼️ Desde Galería"
+              title="🖼️ From Gallery"
               onPress={pickImage}
               variant="secondary"
               style={styles.secondaryButton}
@@ -341,7 +341,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
           <Card variant="outlined" style={styles.tipCard}>
             <Text style={styles.tipTitle}>💡 Consejos</Text>
             <Text style={styles.tipText}>
-              • Asegúrate de que el recibo esté bien iluminado{'\n'}
+              • Make sure the receipt is well lit{'\n'}
               • Captura el recibo completo y sin borrosidad{'\n'}
               • Evita sombras y reflejos{'\n'}
               • Coloca el recibo sobre una superficie plana

@@ -177,7 +177,7 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
     );
 
     if (itemsToUpdate.length === 0) {
-      Alert.alert('Sin cambios', 'No has consumido ningún ingrediente');
+      Alert.alert('No changes', "You haven't consumed any ingredients");
       return;
     }
 
@@ -217,21 +217,21 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
           unit: selectedUnit,
           expiryDate,
           category: 'Platos preparados',
-          notes: 'Cocinado desde receta',
+          notes: 'Cooked from recipe',
           source: 'manual',
         });
       }
 
       const message = addCookedDish
-        ? `Se actualizaron ${itemsToUpdate.length} ingrediente(s) y se añadió "${recipeName}" a tu nevera`
-        : `Se actualizaron ${itemsToUpdate.length} ingrediente(s)`;
+        ? `Updated ${itemsToUpdate.length} ingredient(s) and added "${recipeName}" to your fridge`
+        : `Updated ${itemsToUpdate.length} ingrediente(s)`;
 
       const consumedIds = itemsToUpdate
         .map((consumption) => consumption.inventoryItem?.id)
         .filter((id): id is string => Boolean(id));
 
       Alert.alert(
-        '¡Listo! 🎉',
+        'Done! 🎉',
         message,
         [
           {
@@ -276,7 +276,7 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
           <Text style={styles.headerTitle}>Marcar como usado</Text>
         </View>
         <Text style={styles.headerSubtitle}>
-          Receta: {recipeName} 🍳
+          Recipe: {recipeName} 🍳
         </Text>
       </View>
 
@@ -297,7 +297,7 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
         <Card style={styles.instructionsCard}>
           <Text style={styles.instructionsTitle}>💡 Instrucciones</Text>
           <Text style={styles.instructionsText}>
-            Marca cuánto usaste de cada ingrediente. Si no usaste algo, déjalo en 0.
+            Mark how much you used from each ingredient. If you did not use one, leave it at 0.
           </Text>
         </Card>
 
@@ -311,13 +311,13 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
             <View style={[styles.checkbox, addCookedDish && styles.checkboxChecked]}>
               {addCookedDish && <Check size={18} color={colors.onPrimary} />}
             </View>
-            <Text style={styles.checkboxLabel}>Añadir plato cocinado a mi nevera</Text>
+            <Text style={styles.checkboxLabel}>Add cooked dish to my fridge</Text>
           </TouchableOpacity>
 
           {addCookedDish && (
             <>
               <View style={styles.portionsRow}>
-                <Text style={styles.portionsLabel}>Cantidad:</Text>
+                <Text style={styles.portionsLabel}>Quantity:</Text>
                 <View style={styles.portionsInputContainer}>
                   <TouchableOpacity
                     onPress={() => {
@@ -368,7 +368,7 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
 
           {addCookedDish && (
             <Text style={styles.cookedDishNote}>
-              🍽️ "{recipeName}" se añadirá con {portions} {selectedUnit}, caducidad: {new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+              🍽️ "{recipeName}" will be added with {portions} {selectedUnit}, expiration: {new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()}
             </Text>
           )}
         </Card>
@@ -392,7 +392,7 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
       {totalConsumed > 0 && (
         <View style={styles.footer}>
           <Button
-            title={saving ? 'Guardando...' : 'Guardar Cambios'}
+            title={saving ? 'Saving...' : 'Save Changes'}
             onPress={handleSave}
             disabled={saving}
           />
@@ -412,10 +412,10 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
         >
           <Pressable style={styles.unitModalSheet} onPress={() => {}}>
             <View style={styles.unitModalHandle} />
-            <Text style={styles.unitModalTitle}>Seleccionar unidad</Text>
+            <Text style={styles.unitModalTitle}>Select unit</Text>
             <Text style={styles.unitModalSubtitle}>
               {unitPickerTarget?.type === 'dish'
-                ? 'Elige la unidad para el plato cocinado'
+                ? 'Choose the unit for the cooked dish'
                 : 'Elige la unidad para este ingrediente'}
             </Text>
 
@@ -451,7 +451,7 @@ const ConsumeRecipeIngredientsScreen: React.FC<Props> = ({ navigation, route }) 
               style={styles.unitModalCancel}
               activeOpacity={0.8}
             >
-              <Text style={styles.unitModalCancelText}>Cancelar</Text>
+              <Text style={styles.unitModalCancelText}>Cancel</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
@@ -577,7 +577,7 @@ const IngredientCard: React.FC<IngredientCardProps> = ({
 
       {isFullyConsumed && (
         <View style={styles.fullyConsumedBadge}>
-          <Text style={styles.fullyConsumedText}>Se eliminará</Text>
+          <Text style={styles.fullyConsumedText}>Will be removed</Text>
         </View>
       )}
     </Card>

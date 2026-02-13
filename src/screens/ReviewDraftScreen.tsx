@@ -112,12 +112,12 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
 
         setItems(itemsWithCategories);
       } else {
-        Alert.alert('Error', 'No se pudo cargar el borrador');
+        Alert.alert('Error', 'Could not load draft');
         navigation.goBack();
       }
     } catch (error) {
       console.error('Error loading draft:', error);
-      Alert.alert('Error', 'Error al cargar el borrador');
+      Alert.alert('Error', 'Error loading draft');
       navigation.goBack();
     } finally {
       setLoading(false);
@@ -200,12 +200,12 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const deleteItem = (itemId: string) => {
     Alert.alert(
-      'Eliminar item',
-      '¿Estás seguro de que quieres eliminar este item?',
+      'Delete item',
+      'Are you sure you want to delete this item?',
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Eliminar',
+          text: 'Delete',
           style: 'destructive',
           onPress: () => {
             setItems((prev) => prev.filter((item) => item.id !== itemId));
@@ -219,15 +219,15 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
     const selectedItems = items.filter((item) => item.selected);
 
     if (selectedItems.length === 0) {
-      Alert.alert('Sin selección', 'Selecciona al menos un item para agregar');
+      Alert.alert('No selection', 'Select at least one item to add');
       return;
     }
 
     Alert.alert(
       'Confirmar',
-      `¿Agregar ${selectedItems.length} item(s) al inventario?`,
+      `Add ${selectedItems.length} item(s) to inventory?`,
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Agregar',
           onPress: async () => {
@@ -250,7 +250,7 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
               navigation.navigate('HomeTab');
             } catch (error) {
               console.error('Error adding items:', error);
-              Alert.alert('Error', 'Error al agregar items al inventario');
+              Alert.alert('Error', 'Error adding items to inventory');
             } finally {
               setSaving(false);
             }
@@ -262,10 +262,10 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleDiscard = () => {
     Alert.alert(
-      'Descartar borrador',
-      '¿Estás seguro de que quieres descartar este borrador?',
+      'Discard draft',
+      'Are you sure you want to discard this draft?',
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Descartar',
           style: 'destructive',
@@ -275,7 +275,7 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
               navigation.goBack();
             } catch (error) {
               console.error('Error deleting draft:', error);
-              Alert.alert('Error', 'Error al descartar el borrador');
+              Alert.alert('Error', 'Error discarding draft');
             }
           },
         },
@@ -301,7 +301,7 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
             {item.name}
           </Text>
           <Text style={styles.itemDetails}>
-            Cantidad: {item.quantity || 1} • {item.category || 'Sin categoría'}
+            Quantity: {item.quantity || 1} • {item.category || 'Uncategorized'}
           </Text>
           {item.price && (
             <Text style={styles.itemPrice}>€{item.price.toFixed(2)}</Text>
@@ -324,7 +324,7 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
       <SafeAreaView style={styles.loadingContainer} edges={['top', 'bottom']}>
         <StatusBar barStyle="dark-content" backgroundColor="#FFE5EC" />
         <LoadingNeverito size={80} speed={120} />
-        <Text style={styles.loadingText}>Cargando borrador...</Text>
+        <Text style={styles.loadingText}>Loading draft...</Text>
       </SafeAreaView>
     );
   }
@@ -369,7 +369,7 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
               <Text style={styles.selectAllText}>
                 {items.every((item) => item.selected)
                   ? 'Deseleccionar todo'
-                  : 'Seleccionar todo'}
+                  : 'Select all'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -384,7 +384,7 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
         {unrecognizedLines.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
-              Líneas no reconocidas ({unrecognizedLines.length})
+              Unrecognized lines ({unrecognizedLines.length})
             </Text>
             <Card variant="outlined" style={styles.unrecognizedCard}>
               {unrecognizedLines.slice(0, 5).map((line, index) => (
@@ -394,7 +394,7 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
               ))}
               {unrecognizedLines.length > 5 && (
                 <Text style={styles.moreLines}>
-                  ... y {unrecognizedLines.length - 5} más
+                  ... and {unrecognizedLines.length - 5} more
                 </Text>
               )}
             </Card>
@@ -414,7 +414,7 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
             style={styles.actionButton}
           />
           <Button
-            title={saving ? 'Guardando...' : 'Agregar al inventario'}
+            title={saving ? 'Saving...' : 'Agregar al inventario'}
             onPress={handleConfirm}
             loading={saving}
             disabled={selectedCount === 0 || saving}
@@ -448,7 +448,7 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
                 placeholderTextColor={colors.onSurfaceVariant}
               />
 
-              <Text style={styles.inputLabel}>Cantidad</Text>
+              <Text style={styles.inputLabel}>Quantity</Text>
               <TextInput
                 style={styles.textInput}
                 value={editQuantity}
@@ -459,7 +459,7 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
               />
 
               <Picker
-                label="Categoría"
+                label="Category"
                 value={editCategory}
                 onChange={setEditCategory}
                 options={FOOD_CATEGORIES.map((cat) => ({
@@ -488,13 +488,13 @@ const ReviewDraftScreen: React.FC<Props> = ({ navigation, route }) => {
 
             <View style={styles.modalActions}>
               <Button
-                title="Cancelar"
+                title="Cancel"
                 variant="secondary"
                 onPress={() => setEditModalVisible(false)}
                 style={styles.modalButton}
               />
               <Button
-                title="Guardar"
+                title="Save"
                 onPress={saveEditedItem}
                 style={styles.modalButton}
               />

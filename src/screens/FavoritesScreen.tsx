@@ -38,12 +38,12 @@ const FavoritesScreen = () => {
 
   const handleRemoveFavorite = (recipe: RecipeUi) => {
     Alert.alert(
-      'Eliminar favorito',
-      `¿Quieres eliminar "${recipe.name}" de tus favoritos?`,
+      'Delete favorito',
+      `Do you want to remove "${recipe.name}" from your favorites?`,
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Eliminar',
+          text: 'Delete',
           style: 'destructive',
           onPress: () => removeFavorite(recipe.id)
         },
@@ -68,7 +68,7 @@ const FavoritesScreen = () => {
           <Text style={styles.headerTitle}>Mis Favoritos</Text>
         </View>
         <Text style={styles.headerSubtitle}>
-          Tus recetas guardadas ❤️
+          Tus recipes guardadas ❤️
         </Text>
       </View>
 
@@ -76,15 +76,15 @@ const FavoritesScreen = () => {
         {/* Stats Card */}
         <Card style={styles.statsCard}>
           <View style={styles.statsHeader}>
-            <Text style={styles.statsTitle}>❤️ Recetas favoritas</Text>
+            <Text style={styles.statsTitle}>❤️ Recipes favoritas</Text>
             <Text style={styles.statsCount}>{favorites.length}</Text>
           </View>
           <Text style={styles.statsSubtext}>
             {favorites.length === 0
-              ? 'Aún no tienes favoritos'
+              ? "You don't have favorites yet"
               : favorites.length === 1
-              ? '1 receta guardada'
-              : `${favorites.length} recetas guardadas`}
+              ? '1 saved recipe'
+              : `${favorites.length} recipes guardadas`}
           </Text>
         </Card>
 
@@ -92,12 +92,12 @@ const FavoritesScreen = () => {
         {!loading && favorites.length === 0 && (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateEmoji}>💕</Text>
-            <Text style={styles.emptyStateTitle}>No tienes favoritos aún</Text>
+            <Text style={styles.emptyStateTitle}>You don't have favorites yet</Text>
             <Text style={styles.emptyStateText}>
-              Explora recetas y guarda tus favoritas para encontrarlas fácilmente aquí
+              Explore recipes and save your favorites to find them easily here
             </Text>
             <Button
-              title="Explorar Recetas"
+              title="Explorar Recipes"
               onPress={() => navigation.navigate('RecipesTab')}
               style={styles.exploreButton}
             />
@@ -162,7 +162,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onRemove, onOpenSteps }
             </View>
             {recipe.matchPercentage === 100 && (
               <View style={styles.readyBadge}>
-                <Text style={styles.readyBadgeText}>Listo para cocinar</Text>
+                <Text style={styles.readyBadgeText}>Ready to cook</Text>
               </View>
             )}
 
@@ -210,7 +210,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onRemove, onOpenSteps }
             {/* Full Ingredients with Measures */}
             {ingredientsWithMeasures.length > 0 && (
               <View style={styles.detailSection}>
-                <Text style={styles.detailTitle}>🥄 Cantidades</Text>
+                <Text style={styles.detailTitle}>🥄 Quantityes</Text>
                 <View style={styles.ingredientsList}>
                   {ingredientsWithMeasures.map((ing, index) => (
                     <View key={index} style={styles.ingredientRow}>
@@ -225,7 +225,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onRemove, onOpenSteps }
             {/* Instructions */}
             {instructions && (
               <View style={styles.detailSection}>
-                <Text style={styles.detailTitle}>👨‍🍳 Preparación</Text>
+                <Text style={styles.detailTitle}>👨‍🍳 Preparation</Text>
                 <Text style={styles.instructionsText}>{instructions}</Text>
               </View>
             )}
@@ -236,18 +236,18 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onRemove, onOpenSteps }
       {/* Action Buttons */}
       <View style={styles.actionButtons}>
         <Button
-          title="Cocinar paso a paso"
+          title="Cook step by step"
           onPress={onOpenSteps}
           style={styles.stepsButton}
         />
         <TouchableOpacity onPress={onRemove} style={styles.removeButton}>
           <Heart size={20} color={colors.error} fill={colors.error} />
-          <Text style={styles.removeButtonText}>Quitar de favoritos</Text>
+          <Text style={styles.removeButtonText}>Remove from favorites</Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
-        <Text style={styles.expandText}>{expanded ? 'Ver menos ▲' : 'Ver más ▼'}</Text>
+        <Text style={styles.expandText}>{expanded ? 'Show less ▲' : 'Show more ▼'}</Text>
       </TouchableOpacity>
     </Card>
   );

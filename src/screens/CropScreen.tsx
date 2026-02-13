@@ -88,7 +88,7 @@ const CropScreen: React.FC<Props> = ({ navigation, route }) => {
 
         <View style={styles.buttons}>
           <Button
-            title="Cancelar"
+            title="Cancel"
             onPress={handleCancel}
             variant="secondary"
             disabled={processing}

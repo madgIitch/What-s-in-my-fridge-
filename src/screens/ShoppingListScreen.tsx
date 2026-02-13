@@ -201,8 +201,8 @@ const ShoppingListScreen = () => {
           <ArrowLeft size={24} color={colors.onSurface} />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>Lista de la compra</Text>
-          <Text style={styles.headerSubtitle}>Todo lo que te falta para tus recetas</Text>
+          <Text style={styles.headerTitle}>Shopping List</Text>
+          <Text style={styles.headerSubtitle}>Everything you need for your recipes</Text>
         </View>
         <ShoppingCart size={22} color={colors.primary} />
       </View>
@@ -211,7 +211,7 @@ const ShoppingListScreen = () => {
         <Card style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>Resumen</Text>
           <Text style={styles.summaryText}>
-            {items.length} ingredientes · {recipeCount} recetas
+            {items.length} ingredients · {recipeCount} recipes
           </Text>
           <TouchableOpacity
             onPress={() => setShowChecked(!showChecked)}
@@ -249,7 +249,7 @@ const ShoppingListScreen = () => {
         {items.length === 0 && (
           <Card style={styles.sectionCard}>
             <Text style={styles.emptyText}>
-              No hay ingredientes pendientes. Guarda recetas o actualiza favoritos para generar la lista.
+              No pending ingredients. Save recipes or update favorites to generate the list.
             </Text>
           </Card>
         )}

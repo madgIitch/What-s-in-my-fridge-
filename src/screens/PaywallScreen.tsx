@@ -22,9 +22,9 @@ type PaywallNavigationProp = StackNavigationProp<RootStackParamList, 'Paywall'>;
 
 const PRO_FEATURES = [
   'Escaneos OCR ilimitados',
-  'Recetas ilimitadas',
-  'Importar recetas desde URL',
-  'Lista de la compra',
+  'Recipes ilimitadas',
+  'Importar recipes desde URL',
+  'Shopping List',
   'Sync entre dispositivos',
 ];
 
@@ -50,24 +50,24 @@ const PaywallScreen = () => {
 
   const handlePurchase = async () => {
     if (!recommendedPackage) {
-      Alert.alert('Planes no disponibles', 'No hay planes disponibles ahora mismo.');
+      Alert.alert('Planes no disponibles', 'No plans are available right now.');
       return;
     }
 
     try {
       const result = await purchasePro(recommendedPackage.identifier);
       if (result.isPro) {
-        Alert.alert('Suscripción activada', 'Ahora tienes acceso a todas las funciones Pro.');
+        Alert.alert('Subscription activated', 'You now have access to all Pro features.');
         navigation.goBack();
       } else {
         Alert.alert(
           'Compra pendiente',
-          'La compra se procesó, pero todavía no aparece activa. Intenta restaurar compras.'
+          'The purchase was processed, but it is not active yet. Try restoring purchases.'
         );
       }
     } catch (purchaseError) {
       console.error('Purchase error:', purchaseError);
-      Alert.alert('No se pudo completar la compra', 'Intenta de nuevo en unos segundos.');
+      Alert.alert('Purchase could not be completed', 'Try again in a few seconds.');
     }
   };
 
@@ -75,14 +75,14 @@ const PaywallScreen = () => {
     try {
       const result = await restorePurchases();
       if (result.isPro) {
-        Alert.alert('Compras restauradas', 'Tu suscripción Pro está activa.');
+        Alert.alert('Purchases restored', 'Your Pro subscription is active.');
         navigation.goBack();
       } else {
-        Alert.alert('Sin compras activas', 'No encontramos una suscripción activa para restaurar.');
+        Alert.alert('No active purchases', 'No active subscription found to restore.');
       }
     } catch (restoreError) {
       console.error('Restore purchases error:', restoreError);
-      Alert.alert('No se pudieron restaurar compras', 'Intenta de nuevo.');
+      Alert.alert('Could not restore purchases', 'Try again.');
     }
   };
 
@@ -101,7 +101,7 @@ const PaywallScreen = () => {
       <ScrollView contentContainerStyle={styles.content}>
         <Card style={styles.heroCard}>
           <Text style={styles.heroTitle}>Desbloquea todo el potencial</Text>
-          <Text style={styles.heroSubtitle}>Plan Free: 5 escaneos OCR y 5 recetas al mes</Text>
+          <Text style={styles.heroSubtitle}>Plan Free: 5 escaneos OCR y 5 recipes al mes</Text>
         </Card>
 
         <Card style={styles.featuresCard}>
@@ -135,20 +135,20 @@ const PaywallScreen = () => {
 
         {isPro ? (
           <Card style={styles.activeCard}>
-            <Text style={styles.activeText}>Tu suscripción Pro ya está activa.</Text>
+            <Text style={styles.activeText}>Your Pro subscription is already active.</Text>
           </Card>
         ) : null}
 
         {!isPro && (
           <Button
-            title={loading ? 'Procesando...' : 'Activar Pro'}
+            title={loading ? 'Processing...' : 'Activate Pro'}
             onPress={handlePurchase}
             disabled={loading}
             style={styles.ctaButton}
           />
         )}
         <Button
-          title="Restaurar compras"
+          title="Restore purchases"
           onPress={handleRestore}
           variant="secondary"
           disabled={loading}

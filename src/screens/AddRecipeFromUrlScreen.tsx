@@ -48,7 +48,7 @@ const AddRecipeFromUrlScreen = () => {
       return;
     }
     if (!url.trim()) {
-      setError('Por favor ingresa una URL válida');
+      setError('Please enter a valid URL');
       return;
     }
 
@@ -61,7 +61,7 @@ const AddRecipeFromUrlScreen = () => {
       setResult(data);
     } catch (err: any) {
       console.error('Error parsing recipe:', err);
-      setError(err.message || 'Error al procesar la receta. Intenta con otra URL.');
+      setError(err.message || 'Error processing recipe. Try another URL.');
     } finally {
       setLoading(false);
     }
@@ -72,7 +72,7 @@ const AddRecipeFromUrlScreen = () => {
 
     const recipe: RecipeUi = {
       id: `url_${Date.now()}`,
-      name: result.recipeTitle || 'Receta desde URL',
+      name: result.recipeTitle || 'Recipe from URL',
       matchPercentage,
       matchedIngredients,
       missingIngredients,
@@ -85,8 +85,8 @@ const AddRecipeFromUrlScreen = () => {
       navigation.goBack();
     } catch (err: any) {
       Alert.alert(
-        'Error al guardar',
-        err?.message || 'No se pudo guardar la receta. Intenta de nuevo.'
+        'Error saving',
+        err?.message || 'Could not save recipe. Try again.'
       );
     }
   };
@@ -142,7 +142,7 @@ const AddRecipeFromUrlScreen = () => {
         <Card style={styles.inputCard}>
           <Text style={styles.sectionTitle}>🔗 Pega la URL</Text>
           <Text style={styles.sectionSubtitle}>
-            YouTube, Instagram Reels, TikTok o blog de recetas
+            YouTube, Instagram Reels, TikTok o blog de recipes
           </Text>
 
           <View style={styles.inputContainer}>
@@ -160,7 +160,7 @@ const AddRecipeFromUrlScreen = () => {
           </View>
 
           <Button
-            title={loading ? 'Analizando... (20-30 seg)' : '✨ Analizar Receta'}
+            title={loading ? 'Analyzing... (20-30 sec)' : '✨ Analyze Recipe'}
             onPress={handleParseUrl}
             disabled={loading || !url.trim()}
             style={styles.analyzeButton}
@@ -197,7 +197,7 @@ const AddRecipeFromUrlScreen = () => {
                 </Text>
                 <View style={styles.recipeInfo}>
                   <Text style={styles.recipeTitle}>
-                    {result.recipeTitle || 'Receta'}
+                    {result.recipeTitle || 'Recipe'}
                   </Text>
                   <Text style={styles.recipeSource}>
                     Fuente: {result.sourceType}
@@ -272,7 +272,7 @@ const AddRecipeFromUrlScreen = () => {
 
             {/* Save Button */}
             <Button
-              title="💾 Guardar Receta"
+              title="💾 Save Recipe"
               onPress={handleSaveRecipe}
               style={styles.saveButton}
             />

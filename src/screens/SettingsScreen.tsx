@@ -28,10 +28,10 @@ const SettingsScreen = () => {
   const handleMigrateNormalization = async () => {
     Alert.alert(
       'Normalizar Inventario',
-      'Esta acción actualizará todos los items de tu inventario con nombres normalizados para mejorar las sugerencias de recetas. ¿Deseas continuar?',
+      'This action will update all inventory items with normalized names to improve recipe suggestions. Do you want to continue?',
       [
         {
-          text: 'Cancelar',
+          text: 'Cancel',
           style: 'cancel',
         },
         {
@@ -45,15 +45,15 @@ const SettingsScreen = () => {
               console.log('✅ Migration complete:', result);
 
               Alert.alert(
-                'Migración Completada',
-                `Se actualizaron ${result.updatedCount} de ${result.totalItems} items.\n\n${
-                  result.errorCount > 0 ? `Errores: ${result.errorCount}` : '¡Todo correcto!'
+                'Migration completed',
+                `Updated ${result.updatedCount} de ${result.totalItems} items.\n\n${
+                  result.errorCount > 0 ? `Errors: ${result.errorCount}` : 'Everything looks good!'
                 }`,
                 [{ text: 'OK' }]
               );
             } catch (error: any) {
               console.error('❌ Migration error:', error);
-              Alert.alert('Error', 'Error al migrar la normalización del inventario');
+              Alert.alert('Error', 'Error migrating inventory normalization');
             } finally {
               setMigrating(false);
             }
@@ -65,11 +65,11 @@ const SettingsScreen = () => {
 
   const handleClearCache = async () => {
     Alert.alert(
-      'Limpiar Caché',
-      'Esta acción eliminará todas las normalizaciones de ingredientes guardadas en caché. La próxima vez que escanees un ingrediente, se volverá a normalizar con el vocabulario actualizado. ¿Deseas continuar?',
+      'Clear Cache',
+      'This action will remove all cached ingredient normalizations. The next time you scan an ingredient, it will be normalized again with the updated vocabulary. Do you want to continue?',
       [
         {
-          text: 'Cancelar',
+          text: 'Cancel',
           style: 'cancel',
         },
         {
@@ -81,12 +81,12 @@ const SettingsScreen = () => {
               console.log('🗑️ Clearing ingredient normalization cache...');
               await clearCache();
               console.log('✅ Cache cleared successfully');
-              Alert.alert('Caché Limpiada', 'Todas las normalizaciones en caché han sido eliminadas.', [
+              Alert.alert('Cache Cleared', 'All cached normalizations have been removed.', [
                 { text: 'OK' },
               ]);
             } catch (error: any) {
               console.error('❌ Error clearing cache:', error);
-              Alert.alert('Error', 'Error al limpiar la caché');
+              Alert.alert('Error', 'Error clearing cache');
             } finally {
               setClearingCache(false);
             }
@@ -109,17 +109,17 @@ const SettingsScreen = () => {
           disabled={migrating}
         />
         <Text style={styles.helperText}>
-          Actualiza los nombres de tus items para mejorar las sugerencias de recetas
+          Actualiza los nombres de tus items para mejorar las sugerencias de recipes
         </Text>
 
         <Button
-          title={clearingCache ? "Limpiando..." : "🗑️ Limpiar Caché de Normalizaciones"}
+          title={clearingCache ? 'Clearing...' : '🗑️ Clear Normalization Cache'}
           onPress={handleClearCache}
           style={[styles.button, styles.clearCacheButton]}
           disabled={clearingCache}
         />
         <Text style={styles.helperText}>
-          Elimina todas las normalizaciones guardadas localmente para forzar actualización desde el servidor
+          Remove all locally cached normalizations to force a fresh sync from the server
         </Text>
       </View>
 
@@ -132,7 +132,7 @@ const SettingsScreen = () => {
         />
 
         <Button
-          title="Cerrar Sesión"
+          title="Sign Out"
           onPress={handleSignOut}
           style={styles.button}
         />

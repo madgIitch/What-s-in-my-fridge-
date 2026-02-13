@@ -112,14 +112,14 @@ const RecipeStepsScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={styles.summaryRow}>
             <Text style={styles.summaryEmoji}>OK</Text>
             <Text style={styles.summaryText}>
-              {matchedIngredients.length} ingredientes disponibles
+              {matchedIngredients.length} ingredients disponibles
             </Text>
           </View>
           {missingIngredients.length > 0 && (
             <View style={styles.summaryRow}>
               <Text style={styles.summaryEmoji}>Falta</Text>
               <Text style={styles.summaryText}>
-                {missingIngredients.length} ingredientes faltantes
+                {missingIngredients.length} ingredients faltantes
               </Text>
             </View>
           )}
@@ -178,19 +178,19 @@ const RecipeStepsScreen: React.FC<Props> = ({ navigation, route }) => {
               ))}
             </View>
           ) : (
-            <Text style={styles.emptyText}>No hay instrucciones detalladas para esta receta.</Text>
+            <Text style={styles.emptyText}>No detailed instructions for this recipe.</Text>
           )}
         </Card>
 
         {/* Consume Ingredients Button */}
         {matchedIngredients.length > 0 && (
           <Card style={styles.consumeCard}>
-            <Text style={styles.consumeTitle}>¿Terminaste de cocinar?</Text>
+            <Text style={styles.consumeTitle}>Did you finish cooking?</Text>
             <Text style={styles.consumeText}>
-              Marca los ingredientes que usaste para actualizar tu inventario
+              Marca los ingredients que usaste para actualizar tu inventario
             </Text>
             <Button
-              title="Marcar ingredientes como usados"
+              title="Marcar ingredients como usados"
               onPress={() => navigation.navigate('ConsumeRecipeIngredients', {
                 recipeName: recipe.name,
                 matchedIngredients,

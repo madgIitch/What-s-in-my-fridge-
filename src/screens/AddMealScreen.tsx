@@ -66,7 +66,7 @@ const AddMealScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleSave = async () => {
     if (selectedIds.length === 0 && customName.trim() === '') {
-      Alert.alert('Faltan datos', 'Selecciona ingredientes o escribe un nombre.');
+      Alert.alert('Faltan datos', 'Selecciona ingredients o escribe un nombre.');
       return;
     }
 
@@ -176,7 +176,7 @@ const AddMealScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         <Button
-          title={saving ? 'Guardando...' : 'Guardar comida'}
+          title={saving ? 'Saving...' : 'Save comida'}
           onPress={handleSave}
           disabled={saving}
         />
