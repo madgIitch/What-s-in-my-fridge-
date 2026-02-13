@@ -126,7 +126,7 @@ export const FoodItemCard: React.FC<FoodItemCardProps> = ({
             <View style={styles.detailRow}>
               <Calendar size={16} color={colors.secondary} />
               <Text style={styles.detailText}>
-                Caduca: {item.expiryDateFormatted}
+                Expire: {item.expiryDateFormatted}
               </Text>
             </View>
             {item.category && (

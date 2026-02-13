@@ -198,7 +198,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Text style={styles.headerTitle}>Mi Nevera</Text>
+            <Text style={styles.headerTitle}>My Fridge</Text>
             <Animated.Image
             source={require('../../assets/neveritoNevera.png')}
             style={[
@@ -240,7 +240,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
         <Text style={styles.headerSubtitle}>
-          {items.length} items guardados ♡
+          {items.length} saved items ♡
         </Text>
 
         {/* Filters Row */}
@@ -251,7 +251,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
           >
             <Text style={[styles.filterChipText, activeFilter === 'fresh' && styles.filterChipTextActive]}>
-              ♡ Frescos
+              ♡ Fresh
             </Text>
           </TouchableOpacity>
 
@@ -261,7 +261,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
           >
             <Text style={[styles.filterChipText, activeFilter === 'soon' && styles.filterChipTextActive]}>
-              ⚠ Pronto
+              ⚠ Soon
             </Text>
           </TouchableOpacity>
 
@@ -271,7 +271,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
           >
             <Text style={[styles.filterChipText, activeFilter === 'expired' && styles.filterChipTextActive]}>
-              (╥﹏╥) Vencidos
+              (╥﹏╥) Expired
             </Text>
           </TouchableOpacity>
 
@@ -281,7 +281,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
           >
             <Text style={[styles.filterChipText, activeFilter === 'prepared' && styles.filterChipTextActive]}>
-              🍲 Platos
+              🍲 Dishes
             </Text>
           </TouchableOpacity>
         </View>

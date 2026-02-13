@@ -359,7 +359,7 @@ const RecipesProScreen = () => {
           </TouchableOpacity>
         </View>
         <Text style={styles.headerSubtitle}>
-          Magia culinaria personalizada ✨
+          Personalized culinary magic ✨
         </Text>
 
         {/* Chef Character */}
@@ -393,7 +393,7 @@ const RecipesProScreen = () => {
           activeOpacity={0.7}
         >
           <Text style={[styles.modeSwitchText, recipeMode === 'local' && styles.modeSwitchTextActive]}>
-            ✨ Mi Nevera
+            ✨ My Fridge
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -402,7 +402,7 @@ const RecipesProScreen = () => {
           activeOpacity={0.7}
         >
           <Text style={[styles.modeSwitchText, recipeMode === 'url' && styles.modeSwitchTextActive]}>
-            🔗 Desde URL
+            🔗 URL content
           </Text>
         </TouchableOpacity>
       </View>
@@ -525,10 +525,10 @@ const RecipesProScreen = () => {
       <Card style={styles.statsCard}>
         <View style={styles.statsHeader}>
           <Text style={styles.statsTitle}>
-            {isPro ? '⭐ Plan Pro' : '🎯 Plan Gratuito'}
+            {isPro ? '⭐ Pro Plan' : '🎯 Free Plan'}
           </Text>
           <Text style={styles.statsCount}>
-            {isPro ? 'Ilimitado' : `${monthlyRecipeCallsUsed} / ${maxCalls}`}
+            {isPro ? 'Unlimited' : `${monthlyRecipeCallsUsed} / ${maxCalls}`}
           </Text>
         </View>
 
@@ -556,7 +556,7 @@ const RecipesProScreen = () => {
 
         {!isPro && (
           <Button
-            title="⭐ Actualizar a Pro"
+            title="⭐ Update to Pro"
             onPress={handleUpgradeToPro}
             style={styles.upgradeButton}
           />
@@ -565,17 +565,17 @@ const RecipesProScreen = () => {
 
       <Card style={styles.filtersCard}>
           <View style={styles.filtersHeader}>
-            <Text style={styles.sectionTitle}>🔎 Filtros de recipes</Text>
+            <Text style={styles.sectionTitle}>🔎 Recipe filters</Text>
             {(selectedIngredientFilters.length > 0 || selectedCategoryFilters.length > 0) && (
               <TouchableOpacity onPress={handleClearFilters} activeOpacity={0.7}>
-                <Text style={styles.clearFiltersText}>Limpiar</Text>
+                <Text style={styles.clearFiltersText}>Clear</Text>
               </TouchableOpacity>
             )}
           </View>
 
           {ingredientOptions.length > 0 ? (
             <View style={styles.filterGroup}>
-              <Text style={styles.preferenceLabel}>🥕 Ingredientes</Text>
+              <Text style={styles.preferenceLabel}>🥕 Ingredients</Text>
               <View style={styles.filtersContainer}>
                 {ingredientOptions.map((ingredient) => {
                   const isSelected = selectedIngredientFilters.includes(ingredient);
@@ -669,7 +669,7 @@ const RecipesProScreen = () => {
         <View style={styles.recipesContainer}>
           <View style={styles.recipesTitleContainer}>
             <Text style={styles.recipesTitle}>
-              ✨ Recipes Sugeridas
+              ✨ Recommended Recipes
             </Text>
             <View style={styles.recipesCount}>
               <Text style={styles.recipesCountText}>{filteredRecipes.length}</Text>
@@ -777,7 +777,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isFavorite, onToggleFav
           <View style={styles.recipeDetails}>
             {/* All Ingredients with Emoji Status */}
             <View style={styles.detailSection}>
-              <Text style={styles.detailTitle}>📋 Ingredientes</Text>
+              <Text style={styles.detailTitle}>📋 Ingredients</Text>
               <View style={styles.ingredientsList}>
                 {matchedIngredients.map((ing, index) => (
                   <View key={`matched-${index}`} style={styles.ingredientRow}>

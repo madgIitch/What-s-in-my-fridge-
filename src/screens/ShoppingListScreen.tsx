@@ -209,7 +209,7 @@ const ShoppingListScreen = () => {
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <Card style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Resumen</Text>
+          <Text style={styles.summaryTitle}>Summary</Text>
           <Text style={styles.summaryText}>
             {items.length} ingredients · {recipeCount} recipes
           </Text>
