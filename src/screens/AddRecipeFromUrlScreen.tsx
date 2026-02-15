@@ -30,7 +30,12 @@ const AddRecipeFromUrlScreen = () => {
   const navigation = useNavigation<AddRecipeFromUrlNavigationProp>();
   const { items } = useInventoryStore();
   const { addFavorite } = useFavorites();
-  const { isPro } = useSubscription();
+  const {
+    canUseUrlImports,
+    incrementUrlImports,
+    isPro,
+    remainingUrlImports,
+  } = useSubscription();
 
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -43,7 +48,7 @@ const AddRecipeFromUrlScreen = () => {
     .filter((name) => name && name.trim() !== '');
 
   const handleParseUrl = async () => {
-    if (!isPro) {
+    if (!canUseUrlImports) {
       navigation.navigate('Paywall', { source: 'url_recipes' });
       return;
     }
@@ -59,6 +64,9 @@ const AddRecipeFromUrlScreen = () => {
     try {
       const data = await parseRecipeFromUrl({ url: url.trim() });
       setResult(data);
+      if (!isPro) {
+        incrementUrlImports();
+      }
     } catch (err: any) {
       console.error('Error parsing recipe:', err);
       setError(err.message || 'Error processing recipe. Try another URL.');
@@ -142,8 +150,13 @@ const AddRecipeFromUrlScreen = () => {
         <Card style={styles.inputCard}>
           <Text style={styles.sectionTitle}>🔗 Pega la URL</Text>
           <Text style={styles.sectionSubtitle}>
-            YouTube, Instagram Reels, TikTok o blog de recipes
+            YouTube, Instagram Reels, TikTok or recipe blog
           </Text>
+          {!isPro && (
+            <Text style={styles.sectionSubtitle}>
+              Free plan: {remainingUrlImports} / 10 URL imports left this month
+            </Text>
+          )}
 
           <View style={styles.inputContainer}>
             <LinkIcon size={20} color={colors.primary} />

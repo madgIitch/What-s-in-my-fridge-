@@ -3,6 +3,7 @@ import { useSubscriptionStore } from '../stores/useSubscriptionStore';
 import {
   FREE_OCR_LIMIT,
   FREE_RECIPE_LIMIT,
+  FREE_URL_IMPORT_LIMIT,
   getPaywallPackages,
   initializeRevenueCat,
   purchasePackageByIdentifier,
@@ -19,107 +20,118 @@ export const useSubscription = () => {
   const store = useSubscriptionStore();
 
   useEffect(() => {
-    store.checkAndResetMonthlyCounters();
-  }, [store]);
+    useSubscriptionStore.getState().checkAndResetMonthlyCounters();
+  }, []);
 
   const syncSubscriptionStatus = useCallback(async () => {
-    store.setLoading(true);
-    store.setError(null);
+    const state = useSubscriptionStore.getState();
+    state.setLoading(true);
+    state.setError(null);
     try {
       const snapshot = await refreshRevenueCatSubscription();
-      store.setProStatus(snapshot.isPro);
-      store.setActiveEntitlements(snapshot.activeEntitlements);
+      const currentState = useSubscriptionStore.getState();
+      currentState.setProStatus(snapshot.isPro);
+      currentState.setActiveEntitlements(snapshot.activeEntitlements);
       return snapshot;
     } catch (error) {
-      const message = toErrorMessage(error, 'No se pudo sincronizar la suscripción.');
-      store.setError(message);
+      const message = toErrorMessage(error, 'Failed to sync subscription status.');
+      useSubscriptionStore.getState().setError(message);
       throw error;
     } finally {
-      store.setLoading(false);
+      useSubscriptionStore.getState().setLoading(false);
     }
-  }, [store]);
+  }, []);
 
   const initializeSubscriptions = useCallback(async () => {
-    store.setLoading(true);
-    store.setError(null);
+    const state = useSubscriptionStore.getState();
+    state.setLoading(true);
+    state.setError(null);
     try {
       await initializeRevenueCat();
-      store.checkAndResetMonthlyCounters();
+      useSubscriptionStore.getState().checkAndResetMonthlyCounters();
       await syncSubscriptionStatus();
       const packages = await getPaywallPackages();
-      store.setPackages(packages);
-      store.setInitialized(true);
+      const currentState = useSubscriptionStore.getState();
+      currentState.setPackages(packages);
+      currentState.setInitialized(true);
     } catch (error) {
-      const message = toErrorMessage(error, 'No se pudo inicializar RevenueCat.');
-      store.setError(message);
-      store.setInitialized(false);
+      const message = toErrorMessage(error, 'Failed to initialize RevenueCat.');
+      const currentState = useSubscriptionStore.getState();
+      currentState.setError(message);
+      currentState.setInitialized(false);
       throw error;
     } finally {
-      store.setLoading(false);
+      useSubscriptionStore.getState().setLoading(false);
     }
-  }, [store, syncSubscriptionStatus]);
+  }, [syncSubscriptionStatus]);
 
   const refreshPackages = useCallback(async () => {
-    store.setLoading(true);
-    store.setError(null);
+    const state = useSubscriptionStore.getState();
+    state.setLoading(true);
+    state.setError(null);
     try {
       const packages = await getPaywallPackages();
-      store.setPackages(packages);
+      useSubscriptionStore.getState().setPackages(packages);
       return packages;
     } catch (error) {
-      const message = toErrorMessage(error, 'No se pudieron cargar los planes.');
-      store.setError(message);
+      const message = toErrorMessage(error, 'Failed to load plans.');
+      useSubscriptionStore.getState().setError(message);
       throw error;
     } finally {
-      store.setLoading(false);
+      useSubscriptionStore.getState().setLoading(false);
     }
-  }, [store]);
+  }, []);
 
-  const purchasePro = useCallback(
-    async (packageIdentifier: string) => {
-      store.setLoading(true);
-      store.setError(null);
-      try {
-        const snapshot = await purchasePackageByIdentifier(packageIdentifier);
-        store.setProStatus(snapshot.isPro);
-        store.setActiveEntitlements(snapshot.activeEntitlements);
-        return snapshot;
-      } catch (error) {
-        const message = toErrorMessage(error, 'No se pudo completar la compra.');
-        store.setError(message);
-        throw error;
-      } finally {
-        store.setLoading(false);
-      }
-    },
-    [store]
-  );
-
-  const restorePurchases = useCallback(async () => {
-    store.setLoading(true);
-    store.setError(null);
+  const purchasePro = useCallback(async (packageIdentifier: string) => {
+    const state = useSubscriptionStore.getState();
+    state.setLoading(true);
+    state.setError(null);
     try {
-      const snapshot = await restoreRevenueCatPurchases();
-      store.setProStatus(snapshot.isPro);
-      store.setActiveEntitlements(snapshot.activeEntitlements);
+      const snapshot = await purchasePackageByIdentifier(packageIdentifier);
+      const currentState = useSubscriptionStore.getState();
+      currentState.setProStatus(snapshot.isPro);
+      currentState.setActiveEntitlements(snapshot.activeEntitlements);
       return snapshot;
     } catch (error) {
-      const message = toErrorMessage(error, 'No se pudieron restaurar las compras.');
-      store.setError(message);
+      const message = toErrorMessage(error, 'Could not complete purchase.');
+      useSubscriptionStore.getState().setError(message);
       throw error;
     } finally {
-      store.setLoading(false);
+      useSubscriptionStore.getState().setLoading(false);
     }
-  }, [store]);
+  }, []);
+
+  const restorePurchases = useCallback(async () => {
+    const state = useSubscriptionStore.getState();
+    state.setLoading(true);
+    state.setError(null);
+    try {
+      const snapshot = await restoreRevenueCatPurchases();
+      const currentState = useSubscriptionStore.getState();
+      currentState.setProStatus(snapshot.isPro);
+      currentState.setActiveEntitlements(snapshot.activeEntitlements);
+      return snapshot;
+    } catch (error) {
+      const message = toErrorMessage(error, 'Could not restore purchases.');
+      useSubscriptionStore.getState().setError(message);
+      throw error;
+    } finally {
+      useSubscriptionStore.getState().setLoading(false);
+    }
+  }, []);
 
   const recipeLimit = store.isPro ? Number.POSITIVE_INFINITY : FREE_RECIPE_LIMIT;
   const ocrLimit = store.isPro ? Number.POSITIVE_INFINITY : FREE_OCR_LIMIT;
+  const urlImportLimit = store.isPro ? Number.POSITIVE_INFINITY : FREE_URL_IMPORT_LIMIT;
   const remainingRecipeCalls = store.isPro
     ? Number.POSITIVE_INFINITY
     : Math.max(FREE_RECIPE_LIMIT - store.monthlyRecipeCallsUsed, 0);
   const remainingOcrScans = store.isPro
     ? Number.POSITIVE_INFINITY
     : Math.max(FREE_OCR_LIMIT - store.monthlyOcrScansUsed, 0);
+  const remainingUrlImports = store.isPro
+    ? Number.POSITIVE_INFINITY
+    : Math.max(FREE_URL_IMPORT_LIMIT - store.monthlyUrlImportsUsed, 0);
 
   return {
     initialized: store.initialized,
@@ -131,15 +143,20 @@ export const useSubscription = () => {
 
     monthlyRecipeCallsUsed: store.monthlyRecipeCallsUsed,
     monthlyOcrScansUsed: store.monthlyOcrScansUsed,
+    monthlyUrlImportsUsed: store.monthlyUrlImportsUsed,
     recipeLimit,
     ocrLimit,
+    urlImportLimit,
     remainingRecipeCalls,
     remainingOcrScans,
+    remainingUrlImports,
     canUseRecipeSuggestions: store.isPro || store.monthlyRecipeCallsUsed < FREE_RECIPE_LIMIT,
     canUseOcrScans: store.isPro || store.monthlyOcrScansUsed < FREE_OCR_LIMIT,
+    canUseUrlImports: store.isPro || store.monthlyUrlImportsUsed < FREE_URL_IMPORT_LIMIT,
 
     incrementRecipeCalls: store.incrementRecipeCalls,
     incrementOcrScans: store.incrementOcrScans,
+    incrementUrlImports: store.incrementUrlImports,
 
     initializeSubscriptions,
     syncSubscriptionStatus,

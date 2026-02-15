@@ -13,8 +13,10 @@ interface SubscriptionStore {
 
   monthlyRecipeCallsUsed: number;
   monthlyOcrScansUsed: number;
+  monthlyUrlImportsUsed: number;
   lastRecipeResetMonth: string;
   lastOcrResetMonth: string;
+  lastUrlImportResetMonth: string;
 
   setInitialized: (initialized: boolean) => void;
   setLoading: (loading: boolean) => void;
@@ -25,8 +27,10 @@ interface SubscriptionStore {
 
   incrementRecipeCalls: () => void;
   incrementOcrScans: () => void;
+  incrementUrlImports: () => void;
   resetMonthlyRecipeCalls: () => void;
   resetMonthlyOcrScans: () => void;
+  resetMonthlyUrlImports: () => void;
   checkAndResetMonthlyCounters: () => void;
 }
 
@@ -44,8 +48,10 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
 
       monthlyRecipeCallsUsed: 0,
       monthlyOcrScansUsed: 0,
+      monthlyUrlImportsUsed: 0,
       lastRecipeResetMonth: currentMonth(),
       lastOcrResetMonth: currentMonth(),
+      lastUrlImportResetMonth: currentMonth(),
 
       setInitialized: (initialized) => set({ initialized }),
       setLoading: (loading) => set({ loading }),
@@ -66,12 +72,22 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
         set({ monthlyOcrScansUsed: state.monthlyOcrScansUsed + 1 });
       },
 
+      incrementUrlImports: () => {
+        get().checkAndResetMonthlyCounters();
+        const state = get();
+        set({ monthlyUrlImportsUsed: state.monthlyUrlImportsUsed + 1 });
+      },
+
       resetMonthlyRecipeCalls: () => {
         set({ monthlyRecipeCallsUsed: 0, lastRecipeResetMonth: currentMonth() });
       },
 
       resetMonthlyOcrScans: () => {
         set({ monthlyOcrScansUsed: 0, lastOcrResetMonth: currentMonth() });
+      },
+
+      resetMonthlyUrlImports: () => {
+        set({ monthlyUrlImportsUsed: 0, lastUrlImportResetMonth: currentMonth() });
       },
 
       checkAndResetMonthlyCounters: () => {
@@ -85,6 +101,10 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
         if (state.lastOcrResetMonth !== nowMonth) {
           set({ monthlyOcrScansUsed: 0, lastOcrResetMonth: nowMonth });
         }
+
+        if (state.lastUrlImportResetMonth !== nowMonth) {
+          set({ monthlyUrlImportsUsed: 0, lastUrlImportResetMonth: nowMonth });
+        }
       },
     }),
     {
@@ -95,8 +115,10 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
         activeEntitlements: state.activeEntitlements,
         monthlyRecipeCallsUsed: state.monthlyRecipeCallsUsed,
         monthlyOcrScansUsed: state.monthlyOcrScansUsed,
+        monthlyUrlImportsUsed: state.monthlyUrlImportsUsed,
         lastRecipeResetMonth: state.lastRecipeResetMonth,
         lastOcrResetMonth: state.lastOcrResetMonth,
+        lastUrlImportResetMonth: state.lastUrlImportResetMonth,
       }),
     }
   )

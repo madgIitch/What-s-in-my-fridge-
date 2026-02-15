@@ -4,6 +4,7 @@ import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 
 export const FREE_RECIPE_LIMIT = 5;
 export const FREE_OCR_LIMIT = 5;
+export const FREE_URL_IMPORT_LIMIT = 10;
 
 export interface RevenueCatPackage {
   identifier: string;

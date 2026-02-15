@@ -21,11 +21,10 @@ import { useSubscription } from '../hooks/useSubscription';
 type PaywallNavigationProp = StackNavigationProp<RootStackParamList, 'Paywall'>;
 
 const PRO_FEATURES = [
-  'Escaneos OCR ilimitados',
-  'Recipes ilimitadas',
-  'Importar recipes desde URL',
-  'Shopping List',
-  'Sync entre dispositivos',
+  'Unlimited OCR scans',
+  'Unlimited recipes',
+  'Unlimited URL imports',
+  'Sync between devices',
 ];
 
 const PaywallScreen = () => {
@@ -100,12 +99,12 @@ const PaywallScreen = () => {
 
       <ScrollView contentContainerStyle={styles.content}>
         <Card style={styles.heroCard}>
-          <Text style={styles.heroTitle}>Desbloquea todo el potencial</Text>
-          <Text style={styles.heroSubtitle}>Plan Free: 5 escaneos OCR y 5 recipes al mes</Text>
+          <Text style={styles.heroTitle}>Unlock your full potential</Text>
+          <Text style={styles.heroSubtitle}>Free Plan: 5 OCR scans and 5 recipes per month</Text>
         </Card>
 
         <Card style={styles.featuresCard}>
-          <Text style={styles.sectionTitle}>Incluye</Text>
+          <Text style={styles.sectionTitle}>Includes</Text>
           {PRO_FEATURES.map((feature) => (
             <View key={feature} style={styles.featureRow}>
               <Check size={18} color={colors.primary} />
@@ -115,12 +114,12 @@ const PaywallScreen = () => {
         </Card>
 
         <Card style={styles.priceCard}>
-          <Text style={styles.sectionTitle}>Plan recomendado</Text>
+          <Text style={styles.sectionTitle}>Recommended Plan</Text>
           <Text style={styles.planName}>
             {recommendedPackage?.title || 'Pro Monthly'}
           </Text>
           <Text style={styles.planPrice}>
-            {recommendedPackage?.priceString || '$4.99'} / mes
+            {recommendedPackage?.priceString || '$4.99'} / month
           </Text>
           {recommendedPackage?.description ? (
             <Text style={styles.planDescription}>{recommendedPackage.description}</Text>

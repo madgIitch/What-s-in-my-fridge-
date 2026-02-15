@@ -59,6 +59,9 @@ const RecipesProScreen = () => {
     monthlyRecipeCallsUsed,
     remainingRecipeCalls,
     canUseRecipeSuggestions,
+    canUseUrlImports,
+    incrementUrlImports,
+    remainingUrlImports,
   } = useSubscription();
 
   const { recipes, loading, error, getRecipeSuggestions } = useRecipes();
@@ -167,18 +170,6 @@ const RecipesProScreen = () => {
   };
 
   const handleRecipeModeChange = (mode: 'local' | 'url') => {
-    if (mode === 'url' && !isPro) {
-      Alert.alert(
-        'Pro feature',
-        'Importar recipes desde URL es una Pro feature.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Ver planes', onPress: () => navigation.navigate('Paywall', { source: 'url_recipes' }) },
-        ]
-      );
-      return;
-    }
-
     setRecipeMode(mode);
   };
 
@@ -282,12 +273,18 @@ const RecipesProScreen = () => {
 
   // --- URL mode handlers ---
   const handleParseUrl = () => {
-    if (!isPro) {
+    if (!canUseUrlImports) {
       navigation.navigate('Paywall', { source: 'url_recipes' });
       return;
     }
     if (!urlInput.trim()) return;
-    parseUrlRecipe(urlInput.trim());
+    parseUrlRecipe(urlInput.trim())
+      .then(() => {
+        if (!isPro) incrementUrlImports();
+      })
+      .catch(() => {
+        // error is already managed by useUrlRecipeStore
+      });
   };
 
   const urlMatchedIngredients = urlResult?.ingredients.filter((ing) =>
@@ -413,8 +410,13 @@ const RecipesProScreen = () => {
           <Card style={styles.urlInputCard}>
             <Text style={styles.sectionTitle}>🔗 Pega la URL</Text>
             <Text style={styles.urlSubtitle}>
-              YouTube, Instagram Reels, TikTok o blog de recipes
+              YouTube, Instagram Reels, TikTok, or recipe blog
             </Text>
+            {!isPro && (
+              <Text style={styles.urlSubtitle}>
+                Free plan: {remainingUrlImports} / 10 URL imports left this month
+              </Text>
+            )}
             <View style={styles.urlInputRow}>
               <LinkIcon size={20} color={colors.primary} />
               <TextInput
