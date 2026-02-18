@@ -104,7 +104,7 @@ const AddItemScreen: React.FC<Props> = ({ navigation }) => {
         source: 'manual',
       });
 
-      Alert.alert('Success', 'Item added successfully', [
+      Alert.alert('Éxito', 'Item añadido correctamente', [
         {
           text: 'OK',
           onPress: () => navigation.goBack(),
@@ -116,7 +116,7 @@ const AddItemScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const categoryOptions = [
-    { label: 'Uncategorized', value: '' },
+    { label: 'Sin categoría', value: '' },
     ...FOOD_CATEGORIES.map((cat) => ({ label: cat, value: cat })),
   ];
 
@@ -136,7 +136,7 @@ const AddItemScreen: React.FC<Props> = ({ navigation }) => {
           >
             <ArrowLeft size={24} color={colors.onSurface} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Add Item</Text>
+          <Text style={styles.headerTitle}>Añadir Item</Text>
         </View>
         <Text style={styles.headerSubtitle}>
           Completa los datos del alimento ✨
@@ -188,7 +188,7 @@ const AddItemScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.row}>
             <View style={styles.halfWidth}>
               <Input
-                label="📊 Quantity *"
+                label="📊 Cantidad *"
                 value={quantity}
                 onChangeText={(text) => {
                   setQuantity(text);
@@ -212,18 +212,18 @@ const AddItemScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           <DatePicker
-            label="📅 Expiration Date *"
+            label="📅 Fecha de Caducidad *"
             value={expiryDate}
             onChange={setExpiryDate}
             minimumDate={new Date()}
           />
 
           <Picker
-            label="🏷️ Category"
+            label="🏷️ Categoría"
             value={category}
             options={categoryOptions}
             onChange={setCategory}
-            placeholder="Select category"
+            placeholder="Seleccionar categoría"
           />
 
           <Input
@@ -239,14 +239,14 @@ const AddItemScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={styles.buttonContainer}>
             <Button
-              title="Cancel"
+              title="Cancelar"
               onPress={() => navigation.goBack()}
               variant="text"
               disabled={loading}
               style={styles.cancelButton}
             />
             <Button
-              title="✨ Add Item"
+              title="✨ Añadir Item"
               onPress={handleSubmit}
               loading={loading}
               style={styles.submitButton}

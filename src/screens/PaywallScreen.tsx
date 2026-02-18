@@ -21,10 +21,10 @@ import { useSubscription } from '../hooks/useSubscription';
 type PaywallNavigationProp = StackNavigationProp<RootStackParamList, 'Paywall'>;
 
 const PRO_FEATURES = [
-  'Unlimited OCR scans',
-  'Unlimited recipes',
-  'Unlimited URL imports',
-  'Sync between devices',
+  'Escaneos OCR ilimitados',
+  'Recetas ilimitadas',
+  'Importaciones de URL ilimitadas',
+  'Sincronización entre dispositivos',
 ];
 
 const PaywallScreen = () => {
@@ -49,24 +49,24 @@ const PaywallScreen = () => {
 
   const handlePurchase = async () => {
     if (!recommendedPackage) {
-      Alert.alert('Planes no disponibles', 'No plans are available right now.');
+      Alert.alert('Planes no disponibles', 'No hay planes disponibles ahora mismo.');
       return;
     }
 
     try {
       const result = await purchasePro(recommendedPackage.identifier);
       if (result.isPro) {
-        Alert.alert('Subscription activated', 'You now have access to all Pro features.');
+        Alert.alert('Suscripción activada', 'Ahora tienes acceso a todas las funciones Pro.');
         navigation.goBack();
       } else {
         Alert.alert(
           'Compra pendiente',
-          'The purchase was processed, but it is not active yet. Try restoring purchases.'
+          'La compra fue procesada, pero aún no está activa. Intenta restaurar las compras.'
         );
       }
     } catch (purchaseError) {
       console.error('Purchase error:', purchaseError);
-      Alert.alert('Purchase could not be completed', 'Try again in a few seconds.');
+      Alert.alert('No se pudo completar la compra', 'Inténtalo de nuevo en unos segundos.');
     }
   };
 
@@ -74,14 +74,14 @@ const PaywallScreen = () => {
     try {
       const result = await restorePurchases();
       if (result.isPro) {
-        Alert.alert('Purchases restored', 'Your Pro subscription is active.');
+        Alert.alert('Compras restauradas', 'Tu suscripción Pro está activa.');
         navigation.goBack();
       } else {
-        Alert.alert('No active purchases', 'No active subscription found to restore.');
+        Alert.alert('Sin compras activas', 'No se encontró ninguna suscripción activa para restaurar.');
       }
     } catch (restoreError) {
       console.error('Restore purchases error:', restoreError);
-      Alert.alert('Could not restore purchases', 'Try again.');
+      Alert.alert('No se pudieron restaurar las compras', 'Inténtalo de nuevo.');
     }
   };
 
@@ -99,12 +99,12 @@ const PaywallScreen = () => {
 
       <ScrollView contentContainerStyle={styles.content}>
         <Card style={styles.heroCard}>
-          <Text style={styles.heroTitle}>Unlock your full potential</Text>
-          <Text style={styles.heroSubtitle}>Free Plan: 5 OCR scans and 5 recipes per month</Text>
+          <Text style={styles.heroTitle}>Desbloquea todo tu potencial</Text>
+          <Text style={styles.heroSubtitle}>Plan Gratuito: 5 escaneos OCR y 5 recetas al mes</Text>
         </Card>
 
         <Card style={styles.featuresCard}>
-          <Text style={styles.sectionTitle}>Includes</Text>
+          <Text style={styles.sectionTitle}>Incluye</Text>
           {PRO_FEATURES.map((feature) => (
             <View key={feature} style={styles.featureRow}>
               <Check size={18} color={colors.primary} />
@@ -114,7 +114,7 @@ const PaywallScreen = () => {
         </Card>
 
         <Card style={styles.priceCard}>
-          <Text style={styles.sectionTitle}>Recommended Plan</Text>
+          <Text style={styles.sectionTitle}>Plan Recomendado</Text>
           <Text style={styles.planName}>
             {recommendedPackage?.title || 'Pro Monthly'}
           </Text>
@@ -134,20 +134,20 @@ const PaywallScreen = () => {
 
         {isPro ? (
           <Card style={styles.activeCard}>
-            <Text style={styles.activeText}>Your Pro subscription is already active.</Text>
+            <Text style={styles.activeText}>Tu suscripción Pro ya está activa.</Text>
           </Card>
         ) : null}
 
         {!isPro && (
           <Button
-            title={loading ? 'Processing...' : 'Activate Pro'}
+            title={loading ? 'Procesando...' : 'Activar Pro'}
             onPress={handlePurchase}
             disabled={loading}
             style={styles.ctaButton}
           />
         )}
         <Button
-          title="Restore purchases"
+          title="Restaurar compras"
           onPress={handleRestore}
           variant="secondary"
           disabled={loading}

@@ -67,7 +67,7 @@ const DetailScreen: React.FC<Props> = ({ navigation, route }) => {
       setExpiryDate(new Date(fetchedItem.expiryDate));
       setNotes(fetchedItem.notes || '');
     } catch (error) {
-      Alert.alert('Error', 'Could not load item');
+      Alert.alert('Error', 'No se pudo cargar el item');
       navigation.goBack();
     } finally {
       setLoading(false);
@@ -120,12 +120,12 @@ const DetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleDelete = () => {
     Alert.alert(
-      'Delete Item',
-      `Are you sure you want to delete "${item?.name}"?`,
+      'Eliminar item',
+      `¿Seguro que quieres eliminar "${item?.name}"?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Cancelar', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Eliminar',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -150,7 +150,7 @@ const DetailScreen: React.FC<Props> = ({ navigation, route }) => {
   }
 
   const categoryOptions = [
-    { label: 'Uncategorized', value: '' },
+    { label: 'Sin categoría', value: '' },
     ...FOOD_CATEGORIES.map((cat) => ({ label: cat, value: cat })),
   ];
 
@@ -185,8 +185,8 @@ const DetailScreen: React.FC<Props> = ({ navigation, route }) => {
                 {item.expiryState === 'EXPIRED'
                   ? 'EXPIRADO'
                   : item.expiryState === 'SOON'
-                  ? `${item.daysLeft} days`
-                  : `${item.daysLeft} days`}
+                  ? `${item.daysLeft} días`
+                  : `${item.daysLeft} días`}
               </Text>
             </View>
           )}
@@ -208,7 +208,7 @@ const DetailScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={styles.row}>
             <View style={styles.halfWidth}>
               <Input
-                label="Quantity *"
+                label="Cantidad *"
                 value={quantity}
                 onChangeText={(text) => {
                   setQuantity(text);
@@ -232,18 +232,18 @@ const DetailScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
 
           <DatePicker
-            label="Expiration Date *"
+            label="Fecha de Caducidad *"
             value={expiryDate}
             onChange={setExpiryDate}
             minimumDate={new Date()}
           />
 
           <Picker
-            label="Category"
+            label="Categoría"
             value={category}
             options={categoryOptions}
             onChange={setCategory}
-            placeholder="Select category"
+            placeholder="Seleccionar categoría"
           />
 
           <Input
@@ -259,7 +259,7 @@ const DetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
           <View style={styles.metadata}>
             <Text style={styles.metadataText}>
-              Added: {item && new Date(item.addedAt).toLocaleDateString()}
+              Añadido: {item && new Date(item.addedAt).toLocaleDateString()}
             </Text>
             <Text style={styles.metadataText}>
               Fuente: {item?.source === 'ocr' ? '📸 OCR' : '✏️ Manual'}
@@ -268,7 +268,7 @@ const DetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
           <View style={styles.buttonContainer}>
             <Button
-              title="Delete"
+              title="Eliminar"
               onPress={handleDelete}
               variant="text"
               disabled={actionLoading}
@@ -276,7 +276,7 @@ const DetailScreen: React.FC<Props> = ({ navigation, route }) => {
               textStyle={styles.deleteButtonText}
             />
             <Button
-              title="Save Changes"
+              title="Guardar cambios"
               onPress={handleSave}
               loading={actionLoading}
               style={styles.saveButton}

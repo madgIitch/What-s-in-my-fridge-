@@ -69,15 +69,15 @@ const LoginScreen = () => {
       setEmailError('El email es requerido');
       valid = false;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      setEmailError('Invalid email');
+      setEmailError('Email inválido');
       valid = false;
     }
 
     if (!password.trim()) {
-      setPasswordError('Password is required');
+      setPasswordError('La contraseña es requerida');
       valid = false;
     } else if (password.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
+      setPasswordError('La contraseña debe tener al menos 6 caracteres');
       valid = false;
     }
 
@@ -156,12 +156,12 @@ const LoginScreen = () => {
           {/* Form Card */}
           <Animated.View style={[styles.formCard, { opacity: fadeAnim }]}>
             <Text style={styles.formTitle}>
-              {isSignUp ? 'Join us! ✨' : 'Welcome back! 🎉'}
+              {isSignUp ? '¡Únete! ✨' : '¡Bienvenido de nuevo! 🎉'}
             </Text>
 
             <View style={styles.form}>
               <Input
-                label="Email"
+                label="Correo electrónico"
                 value={email}
                 onChangeText={setEmail}
                 error={emailError}
@@ -173,25 +173,25 @@ const LoginScreen = () => {
               />
 
               <Input
-                label="Password"
+                label="Contraseña"
                 value={password}
                 onChangeText={setPassword}
                 error={passwordError}
-                placeholder="Minimum 6 characters"
+                placeholder="Mínimo 6 caracteres"
                 secureTextEntry
                 autoComplete="password"
                 editable={!loading}
               />
 
               <Button
-                title={isSignUp ? 'Create Account' : 'Sign In'}
+                title={isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
                 onPress={isSignUp ? handleSignUp : handleSignIn}
                 loading={loading}
                 style={styles.primaryButton}
               />
 
               <Button
-                title={isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+                title={isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
                 onPress={toggleMode}
                 variant="text"
                 disabled={loading}
@@ -203,8 +203,8 @@ const LoginScreen = () => {
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               {isSignUp
-                ? 'By creating an account, you accept our terms and conditions'
-                : 'Your data is protected with Firebase Authentication 🔒'}
+                ? 'Al crear una cuenta, aceptas nuestros términos y condiciones'
+                : 'Tus datos están protegidos con Firebase Authentication 🔒'}
             </Text>
           </View>
         </ScrollView>

@@ -140,12 +140,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleDeleteItem = (item: FoodItem) => {
     Alert.alert(
-      'Delete Item',
-      `Are you sure you want to delete "${item.name}"?`,
+      'Eliminar item',
+      `¿Seguro que quieres eliminar "${item.name}"?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Cancelar', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Eliminar',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -171,18 +171,18 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyTitle}>🍎 Empty inventory</Text>
+      <Text style={styles.emptyTitle}>🍎 Inventario vacío</Text>
       <Text style={styles.emptyText}>
-        Add items manually or scan a receipt
+        Añade items manualmente o escanea un ticket
       </Text>
       <View style={styles.emptyButtons}>
         <Button
-          title="Add Item"
+          title="Añadir item"
           onPress={() => navigation.navigate('AddItem')}
           style={styles.emptyButton}
         />
         <Button
-          title="Scan Receipt"
+          title="Escanear ticket"
           onPress={() => navigation.navigate('ScanTab')}
           variant="secondary"
           style={styles.emptyButton}
@@ -198,7 +198,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Text style={styles.headerTitle}>My Fridge</Text>
+            <Text style={styles.headerTitle}>Mi Nevera</Text>
             <Animated.Image
             source={require('../../assets/neveritoNevera.png')}
             style={[
@@ -240,7 +240,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
         <Text style={styles.headerSubtitle}>
-          {items.length} saved items ♡
+          {items.length} items guardados ♡
         </Text>
 
         {/* Filters Row */}
@@ -251,7 +251,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
           >
             <Text style={[styles.filterChipText, activeFilter === 'fresh' && styles.filterChipTextActive]}>
-              ♡ Fresh
+              ♡ Fresco
             </Text>
           </TouchableOpacity>
 
@@ -261,7 +261,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
           >
             <Text style={[styles.filterChipText, activeFilter === 'soon' && styles.filterChipTextActive]}>
-              ⚠ Soon
+              ⚠ Pronto
             </Text>
           </TouchableOpacity>
 
@@ -271,7 +271,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
           >
             <Text style={[styles.filterChipText, activeFilter === 'expired' && styles.filterChipTextActive]}>
-              (╥﹏╥) Expired
+              (╥﹏╥) Caducado
             </Text>
           </TouchableOpacity>
 
@@ -281,7 +281,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
           >
             <Text style={[styles.filterChipText, activeFilter === 'prepared' && styles.filterChipTextActive]}>
-              🍲 Dishes
+              🍲 Platos
             </Text>
           </TouchableOpacity>
         </View>

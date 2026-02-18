@@ -38,12 +38,12 @@ const FavoritesScreen = () => {
 
   const handleRemoveFavorite = (recipe: RecipeUi) => {
     Alert.alert(
-      'Delete favorito',
-      `Do you want to remove "${recipe.name}" from your favorites?`,
+      'Eliminar favorito',
+      `¿Quieres eliminar "${recipe.name}" de tus favoritos?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Cancelar', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Eliminar',
           style: 'destructive',
           onPress: () => removeFavorite(recipe.id)
         },
@@ -81,10 +81,10 @@ const FavoritesScreen = () => {
           </View>
           <Text style={styles.statsSubtext}>
             {favorites.length === 0
-              ? "You don't have favorites yet"
+              ? 'Aún no tienes favoritos'
               : favorites.length === 1
-              ? '1 saved recipe'
-              : `${favorites.length} recipes guardadas`}
+              ? '1 receta guardada'
+              : `${favorites.length} recetas guardadas`}
           </Text>
         </Card>
 
@@ -92,9 +92,9 @@ const FavoritesScreen = () => {
         {!loading && favorites.length === 0 && (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateEmoji}>💕</Text>
-            <Text style={styles.emptyStateTitle}>You don't have favorites yet</Text>
+            <Text style={styles.emptyStateTitle}>Aún no tienes favoritos</Text>
             <Text style={styles.emptyStateText}>
-              Explore recipes and save your favorites to find them easily here
+              Explora recetas y guarda tus favoritas para encontrarlas fácilmente aquí
             </Text>
             <Button
               title="Explorar Recipes"
@@ -162,7 +162,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onRemove, onOpenSteps }
             </View>
             {recipe.matchPercentage === 100 && (
               <View style={styles.readyBadge}>
-                <Text style={styles.readyBadgeText}>Ready to cook</Text>
+                <Text style={styles.readyBadgeText}>¡Listo para cocinar!</Text>
               </View>
             )}
 
@@ -210,7 +210,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onRemove, onOpenSteps }
             {/* Full Ingredients with Measures */}
             {ingredientsWithMeasures.length > 0 && (
               <View style={styles.detailSection}>
-                <Text style={styles.detailTitle}>🥄 Quantityes</Text>
+                <Text style={styles.detailTitle}>🥄 Cantidades</Text>
                 <View style={styles.ingredientsList}>
                   {ingredientsWithMeasures.map((ing, index) => (
                     <View key={index} style={styles.ingredientRow}>
@@ -225,7 +225,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onRemove, onOpenSteps }
             {/* Instructions */}
             {instructions && (
               <View style={styles.detailSection}>
-                <Text style={styles.detailTitle}>👨‍🍳 Preparation</Text>
+                <Text style={styles.detailTitle}>👨‍🍳 Preparación</Text>
                 <Text style={styles.instructionsText}>{instructions}</Text>
               </View>
             )}
@@ -236,18 +236,18 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onRemove, onOpenSteps }
       {/* Action Buttons */}
       <View style={styles.actionButtons}>
         <Button
-          title="Cook step by step"
+          title="Cocinar paso a paso"
           onPress={onOpenSteps}
           style={styles.stepsButton}
         />
         <TouchableOpacity onPress={onRemove} style={styles.removeButton}>
           <Heart size={20} color={colors.error} fill={colors.error} />
-          <Text style={styles.removeButtonText}>Remove from favorites</Text>
+          <Text style={styles.removeButtonText}>Quitar de favoritos</Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
-        <Text style={styles.expandText}>{expanded ? 'Show less ▲' : 'Show more ▼'}</Text>
+        <Text style={styles.expandText}>{expanded ? 'Ver menos ▲' : 'Ver más ▼'}</Text>
       </TouchableOpacity>
     </Card>
   );

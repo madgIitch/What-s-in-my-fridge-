@@ -101,25 +101,25 @@ const RecipeStepsScreen: React.FC<Props> = ({ navigation, route }) => {
           />
         </TouchableOpacity>
         <View style={styles.matchBadge}>
-          <Text style={styles.matchEmoji}>Match</Text>
+          <Text style={styles.matchEmoji}>Coincidencia</Text>
           <Text style={styles.matchText}>{recipe.matchPercentage}%</Text>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <Card style={styles.summaryCard}>
-          <Text style={styles.sectionTitle}>Resumen rapido</Text>
+          <Text style={styles.sectionTitle}>Resumen rápido</Text>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryEmoji}>OK</Text>
+            <Text style={styles.summaryEmoji}>✅</Text>
             <Text style={styles.summaryText}>
-              {matchedIngredients.length} ingredients disponibles
+              {matchedIngredients.length} ingredientes disponibles
             </Text>
           </View>
           {missingIngredients.length > 0 && (
             <View style={styles.summaryRow}>
               <Text style={styles.summaryEmoji}>Falta</Text>
               <Text style={styles.summaryText}>
-                {missingIngredients.length} ingredients faltantes
+                {missingIngredients.length} ingredientes faltantes
               </Text>
             </View>
           )}
@@ -150,7 +150,7 @@ const RecipeStepsScreen: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.statusBlock}>
               {matchedIngredients.map((ing, index) => (
                 <View key={`matched-${index}`} style={styles.listRow}>
-                  <Text style={styles.statusEmoji}>OK</Text>
+                  <Text style={styles.statusEmoji}>✅</Text>
                   <Text style={styles.listText}>{ing}</Text>
                 </View>
               ))}
@@ -178,19 +178,19 @@ const RecipeStepsScreen: React.FC<Props> = ({ navigation, route }) => {
               ))}
             </View>
           ) : (
-            <Text style={styles.emptyText}>No detailed instructions for this recipe.</Text>
+            <Text style={styles.emptyText}>No hay instrucciones detalladas para esta receta.</Text>
           )}
         </Card>
 
         {/* Consume Ingredients Button */}
         {matchedIngredients.length > 0 && (
           <Card style={styles.consumeCard}>
-            <Text style={styles.consumeTitle}>Did you finish cooking?</Text>
+            <Text style={styles.consumeTitle}>¿Terminaste de cocinar?</Text>
             <Text style={styles.consumeText}>
-              Marca los ingredients que usaste para actualizar tu inventario
+              Marca los ingredientes que usaste para actualizar tu inventario
             </Text>
             <Button
-              title="Marcar ingredients como usados"
+              title="Marcar ingredientes como usados"
               onPress={() => navigation.navigate('ConsumeRecipeIngredients', {
                 recipeName: recipe.name,
                 matchedIngredients,
