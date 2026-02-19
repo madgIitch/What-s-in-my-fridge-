@@ -1,4 +1,5 @@
 import * as functions from "firebase-functions";
+import { logger } from "firebase-functions";
 import * as admin from "firebase-admin";
 import vision from "@google-cloud/vision";
 import { ParsedDraftEntity, ParsedItem } from "./types";
@@ -31,6 +32,9 @@ export const parseReceipt = functions.https.onCall(async (data, context) => {
   if (!imageUri) {
     throw new functions.https.HttpsError("invalid-argument", "imageUri es requerido");
   }
+
+  const start = Date.now();
+  const userId = isEmulator ? "test-user-123" : context.auth!.uid;
 
   try {
     let rawText: string;
@@ -77,9 +81,6 @@ Vielen Dank für Ihren Einkauf!
       unrecognizedLines: JSON.stringify(parsedInfo.unrecognizedLines),
     };
 
-    // Determinar userId según entorno
-    const userId = isEmulator ? "test-user-123" : context.auth!.uid;
-
     // Guardar en Firestore con timestamp simple
     const draftRef = await admin
       .firestore()
@@ -91,14 +92,28 @@ Vielen Dank für Ihren Einkauf!
         timestamp: Date.now(),
       });
 
-    console.log(`✅ Draft creado: ${draftRef.id}`);
+    logger.info("feature_usage", {
+      feature: "ocr_scan",
+      userId,
+      durationMs: Date.now() - start,
+      success: true,
+      isEmulator,
+      itemsFound: parsedInfo.items.length,
+      merchant: parsedInfo.merchant,
+    });
 
     return {
       draftId: draftRef.id,
       draft,
     };
   } catch (error: any) {
-    console.error("❌ Error procesando ticket:", error);
+    logger.error("feature_usage", {
+      feature: "ocr_scan",
+      userId,
+      durationMs: Date.now() - start,
+      success: false,
+      error: error.message,
+    });
     throw new functions.https.HttpsError("internal", `Error procesando imagen: ${error.message}`);
   }
 });

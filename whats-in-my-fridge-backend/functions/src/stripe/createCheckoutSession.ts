@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
+import { logger } from "firebase-functions";
 import Stripe from "stripe";
 
 const getStripe = () =>
@@ -22,7 +23,7 @@ const getStripe = () =>
 export const createCheckoutSession = functions
   .region("europe-west1")
   .runWith({ secrets: ["STRIPE_SECRET_KEY"] })
-  .https.onCall(async (_data, context) => {
+  .https.onCall(async (data: { billingPeriod?: "monthly" | "yearly" }, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
@@ -32,6 +33,7 @@ export const createCheckoutSession = functions
 
     const userId = context.auth.uid;
     const userEmail = context.auth.token.email;
+    const start = Date.now();
     const stripe = getStripe();
     const db = admin.firestore();
     const subscriptionRef = db
@@ -44,6 +46,7 @@ export const createCheckoutSession = functions
     const subscriptionSnap = await subscriptionRef.get();
     let stripeCustomerId: string | null =
       subscriptionSnap.data()?.stripeCustomerId ?? null;
+    const isNewCustomer = !stripeCustomerId;
 
     if (!stripeCustomerId) {
       const customer = await stripe.customers.create({
@@ -57,7 +60,10 @@ export const createCheckoutSession = functions
       );
     }
 
-    const priceId = process.env.STRIPE_PRO_PRICE_ID;
+    const isYearly = data?.billingPeriod === "yearly";
+    const priceId = isYearly
+      ? process.env.STRIPE_PRO_PRICE_YEARLY
+      : process.env.STRIPE_PRO_PRICE_MONTHLY;
     const successUrl =
       process.env.STRIPE_SUCCESS_URL || "https://example.com/success";
     const cancelUrl =
@@ -66,7 +72,7 @@ export const createCheckoutSession = functions
     if (!priceId) {
       throw new functions.https.HttpsError(
         "failed-precondition",
-        "STRIPE_PRO_PRICE_ID no configurado"
+        `STRIPE_PRO_PRICE_${isYearly ? "YEARLY" : "MONTHLY"} no configurado`
       );
     }
 
@@ -77,6 +83,15 @@ export const createCheckoutSession = functions
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: { firebaseUserId: userId },
+    });
+
+    logger.info("feature_usage", {
+      feature: "stripe_checkout",
+      userId,
+      durationMs: Date.now() - start,
+      success: true,
+      billingPeriod: isYearly ? "yearly" : "monthly",
+      isNewCustomer,
     });
 
     return { url: session.url };

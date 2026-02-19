@@ -5,31 +5,13 @@ import { database } from './src/database';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { onAuthStateChanged } from './src/services/firebase/auth';
 import { useAuthStore } from './src/stores/useAuthStore';
-import {
-  initializeRevenueCat,
-  logoutRevenueCatUser,
-  refreshRevenueCatSubscription,
-  setRevenueCatUser,
-} from './src/services/revenuecat';
+import { fetchSubscriptionStatus } from './src/services/stripe';
 import { useSubscriptionStore } from './src/stores/useSubscriptionStore';
 
 export default function App() {
   // Firebase is auto-initialized via google-services.json
 
   useEffect(() => {
-    initializeRevenueCat()
-      .then(async (initialized) => {
-        useSubscriptionStore.getState().setInitialized(initialized);
-        if (!initialized) return;
-
-        const snapshot = await refreshRevenueCatSubscription();
-        useSubscriptionStore.getState().setProStatus(snapshot.isPro);
-        useSubscriptionStore.getState().setActiveEntitlements(snapshot.activeEntitlements);
-      })
-      .catch((error) => {
-        console.error('Error initializing RevenueCat:', error);
-      });
-
     // Listen to auth state changes
     const unsubscribe = onAuthStateChanged((user) => {
       void (async () => {
@@ -40,15 +22,17 @@ export default function App() {
             displayName: user.displayName,
           });
 
-          await setRevenueCatUser(user.uid);
-          const snapshot = await refreshRevenueCatSubscription();
-          useSubscriptionStore.getState().setProStatus(snapshot.isPro);
-          useSubscriptionStore.getState().setActiveEntitlements(snapshot.activeEntitlements);
+          try {
+            const status = await fetchSubscriptionStatus();
+            useSubscriptionStore.getState().setProStatus(status.isPro);
+          } catch {
+            // Silent — persisted value remains
+          }
+          useSubscriptionStore.getState().setInitialized(true);
         } else {
           useAuthStore.getState().setUser(null);
-          await logoutRevenueCatUser();
           useSubscriptionStore.getState().setProStatus(false);
-          useSubscriptionStore.getState().setActiveEntitlements([]);
+          useSubscriptionStore.getState().setInitialized(false);
         }
       })().catch((error) => {
         console.error('Error syncing auth/subscription state:', error);

@@ -192,9 +192,9 @@ const AddRecipeFromUrlScreen = () => {
         {loading && (
           <Card style={styles.loadingCard}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.loadingText}>Analizando video...</Text>
+            <Text style={styles.loadingText}>Analizando receta...</Text>
             <Text style={styles.loadingSubtext}>
-              Esto puede tomar 20-30 segundos
+              Esto puede tomar 1-2 minutos
             </Text>
           </Card>
         )}
@@ -227,7 +227,7 @@ const AddRecipeFromUrlScreen = () => {
               </View>
             </Card>
 
-            {/* Ingredients */}
+            {/* Ingredientes */}
             <Card style={styles.ingredientsCard}>
               <Text style={styles.sectionTitle}>
                 📋 Ingredientes ({result.ingredients.length})
@@ -266,7 +266,7 @@ const AddRecipeFromUrlScreen = () => {
               )}
             </Card>
 
-            {/* Steps */}
+            {/* Pasos */}
             {result.steps.length > 0 && (
               <Card style={styles.stepsCard}>
                 <Text style={styles.sectionTitle}>
@@ -283,7 +283,6 @@ const AddRecipeFromUrlScreen = () => {
               </Card>
             )}
 
-            {/* Save Button */}
             <Button
               title="💾 Save Recipe"
               onPress={handleSaveRecipe}

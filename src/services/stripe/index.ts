@@ -28,10 +28,12 @@ const requireAuth = async () => {
  * Calls the createCheckoutSession Cloud Function and returns the Stripe
  * Checkout URL. The caller should open it with Linking.openURL().
  */
-export const createStripeCheckoutSession = async (): Promise<string> => {
+export const createStripeCheckoutSession = async (
+  billingPeriod: 'monthly' | 'yearly' = 'monthly'
+): Promise<string> => {
   await requireAuth();
   const callable = getCallable('createCheckoutSession');
-  const result = await callable({});
+  const result = await callable({ billingPeriod });
   const url = (result.data as { url: string }).url;
   if (!url) throw new Error('No se recibió URL de Stripe Checkout');
   return url;

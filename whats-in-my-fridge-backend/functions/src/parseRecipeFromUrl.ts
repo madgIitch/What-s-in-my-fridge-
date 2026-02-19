@@ -1,4 +1,5 @@
 import * as functions from "firebase-functions";
+import { logger } from "firebase-functions";
 import axios from "axios";
 import * as cheerio from "cheerio";
 import { YoutubeTranscript } from "youtube-transcript";
@@ -33,6 +34,9 @@ export const parseRecipeFromUrl = functions
       throw new functions.https.HttpsError("invalid-argument", "URL inválida");
     }
 
+    const start = Date.now();
+    const userId = context.auth.uid;
+
     try {
       let rawText = "";
       let recipeTitle = "";
@@ -64,17 +68,37 @@ export const parseRecipeFromUrl = functions
         throw new functions.https.HttpsError("failed-precondition", "No se pudo extraer texto de la URL");
       }
 
-      const ingredients = await extractIngredientsWithOllama(rawText);
-      const steps = await extractStepsWithOllama(rawText);
+      const [ingredients, steps] = await Promise.all([
+        extractIngredientsWithOllama(rawText),
+        extractStepsWithOllama(rawText),
+      ]);
+
+      logger.info("feature_usage", {
+        feature: "url_import",
+        userId,
+        durationMs: Date.now() - start,
+        success: true,
+        sourceType,
+        usedWhisper: sourceType === "youtube" || sourceType === "instagram" || sourceType === "tiktok",
+        ingredientsFound: ingredients.length,
+        stepsFound: steps.length,
+      });
 
       return {
         ingredients,
         steps,
         sourceType,
-        rawText, // ✅ Devolver texto completo para debugging
+        rawText,
         recipeTitle,
       };
     } catch (error: any) {
+      logger.error("feature_usage", {
+        feature: "url_import",
+        userId,
+        durationMs: Date.now() - start,
+        success: false,
+        error: error.message,
+      });
       if (error instanceof functions.https.HttpsError) {
         throw error;
       }
@@ -316,14 +340,15 @@ function parseStepsFromModelOutput(output: string): string[] {
 }
 
 function buildOllamaPrompt(inputText: string): string {
-  return `Extract ONLY the ingredients from this recipe. The text may be a video transcription.
-List each ingredient on a separate line, without quantities, only the ingredient name.
-Do not include instructions or preparation steps.
+  return `Extrae SOLO los ingredientes de esta receta. El texto puede ser la transcripción de un video.
+Lista cada ingrediente en una línea separada, sin cantidades, solo el nombre del ingrediente.
+Responde SIEMPRE en español, traduciendo los ingredientes si el texto está en otro idioma.
+No incluyas instrucciones ni pasos de preparación.
 
-Recipe text:
+Texto de la receta:
 ${inputText}
 
-Ingredients:`;
+Ingredientes:`;
 }
 
 async function callOllama(prompt: string, timeoutMs: number): Promise<string> {
@@ -368,16 +393,16 @@ async function extractIngredientsWithOllama(text: string): Promise<string[]> {
 }
 
 async function extractStepsWithOllama(text: string): Promise<string[]> {
-  // ✅ Prompt mejorado para transcripciones de video
-  const stepsPrompt = `Extract the cooking steps from this recipe. The text may be a video transcription.
-Return a list of steps, one step per line, in the order they appear.
-Only include preparation/cooking instructions, not ingredients or quantities.
-Keep each step clear and concise.
+  const stepsPrompt = `Extrae los pasos de preparación de esta receta. El texto puede ser la transcripción de un video.
+Devuelve una lista de pasos, uno por línea, en el orden en que aparecen.
+Responde SIEMPRE en español, traduciendo los pasos si el texto está en otro idioma.
+Incluye solo instrucciones de preparación y cocción, no ingredientes ni cantidades.
+Cada paso debe ser claro y conciso.
 
-Recipe text:
+Texto de la receta:
 ${text.substring(0, 4000)}
 
-Steps:`;
+Pasos:`;
 
   try {
     const output = await callOllama(stepsPrompt, 120000);

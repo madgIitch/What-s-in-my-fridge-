@@ -240,6 +240,7 @@ export function findMatchingRecipes(
  * Cloud Function para obtener sugerencias de recetas
  */
 import * as functions from "firebase-functions";
+import { logger } from "firebase-functions";
 import * as admin from "firebase-admin";
 
 // Cache del vocabulario normalizado
@@ -371,6 +372,7 @@ export const getRecipeSuggestions = functions
     }
 
     const userId = context.auth.uid;
+    const start = Date.now();
 
     try {
       // Cargar vocabulario para obtener categorías
@@ -412,7 +414,15 @@ export const getRecipeSuggestions = functions
         vocabulary,
         0.3 // 30% mínimo para considerar recetas con ingredientes de categorías similares
       );
-      console.log(`🍳 Found ${matches.length} matching recipes`);
+      logger.info("feature_usage", {
+        feature: "recipe_suggestions",
+        userId,
+        durationMs: Date.now() - start,
+        success: true,
+        inventoryItemCount: inventoryItems.length,
+        categoryCount: inventoryCategories.size,
+        matchesFound: matches.length,
+      });
 
       return {
         success: true,
@@ -438,8 +448,14 @@ export const getRecipeSuggestions = functions
           instructions: match.recipe.instructions,
         })),
       };
-    } catch (error) {
-      console.error("Error obteniendo sugerencias:", error);
+    } catch (error: any) {
+      logger.error("feature_usage", {
+        feature: "recipe_suggestions",
+        userId,
+        durationMs: Date.now() - start,
+        success: false,
+        error: error.message,
+      });
       throw new functions.https.HttpsError("internal", "Error obteniendo sugerencias de recetas");
     }
   });

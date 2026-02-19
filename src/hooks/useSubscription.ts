@@ -107,12 +107,12 @@ export const useSubscription = () => {
   }, [syncFromFirestore, stopFirestoreListener]);
 
   /** Opens Stripe Checkout in the external browser */
-  const openPaywall = useCallback(async () => {
+  const openPaywall = useCallback(async (billingPeriod: 'monthly' | 'yearly' = 'monthly') => {
     const state = useSubscriptionStore.getState();
     state.setLoading(true);
     state.setError(null);
     try {
-      const url = await createStripeCheckoutSession();
+      const url = await createStripeCheckoutSession(billingPeriod);
       await Linking.openURL(url);
     } catch (error) {
       const message = toErrorMessage(error, 'No se pudo abrir el pago.');
