@@ -4,6 +4,10 @@ import {parseReceipt} from "./parseReceipt";
 import {getRecipeSuggestions} from "./recipeMatcher";
 import {normalizeScannedIngredient, normalizeScannedIngredientsBatch} from "./normalizeScannedIngredient";
 import {parseRecipeFromUrl} from "./parseRecipeFromUrl";
+import {createCheckoutSession} from "./stripe/createCheckoutSession";
+import {stripeWebhook} from "./stripe/stripeWebhook";
+import {getSubscriptionStatus} from "./stripe/getSubscriptionStatus";
+import {openCustomerPortal} from "./stripe/openCustomerPortal";
 
 // Inicializar Firebase Admin
 admin.initializeApp();
@@ -21,6 +25,12 @@ export {normalizeScannedIngredient, normalizeScannedIngredientsBatch};
 
 // Función de parsing de recetas desde URLs (YouTube, Instagram, TikTok, blogs)
 export {parseRecipeFromUrl};
+
+// ========== Stripe — Sistema de pagos ==========
+export {createCheckoutSession};
+export {stripeWebhook};
+export {getSubscriptionStatus};
+export {openCustomerPortal};
 
 // Función de migración para normalizar items existentes
 export const migrateInventoryNormalization = functions

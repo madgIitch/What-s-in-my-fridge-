@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -29,59 +29,23 @@ const PRO_FEATURES = [
 
 const PaywallScreen = () => {
   const navigation = useNavigation<PaywallNavigationProp>();
-  const {
-    isPro,
-    loading,
-    error,
-    packages,
-    refreshPackages,
-    purchasePro,
-    restorePurchases,
-  } = useSubscription();
-
-  useEffect(() => {
-    refreshPackages().catch((refreshError) => {
-      console.error('Error loading RevenueCat packages:', refreshError);
-    });
-  }, [refreshPackages]);
-
-  const recommendedPackage = useMemo(() => packages[0] || null, [packages]);
+  const { isPro, loading, error, openPaywall, openCustomerPortal } = useSubscription();
 
   const handlePurchase = async () => {
-    if (!recommendedPackage) {
-      Alert.alert('Planes no disponibles', 'No hay planes disponibles ahora mismo.');
-      return;
-    }
-
     try {
-      const result = await purchasePro(recommendedPackage.identifier);
-      if (result.isPro) {
-        Alert.alert('Suscripción activada', 'Ahora tienes acceso a todas las funciones Pro.');
-        navigation.goBack();
-      } else {
-        Alert.alert(
-          'Compra pendiente',
-          'La compra fue procesada, pero aún no está activa. Intenta restaurar las compras.'
-        );
-      }
+      await openPaywall();
     } catch (purchaseError) {
       console.error('Purchase error:', purchaseError);
-      Alert.alert('No se pudo completar la compra', 'Inténtalo de nuevo en unos segundos.');
+      Alert.alert('No se pudo abrir el pago', 'Inténtalo de nuevo en unos segundos.');
     }
   };
 
   const handleRestore = async () => {
     try {
-      const result = await restorePurchases();
-      if (result.isPro) {
-        Alert.alert('Compras restauradas', 'Tu suscripción Pro está activa.');
-        navigation.goBack();
-      } else {
-        Alert.alert('Sin compras activas', 'No se encontró ninguna suscripción activa para restaurar.');
-      }
+      await openCustomerPortal();
     } catch (restoreError) {
-      console.error('Restore purchases error:', restoreError);
-      Alert.alert('No se pudieron restaurar las compras', 'Inténtalo de nuevo.');
+      console.error('Customer portal error:', restoreError);
+      Alert.alert('No se pudo abrir el portal', 'Inténtalo de nuevo.');
     }
   };
 
@@ -115,15 +79,11 @@ const PaywallScreen = () => {
 
         <Card style={styles.priceCard}>
           <Text style={styles.sectionTitle}>Plan Recomendado</Text>
-          <Text style={styles.planName}>
-            {recommendedPackage?.title || 'Pro Monthly'}
+          <Text style={styles.planName}>Pro Mensual</Text>
+          <Text style={styles.planPrice}>$4.99 / mes</Text>
+          <Text style={styles.planDescription}>
+            Serás redirigido al navegador para completar el pago de forma segura con Stripe.
           </Text>
-          <Text style={styles.planPrice}>
-            {recommendedPackage?.priceString || '$4.99'} / month
-          </Text>
-          {recommendedPackage?.description ? (
-            <Text style={styles.planDescription}>{recommendedPackage.description}</Text>
-          ) : null}
         </Card>
 
         {error ? (
@@ -147,7 +107,7 @@ const PaywallScreen = () => {
           />
         )}
         <Button
-          title="Restaurar compras"
+          title="Gestionar suscripción"
           onPress={handleRestore}
           variant="secondary"
           disabled={loading}

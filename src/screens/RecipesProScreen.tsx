@@ -29,7 +29,7 @@ import { RootStackParamList } from '../types';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { LoadingNeverito } from '../components/common';
-import { FREE_RECIPE_LIMIT } from '../services/revenuecat';
+import { FREE_RECIPE_LIMIT } from '../services/stripe';
 
 // Common kitchen utensils (Spanish) with emojis
 const COMMON_UTENSILS = [

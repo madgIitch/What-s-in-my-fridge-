@@ -3,7 +3,7 @@ import { database } from '../database';
 import RecipeCache, { RecipeUi } from '../database/models/RecipeCache';
 import { Q } from '@nozbe/watermelondb';
 import functions from '@react-native-firebase/functions';
-import { FREE_RECIPE_LIMIT } from '../services/revenuecat';
+import { FREE_RECIPE_LIMIT } from '../services/stripe';
 import { useSubscriptionStore } from '../stores/useSubscriptionStore';
 import { useRecipeStore } from '../stores/useRecipeStore';
 

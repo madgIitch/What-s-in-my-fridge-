@@ -1,15 +1,16 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { AppState, AppStateStatus, Linking } from 'react-native';
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 import { useSubscriptionStore } from '../stores/useSubscriptionStore';
 import {
   FREE_OCR_LIMIT,
   FREE_RECIPE_LIMIT,
   FREE_URL_IMPORT_LIMIT,
-  getPaywallPackages,
-  initializeRevenueCat,
-  purchasePackageByIdentifier,
-  refreshRevenueCatSubscription,
-  restoreRevenueCatPurchases,
-} from '../services/revenuecat';
+  createStripeCheckoutSession,
+  fetchSubscriptionStatus,
+  getStripeCustomerPortalUrl,
+} from '../services/stripe';
 
 const toErrorMessage = (error: unknown, fallback: string): string => {
   if (error instanceof Error && error.message) return error.message;
@@ -18,63 +19,103 @@ const toErrorMessage = (error: unknown, fallback: string): string => {
 
 export const useSubscription = () => {
   const store = useSubscriptionStore();
+  const firestoreUnsubscribeRef = useRef<(() => void) | null>(null);
 
+  // Reset monthly counters on mount
   useEffect(() => {
     useSubscriptionStore.getState().checkAndResetMonthlyCounters();
   }, []);
 
-  const syncSubscriptionStatus = useCallback(async () => {
-    const state = useSubscriptionStore.getState();
-    state.setLoading(true);
-    state.setError(null);
+  /** Sync isPro from Firestore (called on init and on AppState foreground) */
+  const syncFromFirestore = useCallback(async () => {
+    const user = auth().currentUser;
+    if (!user) return;
     try {
-      const snapshot = await refreshRevenueCatSubscription();
-      const currentState = useSubscriptionStore.getState();
-      currentState.setProStatus(snapshot.isPro);
-      currentState.setActiveEntitlements(snapshot.activeEntitlements);
-      return snapshot;
-    } catch (error) {
-      const message = toErrorMessage(error, 'Failed to sync subscription status.');
-      useSubscriptionStore.getState().setError(message);
-      throw error;
-    } finally {
-      useSubscriptionStore.getState().setLoading(false);
+      const snap = await firestore()
+        .collection('users')
+        .doc(user.uid)
+        .collection('subscription')
+        .doc('status')
+        .get();
+      const isPro = snap.data()?.isPro ?? false;
+      useSubscriptionStore.getState().setProStatus(isPro);
+    } catch {
+      // Silent — we'll rely on the persisted value if Firestore is unavailable
     }
   }, []);
 
+  /**
+   * Sets up a real-time Firestore listener so the app updates instantly
+   * when the Stripe webhook writes isPro = true.
+   */
+  const startFirestoreListener = useCallback(() => {
+    const user = auth().currentUser;
+    if (!user) return;
+    if (firestoreUnsubscribeRef.current) return; // already listening
+
+    firestoreUnsubscribeRef.current = firestore()
+      .collection('users')
+      .doc(user.uid)
+      .collection('subscription')
+      .doc('status')
+      .onSnapshot(
+        (snap) => {
+          const isPro = snap.data()?.isPro ?? false;
+          useSubscriptionStore.getState().setProStatus(isPro);
+        },
+        () => {
+          // Ignore listener errors — persisted value remains
+        }
+      );
+  }, []);
+
+  const stopFirestoreListener = useCallback(() => {
+    firestoreUnsubscribeRef.current?.();
+    firestoreUnsubscribeRef.current = null;
+  }, []);
+
+  /** Initialize: start Firestore listener + initial sync */
   const initializeSubscriptions = useCallback(async () => {
     const state = useSubscriptionStore.getState();
     state.setLoading(true);
     state.setError(null);
     try {
-      await initializeRevenueCat();
-      useSubscriptionStore.getState().checkAndResetMonthlyCounters();
-      await syncSubscriptionStatus();
-      const packages = await getPaywallPackages();
-      const currentState = useSubscriptionStore.getState();
-      currentState.setPackages(packages);
-      currentState.setInitialized(true);
+      state.checkAndResetMonthlyCounters();
+      startFirestoreListener();
+      await syncFromFirestore();
+      state.setInitialized(true);
     } catch (error) {
-      const message = toErrorMessage(error, 'Failed to initialize RevenueCat.');
-      const currentState = useSubscriptionStore.getState();
-      currentState.setError(message);
-      currentState.setInitialized(false);
-      throw error;
+      const message = toErrorMessage(error, 'Error al inicializar suscripción.');
+      useSubscriptionStore.getState().setError(message);
     } finally {
       useSubscriptionStore.getState().setLoading(false);
     }
-  }, [syncSubscriptionStatus]);
+  }, [syncFromFirestore, startFirestoreListener]);
 
-  const refreshPackages = useCallback(async () => {
+  /** When the app comes back to foreground, re-check Firestore */
+  useEffect(() => {
+    const handleAppState = (next: AppStateStatus) => {
+      if (next === 'active') {
+        syncFromFirestore();
+      }
+    };
+    const sub = AppState.addEventListener('change', handleAppState);
+    return () => {
+      sub.remove();
+      stopFirestoreListener();
+    };
+  }, [syncFromFirestore, stopFirestoreListener]);
+
+  /** Opens Stripe Checkout in the external browser */
+  const openPaywall = useCallback(async () => {
     const state = useSubscriptionStore.getState();
     state.setLoading(true);
     state.setError(null);
     try {
-      const packages = await getPaywallPackages();
-      useSubscriptionStore.getState().setPackages(packages);
-      return packages;
+      const url = await createStripeCheckoutSession();
+      await Linking.openURL(url);
     } catch (error) {
-      const message = toErrorMessage(error, 'Failed to load plans.');
+      const message = toErrorMessage(error, 'No se pudo abrir el pago.');
       useSubscriptionStore.getState().setError(message);
       throw error;
     } finally {
@@ -82,18 +123,16 @@ export const useSubscription = () => {
     }
   }, []);
 
-  const purchasePro = useCallback(async (packageIdentifier: string) => {
+  /** Opens the Stripe Customer Portal in the external browser */
+  const openCustomerPortal = useCallback(async () => {
     const state = useSubscriptionStore.getState();
     state.setLoading(true);
     state.setError(null);
     try {
-      const snapshot = await purchasePackageByIdentifier(packageIdentifier);
-      const currentState = useSubscriptionStore.getState();
-      currentState.setProStatus(snapshot.isPro);
-      currentState.setActiveEntitlements(snapshot.activeEntitlements);
-      return snapshot;
+      const url = await getStripeCustomerPortalUrl();
+      await Linking.openURL(url);
     } catch (error) {
-      const message = toErrorMessage(error, 'Could not complete purchase.');
+      const message = toErrorMessage(error, 'No se pudo abrir el portal.');
       useSubscriptionStore.getState().setError(message);
       throw error;
     } finally {
@@ -101,18 +140,17 @@ export const useSubscription = () => {
     }
   }, []);
 
-  const restorePurchases = useCallback(async () => {
+  /** Manual sync from the Cloud Function (server-side source of truth) */
+  const syncSubscriptionStatus = useCallback(async () => {
     const state = useSubscriptionStore.getState();
     state.setLoading(true);
     state.setError(null);
     try {
-      const snapshot = await restoreRevenueCatPurchases();
-      const currentState = useSubscriptionStore.getState();
-      currentState.setProStatus(snapshot.isPro);
-      currentState.setActiveEntitlements(snapshot.activeEntitlements);
-      return snapshot;
+      const status = await fetchSubscriptionStatus();
+      useSubscriptionStore.getState().setProStatus(status.isPro);
+      return status;
     } catch (error) {
-      const message = toErrorMessage(error, 'Could not restore purchases.');
+      const message = toErrorMessage(error, 'Error al sincronizar suscripción.');
       useSubscriptionStore.getState().setError(message);
       throw error;
     } finally {
@@ -138,8 +176,6 @@ export const useSubscription = () => {
     loading: store.loading,
     error: store.error,
     isPro: store.isPro,
-    activeEntitlements: store.activeEntitlements,
-    packages: store.packages,
 
     monthlyRecipeCallsUsed: store.monthlyRecipeCallsUsed,
     monthlyOcrScansUsed: store.monthlyOcrScansUsed,
@@ -160,8 +196,7 @@ export const useSubscription = () => {
 
     initializeSubscriptions,
     syncSubscriptionStatus,
-    refreshPackages,
-    purchasePro,
-    restorePurchases,
+    openPaywall,
+    openCustomerPortal,
   };
 };

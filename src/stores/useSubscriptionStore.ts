@@ -1,15 +1,12 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { RevenueCatPackage } from '../services/revenuecat';
 
 interface SubscriptionStore {
   initialized: boolean;
   loading: boolean;
   error: string | null;
   isPro: boolean;
-  activeEntitlements: string[];
-  packages: RevenueCatPackage[];
 
   monthlyRecipeCallsUsed: number;
   monthlyOcrScansUsed: number;
@@ -22,8 +19,6 @@ interface SubscriptionStore {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setProStatus: (isPro: boolean) => void;
-  setActiveEntitlements: (entitlements: string[]) => void;
-  setPackages: (packages: RevenueCatPackage[]) => void;
 
   incrementRecipeCalls: () => void;
   incrementOcrScans: () => void;
@@ -43,8 +38,6 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
       loading: false,
       error: null,
       isPro: false,
-      activeEntitlements: [],
-      packages: [],
 
       monthlyRecipeCallsUsed: 0,
       monthlyOcrScansUsed: 0,
@@ -57,8 +50,6 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
       setLoading: (loading) => set({ loading }),
       setError: (error) => set({ error }),
       setProStatus: (isPro) => set({ isPro }),
-      setActiveEntitlements: (activeEntitlements) => set({ activeEntitlements }),
-      setPackages: (packages) => set({ packages }),
 
       incrementRecipeCalls: () => {
         get().checkAndResetMonthlyCounters();
@@ -112,7 +103,6 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         isPro: state.isPro,
-        activeEntitlements: state.activeEntitlements,
         monthlyRecipeCallsUsed: state.monthlyRecipeCallsUsed,
         monthlyOcrScansUsed: state.monthlyOcrScansUsed,
         monthlyUrlImportsUsed: state.monthlyUrlImportsUsed,
