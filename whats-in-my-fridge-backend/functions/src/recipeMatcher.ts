@@ -3,6 +3,25 @@ import * as path from "path";
 import { Recipe, RecipeMatch } from "./types";
 
 let cachedRecipes: Recipe[] | null = null;
+let recipeCategoryIndex: Map<string, Recipe[]> | null = null;
+let synonymCategoryIndex: Map<string, string> | null = null;
+
+type VocabularyIngredient = {
+  categorySpanish?: string;
+  category?: string;
+  synonyms?: string[];
+};
+
+type VocabularyMap = Record<string, VocabularyIngredient>;
+
+type NormalizedInventoryItem = {
+  original: string;
+  normalized: string;
+  words: string[];
+};
+
+const COMMON_WORDS = new Set(["the", "a", "an", "of", "with", "in", "on", "raw", "fresh", "dried"]);
+const EARLY_EXIT_SCORE = 0.95;
 
 function getRecipes(): Recipe[] {
   if (cachedRecipes) {
@@ -63,10 +82,18 @@ function normalizeString(str: string): string {
  * Calcula similitud entre dos strings usando Levenshtein distance
  * Retorna valor entre 0 (totalmente diferente) y 1 (idéntico)
  */
-function calculateSimilarity(str1: string, str2: string): number {
-  const s1 = normalizeString(str1);
-  const s2 = normalizeString(str2);
+function normalizeInventoryItems(inventoryItems: string[]): NormalizedInventoryItem[] {
+  return inventoryItems.map((item) => {
+    const normalized = normalizeString(item);
+    return {
+      original: item,
+      normalized,
+      words: normalized.split(" "),
+    };
+  });
+}
 
+function calculateSimilarityNormalized(s1: string, s2: string): number {
   if (s1 === s2) return 1.0;
 
   const len1 = s1.length;
@@ -109,22 +136,24 @@ function calculateSimilarity(str1: string, str2: string): number {
  */
 function matchIngredient(
   ingredient: string,
-  inventoryItems: string[],
+  inventoryItems: NormalizedInventoryItem[],
   threshold: number = 0.65
 ): string | null {
   const normalizedIngredient = normalizeString(ingredient);
   const ingredientWords = normalizedIngredient.split(" ");
+  const importantIngredientWords = ingredientWords.filter((w) => w.length > 2 && !COMMON_WORDS.has(w));
 
   let bestMatch: string | null = null;
   let bestScore = 0;
 
   for (const item of inventoryItems) {
-    const normalizedItem = normalizeString(item);
-    const itemWords = normalizedItem.split(" ");
+    const normalizedItem = item.normalized;
+    const itemWords = item.words;
+    const importantItemWords = itemWords.filter((w) => w.length > 2 && !COMMON_WORDS.has(w));
 
     // Estrategia 1: Exact match
     if (normalizedIngredient === normalizedItem) {
-      return item;
+      return item.original;
     }
 
     // Estrategia 2: Substring match
@@ -134,7 +163,7 @@ function matchIngredient(
       const score = 0.95; // Alta prioridad para substring match
       if (score > bestScore) {
         bestScore = score;
-        bestMatch = item;
+        bestMatch = item.original;
       }
     }
 
@@ -144,16 +173,13 @@ function matchIngredient(
       const score = 0.9;
       if (score > bestScore) {
         bestScore = score;
-        bestMatch = item;
+        bestMatch = item.original;
       }
     }
 
     // Estrategia 3: Keyword match
     // Verifica si las palabras principales coinciden
     // Filtra palabras comunes (artículos, preposiciones)
-    const commonWords = new Set(["the", "a", "an", "of", "with", "in", "on", "raw", "fresh", "dried"]);
-    const importantIngredientWords = ingredientWords.filter((w) => w.length > 2 && !commonWords.has(w));
-    const importantItemWords = itemWords.filter((w) => w.length > 2 && !commonWords.has(w));
 
     if (importantIngredientWords.length > 0 && importantItemWords.length > 0) {
       const matchingWords = importantIngredientWords.filter((w) =>
@@ -163,15 +189,19 @@ function matchIngredient(
 
       if (keywordScore >= 0.5 && keywordScore > bestScore * 0.85) {
         bestScore = keywordScore * 0.85;
-        bestMatch = item;
+        bestMatch = item.original;
       }
     }
 
     // Estrategia 4: Fuzzy matching (fallback)
-    const similarity = calculateSimilarity(ingredient, item);
+    const similarity = calculateSimilarityNormalized(normalizedIngredient, normalizedItem);
     if (similarity >= threshold && similarity > bestScore) {
       bestScore = similarity;
-      bestMatch = item;
+      bestMatch = item.original;
+    }
+
+    if (bestScore >= EARLY_EXIT_SCORE && bestMatch) {
+      return bestMatch;
     }
   }
 
@@ -190,6 +220,7 @@ export function findMatchingRecipes(
 ): RecipeMatch[] {
   const matches: RecipeMatch[] = [];
   const recipes = getRecipes();
+  const normalizedInventoryItems = normalizeInventoryItems(inventoryItems);
 
   for (const recipe of recipes) {
     const matchedIngredients: string[] = [];
@@ -201,7 +232,7 @@ export function findMatchingRecipes(
 
     // Verificar cada ingrediente de la receta
     for (const ingredient of ingredientsForMatching) {
-      const match = matchIngredient(ingredient, inventoryItems);
+      const match = matchIngredient(ingredient, normalizedInventoryItems);
       if (match) {
         matchedIngredients.push(match);
       }
@@ -244,14 +275,35 @@ import { logger } from "firebase-functions";
 import * as admin from "firebase-admin";
 
 // Cache del vocabulario normalizado
-let vocabularyCache: any = null;
+let vocabularyCache: VocabularyMap | null = null;
 let vocabularyCacheTime: number = 0;
 const CACHE_TTL_MS = 3600000; // 1 hora
+
+function buildSynonymCategoryIndex(vocabulary: VocabularyMap): Map<string, string> {
+  const index = new Map<string, string>();
+
+  for (const [normalizedName, data] of Object.entries(vocabulary)) {
+    const category = data.categorySpanish || data.category;
+    if (!category) {
+      continue;
+    }
+
+    index.set(normalizedName, category);
+
+    if (data.synonyms) {
+      for (const synonym of data.synonyms) {
+        index.set(normalizeString(synonym), category);
+      }
+    }
+  }
+
+  return index;
+}
 
 /**
  * Carga el vocabulario normalizado desde Firebase Storage
  */
-async function loadVocabulary(): Promise<any> {
+async function loadVocabulary(): Promise<VocabularyMap> {
   const now = Date.now();
 
   // Usar caché si está disponible y no ha expirado
@@ -267,8 +319,10 @@ async function loadVocabulary(): Promise<any> {
   const [contents] = await file.download();
   const data = JSON.parse(contents.toString());
 
-  vocabularyCache = data.ingredients;
+  vocabularyCache = (data.ingredients ?? {}) as VocabularyMap;
   vocabularyCacheTime = now;
+  synonymCategoryIndex = buildSynonymCategoryIndex(vocabularyCache);
+  recipeCategoryIndex = null;
 
   console.log(`✅ Vocabulario cargado: ${Object.keys(vocabularyCache!).length} ingredientes`);
 
@@ -278,22 +332,81 @@ async function loadVocabulary(): Promise<any> {
 /**
  * Obtiene la categoría de un ingrediente desde el vocabulario
  */
-function getIngredientCategory(ingredientName: string, vocabulary: any): string | null {
+function getIngredientCategory(ingredientName: string, vocabulary: VocabularyMap): string | null {
   const normalized = normalizeString(ingredientName);
 
   // Buscar coincidencia exacta
-  if (vocabulary[normalized]) {
-    return vocabulary[normalized].categorySpanish || vocabulary[normalized].category;
+  const directMatch = vocabulary[normalized];
+  if (directMatch) {
+    return directMatch.categorySpanish || directMatch.category || null;
   }
 
   // Buscar en sinónimos
-  for (const [, data] of Object.entries<any>(vocabulary)) {
-    if (data.synonyms && data.synonyms.some((syn: string) => normalizeString(syn) === normalized)) {
-      return data.categorySpanish || data.category;
+  if (!synonymCategoryIndex) {
+    synonymCategoryIndex = buildSynonymCategoryIndex(vocabulary);
+  }
+
+  return synonymCategoryIndex.get(normalized) ?? null;
+}
+
+function buildRecipeIndexByCategory(
+  recipes: Recipe[],
+  vocabulary: VocabularyMap
+): Map<string, Recipe[]> {
+  const index = new Map<string, Recipe[]>();
+
+  for (const recipe of recipes) {
+    const ingredientsForMatching = recipe.ingredientsNormalized || recipe.ingredients;
+    const categories = new Set<string>();
+
+    for (const ingredient of ingredientsForMatching) {
+      const category = getIngredientCategory(ingredient, vocabulary);
+      if (category) {
+        categories.add(category);
+      }
+    }
+
+    for (const category of categories) {
+      const recipesForCategory = index.get(category);
+      if (recipesForCategory) {
+        recipesForCategory.push(recipe);
+      } else {
+        index.set(category, [recipe]);
+      }
     }
   }
 
-  return null;
+  return index;
+}
+
+function getRecipesForCategories(
+  inventoryCategories: Set<string>,
+  vocabulary: VocabularyMap
+): Recipe[] {
+  if (!recipeCategoryIndex) {
+    const recipes = getRecipes();
+    recipeCategoryIndex = buildRecipeIndexByCategory(recipes, vocabulary);
+    console.log(`Recipe category index built (${recipeCategoryIndex.size} categories)`);
+  }
+  const index = recipeCategoryIndex;
+  if (!index) {
+    return [];
+  }
+
+  const candidateRecipes = new Map<string, Recipe>();
+
+  for (const category of inventoryCategories) {
+    const recipesByCategory = index.get(category);
+    if (!recipesByCategory) {
+      continue;
+    }
+
+    for (const recipe of recipesByCategory) {
+      candidateRecipes.set(recipe.id, recipe);
+    }
+  }
+
+  return Array.from(candidateRecipes.values());
 }
 
 /**
@@ -302,15 +415,19 @@ function getIngredientCategory(ingredientName: string, vocabulary: any): string 
 function findMatchingRecipesByCategory(
   inventoryItems: string[],
   inventoryCategories: Set<string>,
-  vocabulary: any,
+  vocabulary: VocabularyMap,
   minMatchPercentage: number = 0.3
 ): RecipeMatch[] {
   const matches: RecipeMatch[] = [];
-  const recipes = getRecipes();
+  if (inventoryCategories.size === 0) {
+    return matches;
+  }
+
+  const recipes = getRecipesForCategories(inventoryCategories, vocabulary);
+  const normalizedInventoryItems = normalizeInventoryItems(inventoryItems);
 
   for (const recipe of recipes) {
     const matchedIngredients: string[] = [];
-    let hasIngredientFromInventoryCategory = false;
 
     const ingredientsForMatching = recipe.ingredientsNormalized || recipe.ingredients;
     const totalIngredientsCount = recipe.ingredients.length;
@@ -318,16 +435,12 @@ function findMatchingRecipesByCategory(
     // Verificar cada ingrediente de la receta
     for (const ingredient of ingredientsForMatching) {
       // Intentar match exacto primero
-      const match = matchIngredient(ingredient, inventoryItems);
+      const match = matchIngredient(ingredient, normalizedInventoryItems);
       if (match) {
         matchedIngredients.push(match);
       }
 
       // Verificar si el ingrediente pertenece a una categoría del inventario
-      const ingredientCategory = getIngredientCategory(ingredient, vocabulary);
-      if (ingredientCategory && inventoryCategories.has(ingredientCategory)) {
-        hasIngredientFromInventoryCategory = true;
-      }
     }
 
     // Calcular porcentaje de match basado en ingredientes reales
@@ -339,7 +452,6 @@ function findMatchingRecipesByCategory(
     // 2. Cumplan el porcentaje mínimo de match de ingredientes reales
     // 3. Cumplan los requisitos mínimos de la receta
     if (
-      hasIngredientFromInventoryCategory &&
       matchedIngredients.length >= recipe.minIngredients &&
       matchPercentage >= minMatchPercentage
     ) {
