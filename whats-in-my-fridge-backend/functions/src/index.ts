@@ -127,18 +127,7 @@ export const migrateInventoryNormalization = functions
 export const uploadReceipt = functions  
   .region("us-central1")  
   .https.onRequest(async (req, res) => {  
-    // CORS headers  
-    res.set("Access-Control-Allow-Origin", "*");  
-    res.set("Access-Control-Allow-Methods", "POST, OPTIONS");  
-    res.set("Access-Control-Allow-Headers", "Authorization, Content-Type");  
-  
-    // Handle preflight  
-    if (req.method === "OPTIONS") {  
-      res.status(204).send("");  
-      return;  
-    }  
-  
-    // Validar método  
+    // Validar método
     if (req.method !== "POST") {  
       res.status(405).send("Method Not Allowed");  
       return;  

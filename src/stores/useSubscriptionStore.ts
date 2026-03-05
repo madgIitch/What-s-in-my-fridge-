@@ -19,6 +19,7 @@ interface SubscriptionStore {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setProStatus: (isPro: boolean) => void;
+  setUsageCounts: (counts: { recipeCallsUsed?: number; ocrScansUsed?: number; urlImportsUsed?: number }) => void;
 
   incrementRecipeCalls: () => void;
   incrementOcrScans: () => void;
@@ -50,6 +51,11 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
       setLoading: (loading) => set({ loading }),
       setError: (error) => set({ error }),
       setProStatus: (isPro) => set({ isPro }),
+      setUsageCounts: (counts) => set({
+        ...(counts.recipeCallsUsed !== undefined && { monthlyRecipeCallsUsed: counts.recipeCallsUsed }),
+        ...(counts.ocrScansUsed !== undefined && { monthlyOcrScansUsed: counts.ocrScansUsed }),
+        ...(counts.urlImportsUsed !== undefined && { monthlyUrlImportsUsed: counts.urlImportsUsed }),
+      }),
 
       incrementRecipeCalls: () => {
         get().checkAndResetMonthlyCounters();

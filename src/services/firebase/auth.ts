@@ -64,9 +64,9 @@ export const signUp = async (email: string, password: string) => {
 
     // Save initial cooking preferences to Firestore
     try {
-      const { cookingTime, availableUtensils } = usePreferencesStore.getState();
+      const { cookingTime } = usePreferencesStore.getState();
       const { syncCookingPreferencesToFirestore } = await import('./firestore');
-      await syncCookingPreferencesToFirestore(cookingTime, availableUtensils);
+      await syncCookingPreferencesToFirestore(cookingTime);
     } catch (error) {
       console.error('Error saving initial preferences after sign up:', error);
     }

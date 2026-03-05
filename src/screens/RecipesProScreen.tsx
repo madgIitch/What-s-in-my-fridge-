@@ -31,18 +31,6 @@ import { Button } from '../components/common/Button';
 import { LoadingNeverito } from '../components/common';
 import { FREE_RECIPE_LIMIT } from '../services/stripe';
 
-// Common kitchen utensils (Spanish) with emojis
-const COMMON_UTENSILS = [
-  { name: 'horno', emoji: '🔥' },
-  { name: 'microondas', emoji: '📡' },
-  { name: 'batidora', emoji: '🥄' },
-  { name: 'pressure cooker', emoji: '🍲' },
-  { name: 'freidora', emoji: '🍟' },
-  { name: 'licuadora', emoji: '🥤' },
-  { name: 'procesador', emoji: '⚙️' },
-  { name: 'tostadora', emoji: '🍞' },
-];
-
 type RecipesNavigationProp = StackNavigationProp<RootStackParamList, 'RecipesTab'>;
 
 const RecipesProScreen = () => {
@@ -50,9 +38,7 @@ const RecipesProScreen = () => {
   const { items } = useInventoryStore();
   const {
     cookingTime,
-    availableUtensils,
     setCookingTime,
-    setAvailableUtensils,
   } = usePreferencesStore();
   const {
     isPro,
@@ -73,7 +59,6 @@ const RecipesProScreen = () => {
     parseUrlRecipe, clearUrlState,
   } = useUrlRecipeStore();
 
-  const [selectedUtensils, setSelectedUtensils] = useState<string[]>(availableUtensils);
   const [localCookingTime, setLocalCookingTime] = useState<number>(cookingTime);
   const [selectedIngredientFilters, setSelectedIngredientFilters] = useState<string[]>([]);
   const [selectedCategoryFilters, setSelectedCategoryFilters] = useState<string[]>([]);
@@ -136,22 +121,8 @@ const RecipesProScreen = () => {
   }, [items]);
 
   useEffect(() => {
-    setSelectedUtensils(availableUtensils);
     setLocalCookingTime(cookingTime);
-  }, [availableUtensils, cookingTime]);
-
-  const handleUtensilToggle = (utensilName: string) => {
-    setSelectedUtensils((prev) => {
-      const newUtensils = prev.includes(utensilName)
-        ? prev.filter((u) => u !== utensilName)
-        : [...prev, utensilName];
-
-      // Save to Firebase immediately
-      setAvailableUtensils(newUtensils);
-
-      return newUtensils;
-    });
-  };
+  }, [cookingTime]);
 
   const handleGetRecipes = async () => {
     if (items.length === 0) {
@@ -162,7 +133,7 @@ const RecipesProScreen = () => {
       navigation.navigate('Paywall', { source: 'recipes_limit' });
       return;
     }
-    await getRecipeSuggestions(ingredientNames, localCookingTime, selectedUtensils);
+    await getRecipeSuggestions(ingredientNames, localCookingTime);
   };
 
   const handleUpgradeToPro = () => {
@@ -1051,37 +1022,6 @@ const styles = StyleSheet.create({
   sliderLabel: {
     ...typography.bodySmall,
     color: colors.onSurfaceVariant,
-  },
-  utensilsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  utensilChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    borderWidth: 2,
-    borderColor: colors.outline,
-    backgroundColor: colors.surface,
-  },
-  utensilChipSelected: {
-    backgroundColor: colors.primaryContainer,
-    borderColor: colors.primary,
-  },
-  utensilEmoji: {
-    fontSize: 16,
-  },
-  utensilChipText: {
-    ...typography.labelMedium,
-    color: colors.onSurface,
-  },
-  utensilChipTextSelected: {
-    color: colors.onPrimaryContainer,
-    fontWeight: '600',
   },
   mainButtonsContainer: {
     flexDirection: 'row',

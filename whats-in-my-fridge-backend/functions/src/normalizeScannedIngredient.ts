@@ -342,7 +342,10 @@ Normalized ingredient:`;
 
 export const normalizeScannedIngredient = functions
   .region("europe-west1")
-  .https.onCall(async (data) => {
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError("unauthenticated", "Debes iniciar sesión");
+    }
     try {
       const { ingredientName, useLlmFallback = true } = data;
 
@@ -377,7 +380,10 @@ export const normalizeScannedIngredient = functions
 
 export const normalizeScannedIngredientsBatch = functions
   .region("europe-west1")
-  .https.onCall(async (data) => {
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError("unauthenticated", "Debes iniciar sesión");
+    }
     try {
       const { ingredients, useLlmFallback = true } = data;
 

@@ -57,12 +57,26 @@ export const stripeWebhook = functions
       userId: string,
       data: Record<string, unknown>
     ) => {
-      await db
+      const subscriptionRef = db
         .collection("users")
         .doc(userId)
         .collection("subscription")
-        .doc("status")
-        .set({ ...data, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        .doc("status");
+
+      const current = await subscriptionRef.get();
+      const manualProOverride = current.data()?.manualProOverride === true;
+      const nextData: Record<string, unknown> = { ...data };
+
+      // If manual override is enabled for this user, keep Pro always on.
+      if (manualProOverride) {
+        nextData.isPro = true;
+        nextData.status = "manual_override";
+      }
+
+      await subscriptionRef.set(
+        { ...nextData, updatedAt: admin.firestore.FieldValue.serverTimestamp() },
+        { merge: true }
+      );
     };
 
     try {

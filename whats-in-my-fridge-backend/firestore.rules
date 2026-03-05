@@ -33,15 +33,13 @@ service cloud.firestore {
 
       // Inventory subcollection
       match /inventory/{itemId} {
-        allow read, write: if isOwner(userId);
-
-        // Validate structure on write
+        allow read: if isOwner(userId);
+        allow delete: if isOwner(userId);
         allow create: if isOwner(userId)
           && request.resource.data.keys().hasAll(['name', 'expiryDate', 'quantity'])
           && request.resource.data.name is string
           && request.resource.data.quantity is number
           && request.resource.data.quantity > 0;
-
         allow update: if isOwner(userId)
           && request.resource.data.keys().hasAll(['name', 'expiryDate', 'quantity']);
       }

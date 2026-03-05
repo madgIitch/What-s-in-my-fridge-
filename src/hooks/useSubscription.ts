@@ -26,6 +26,31 @@ export const useSubscription = () => {
     useSubscriptionStore.getState().checkAndResetMonthlyCounters();
   }, []);
 
+  /** Sync server-side usage counters for the current month from Firestore */
+  const syncUsageFromFirestore = useCallback(async () => {
+    const user = auth().currentUser;
+    if (!user) return;
+    try {
+      const month = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+      const snap = await firestore()
+        .collection('users')
+        .doc(user.uid)
+        .collection('usage')
+        .doc(month)
+        .get();
+      if (snap.exists) {
+        const d = snap.data()!;
+        useSubscriptionStore.getState().setUsageCounts({
+          recipeCallsUsed: d.recipeCallsUsed ?? 0,
+          ocrScansUsed: d.ocrScansUsed ?? 0,
+          urlImportsUsed: d.urlImportsUsed ?? 0,
+        });
+      }
+    } catch {
+      // Silent — persisted local value remains as fallback
+    }
+  }, []);
+
   /** Sync isPro from Firestore (called on init and on AppState foreground) */
   const syncFromFirestore = useCallback(async () => {
     const user = auth().currentUser;
@@ -82,7 +107,7 @@ export const useSubscription = () => {
     try {
       state.checkAndResetMonthlyCounters();
       startFirestoreListener();
-      await syncFromFirestore();
+      await Promise.all([syncFromFirestore(), syncUsageFromFirestore()]);
       state.setInitialized(true);
     } catch (error) {
       const message = toErrorMessage(error, 'Error al inicializar suscripción.');
@@ -90,7 +115,7 @@ export const useSubscription = () => {
     } finally {
       useSubscriptionStore.getState().setLoading(false);
     }
-  }, [syncFromFirestore, startFirestoreListener]);
+  }, [syncFromFirestore, syncUsageFromFirestore, startFirestoreListener]);
 
   /** When the app comes back to foreground, re-check Firestore */
   useEffect(() => {

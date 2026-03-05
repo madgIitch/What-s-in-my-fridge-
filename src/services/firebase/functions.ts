@@ -71,7 +71,6 @@ const callCallableUrl = async <T>(
 export interface GetRecipeSuggestionsParams {
   ingredients: string[];
   cookingTime: number;
-  availableUtensils: string[];
 }
 
 /**

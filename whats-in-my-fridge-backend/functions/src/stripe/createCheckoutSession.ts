@@ -44,6 +44,7 @@ export const createCheckoutSession = functions
 
     // Reutilizar stripeCustomerId si ya existe
     const subscriptionSnap = await subscriptionRef.get();
+    const manualProOverride = subscriptionSnap.data()?.manualProOverride === true;
     let stripeCustomerId: string | null =
       subscriptionSnap.data()?.stripeCustomerId ?? null;
     const isNewCustomer = !stripeCustomerId;
@@ -55,7 +56,11 @@ export const createCheckoutSession = functions
       });
       stripeCustomerId = customer.id;
       await subscriptionRef.set(
-        { stripeCustomerId, isPro: false, status: "inactive" },
+        {
+          stripeCustomerId,
+          isPro: manualProOverride,
+          status: manualProOverride ? "manual_override" : "inactive",
+        },
         { merge: true }
       );
     }

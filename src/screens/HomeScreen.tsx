@@ -15,9 +15,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList, FOOD_CATEGORIES } from '../types';
 import { useInventory } from '../hooks/useInventory';
-import { useAuthStore } from '../stores/useAuthStore';
-import { signOut } from '../services/firebase/auth';
-import { startFirestoreSync } from '../services/firebase/firestore';
 import FoodItem from '../database/models/FoodItem';
 import { Button } from '../components/common/Button';
 import { KawaiiFAB, FABGroup } from '../components/common/KawaiiFAB';
@@ -35,7 +32,6 @@ type FilterType = 'fresh' | 'soon' | 'expired' | 'prepared';
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const { items, loading, error, deleteItem } = useInventory();
-  const user = useAuthStore((state) => state.user);
   const wiggleAnim = useRef(new Animated.Value(0)).current;
   const [activeFilter, setActiveFilter] = React.useState<FilterType | null>(null);
 
@@ -64,14 +60,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     anim.start();
     return () => anim.stop();
   }, [wiggleAnim]);
-
-  // Start Firestore sync when user is logged in
-  useEffect(() => {
-    if (user?.uid) {
-      const unsubscribe = startFirestoreSync(user.uid);
-      return () => unsubscribe();
-    }
-  }, [user?.uid]);
 
   // Category emoji map for section headers
   const categoryEmoji: Record<string, string> = {

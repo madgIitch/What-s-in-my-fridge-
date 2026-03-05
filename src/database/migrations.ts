@@ -5,14 +5,36 @@ import { schemaMigrations, createTable, addColumns } from '@nozbe/watermelondb/S
  *
  * IMPORTANT: Never modify existing migrations, only add new ones
  * Migration history:
- * - v5: Initial schema (migrated from Android Room)
+ * - v5: Initial schema (migrated from Android Room) — WatermelonDB baseline
  * - v6: Added ingredient_mappings table
- * - v7: Added normalized_name to food_items
+ * - v7: Added normalized_name to food_items (also creates ingredient_mappings as no-op for v6 installs)
  * - v8: Added favorite_recipes table
  * - v9: Added meal_entries table
+ * - v10: Removed legacy expiry_at column from food_items (column stays in SQLite on existing installs, ignored by WatermelonDB)
  */
 export default schemaMigrations({
   migrations: [
+    // Migration from version 5 to 6
+    // Adds ingredient_mappings table for caching ingredient normalizations.
+    // Enables users still on v5 to migrate forward without a DB reset.
+    {
+      toVersion: 6,
+      steps: [
+        createTable({
+          name: 'ingredient_mappings',
+          columns: [
+            { name: 'scanned_name', type: 'string', isIndexed: true },
+            { name: 'normalized_name', type: 'string', isOptional: true },
+            { name: 'confidence', type: 'number' },
+            { name: 'method', type: 'string' },
+            { name: 'verified_by_user', type: 'boolean' },
+            { name: 'timestamp', type: 'number' },
+            { name: 'created_at', type: 'number' },
+            { name: 'updated_at', type: 'number' },
+          ],
+        }),
+      ],
+    },
     // Migration from version 6 to 7
     // Adds ingredient normalization support
     {
@@ -91,6 +113,15 @@ export default schemaMigrations({
           ],
         }),
       ],
+    },
+    // Migration from version 9 to 10
+    // Removes legacy expiry_at column from food_items.
+    // WatermelonDB cannot drop columns — existing SQLite DBs keep the column
+    // but it is no longer part of the schema and will not be read or written.
+    // New installs won't have the column at all.
+    {
+      toVersion: 10,
+      steps: [],
     },
   ],
 });

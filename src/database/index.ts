@@ -20,8 +20,9 @@ import MealEntry from './models/MealEntry';
 const adapter = new SQLiteAdapter({
   schema,
   migrations,
-  // Optional: Enable JSI for better performance (requires Expo dev client)
-  jsi: false,
+  // JSI enabled: requires native build (Expo dev client / bare workflow)
+  // Provides significantly faster synchronous SQLite queries vs the async bridge
+  jsi: true,
 });
 
 // Create database instance

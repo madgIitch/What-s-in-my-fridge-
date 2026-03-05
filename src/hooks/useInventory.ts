@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { database, collections } from '../database';
 import FoodItem from '../database/models/FoodItem';
 import { useInventoryStore } from '../stores/useInventoryStore';
-import { syncToFirestore, deleteFromFirestore } from '../services/firebase/firestore';
+import { syncToFirestore, deleteFromFirestore, batchDeleteFromFirestore } from '../services/firebase/firestore';
 import { useIngredientNormalizer } from './useIngredientNormalizer';
 
 /**
@@ -163,11 +163,13 @@ export const useInventory = () => {
     try {
       await database.write(async () => {
         const allItems = await collections.foodItems.query().fetch();
+        const ids = allItems.map((item) => item.id);
 
         for (const item of allItems) {
           await item.destroyPermanently();
-          await deleteFromFirestore(item.id);
         }
+
+        await batchDeleteFromFirestore(ids);
       });
 
       store.setError(null);
@@ -181,12 +183,36 @@ export const useInventory = () => {
   };
 
   /**
-   * Mark item as consumed (soft delete alternative)
+   * Mark item as consumed by reducing its quantity.
+   * Deletes the item only when the remaining quantity reaches zero.
+   *
+   * @param itemId - The item to consume
+   * @param amount - How many units to consume (defaults to the full current quantity)
    */
-  const markAsConsumed = async (itemId: string) => {
-    // For now, just delete the item
-    // Could be extended to add a "consumed" flag instead
-    await deleteItem(itemId);
+  const markAsConsumed = async (itemId: string, amount?: number) => {
+    store.setLoading(true);
+    try {
+      await database.write(async () => {
+        const item = await collections.foodItems.find(itemId);
+        const toConsume = amount ?? item.quantity;
+        const remaining = item.quantity - toConsume;
+
+        if (remaining <= 0) {
+          await item.destroyPermanently();
+          await deleteFromFirestore(itemId);
+        } else {
+          await item.update(() => { item.quantity = remaining; });
+          await syncToFirestore(item);
+        }
+      });
+      store.setError(null);
+    } catch (error: any) {
+      console.error('Error consuming item:', error);
+      store.setError(error.message);
+      throw error;
+    } finally {
+      store.setLoading(false);
+    }
   };
 
   /**

@@ -3,6 +3,7 @@ import { logger } from "firebase-functions";
 import * as admin from "firebase-admin";
 import vision from "@google-cloud/vision";
 import { ParsedDraftEntity, ParsedItem } from "./types";
+import { checkAndIncrementUsage, FREE_OCR_LIMIT } from "./usageLimits";
 
 type VisionClient = InstanceType<typeof vision.ImageAnnotatorClient>;
 let visionClient: VisionClient | null = null;
@@ -37,6 +38,11 @@ export const parseReceipt = functions.https.onCall(async (data, context) => {
   const userId = isEmulator ? "test-user-123" : context.auth!.uid;
 
   try {
+    // Enforce server-side monthly usage limit (skip in emulator)
+    if (!isEmulator) {
+      await checkAndIncrementUsage(userId, "ocrScansUsed", FREE_OCR_LIMIT);
+    }
+
     let rawText: string;
 
     // Usar texto simulado en emuladores, Vision API en producción

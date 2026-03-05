@@ -6,12 +6,14 @@ import functions from '@react-native-firebase/functions';
 import { FREE_RECIPE_LIMIT } from '../services/stripe';
 import { useSubscriptionStore } from '../stores/useSubscriptionStore';
 import { useRecipeStore } from '../stores/useRecipeStore';
+import MD5 from 'crypto-js/md5';
 
 /**
- * Generate cache key from sorted ingredients list
+ * Generate a fixed-length MD5 cache key from sorted ingredients list
  */
 export function generateInventoryHash(ingredients: string[]): string {
-  return [...ingredients].sort().join(',');
+  const key = [...ingredients].sort().join(',');
+  return MD5(key).toString();
 }
 
 /**
@@ -130,8 +132,7 @@ export function useRecipes() {
    */
   const getRecipeSuggestions = useCallback(async (
     ingredientsList: string[],
-    cookingTime: number,
-    utensils: string[]
+    cookingTime: number
   ): Promise<void> => {
     const startTime = Date.now();
     const MIN_LOADING_TIME = 800; // Minimum time to show loading animation (ms)
@@ -177,7 +178,6 @@ export function useRecipes() {
       const result = await getRecipeSuggestionsCallable({
         ingredients: ingredientsList,
         cookingTime,
-        utensils,
       });
 
       if (result.data.success && result.data.recipes) {
@@ -199,6 +199,11 @@ export function useRecipes() {
       }
     } catch (err: any) {
       console.error('💥 [useRecipes] Error getting recipe suggestions:', err);
+      if (err?.code === 'functions/resource-exhausted') {
+        // Server says limit is reached — pin the local counter to the limit
+        // so subsequent client-side checks also fail fast without a round-trip.
+        useSubscriptionStore.getState().setUsageCounts({ recipeCallsUsed: FREE_RECIPE_LIMIT });
+      }
       setError(err.message || 'Error al obtener recetas');
     } finally {
       // Ensure loading is visible for at least MIN_LOADING_TIME

@@ -22,7 +22,7 @@ export interface RecipeUi {
 export default class RecipeCache extends Model {
   static table = 'recipe_cache';
 
-  @field('ingredients_hash') ingredientsHash!: string; // MD5 hash of sorted ingredients
+  @field('ingredients_hash') ingredientsHash!: string; // MD5 hash of sorted, comma-joined ingredient names
   @field('recipes_json') recipesJson!: string; // JSON array of RecipeUi[]
   @field('timestamp') timestamp!: number;
   @field('ttl_minutes') ttlMinutes!: number; // Time to live in minutes (default: 60)

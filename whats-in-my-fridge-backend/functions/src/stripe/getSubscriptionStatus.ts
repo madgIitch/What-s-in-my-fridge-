@@ -29,9 +29,10 @@ export const getSubscriptionStatus = functions
     }
 
     const data = doc.data()!;
+    const manualProOverride = data.manualProOverride === true;
     return {
-      isPro: data.isPro ?? false,
-      status: data.status ?? "inactive",
+      isPro: manualProOverride ? true : (data.isPro ?? false),
+      status: manualProOverride ? "manual_override" : (data.status ?? "inactive"),
       currentPeriodEnd: data.currentPeriodEnd?.toMillis?.() ?? null,
     };
   });

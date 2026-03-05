@@ -104,6 +104,35 @@ export const deleteFromFirestore = async (itemId: string) => {
 };
 
 /**
+ * Delete multiple food items from Firestore in a single batch write
+ */
+export const batchDeleteFromFirestore = async (itemIds: string[]) => {
+  if (itemIds.length === 0) return;
+
+  const userId = useAuthStore.getState().user?.uid;
+  if (!userId) {
+    console.warn('No user logged in, skipping Firestore batch delete');
+    return;
+  }
+
+  try {
+    const inventoryRef = firestore()
+      .collection('users')
+      .doc(userId)
+      .collection('inventory');
+
+    const batch = firestore().batch();
+    for (const id of itemIds) {
+      batch.delete(inventoryRef.doc(id));
+    }
+    await batch.commit();
+  } catch (error) {
+    console.error('Error batch deleting from Firestore:', error);
+    throw error;
+  }
+};
+
+/**
  * Delete a meal entry from Firestore
  */
 export const deleteMealEntryFromFirestore = async (entryId: string) => {
@@ -383,8 +412,7 @@ export const fetchInventoryFromFirestore = async (userId: string) => {
  * Sync cooking preferences to Firestore
  */
 export const syncCookingPreferencesToFirestore = async (
-  cookingTime: number,
-  availableUtensils: string[]
+  cookingTime: number
 ) => {
   const userId = useAuthStore.getState().user?.uid;
   if (!userId) {
@@ -400,7 +428,6 @@ export const syncCookingPreferencesToFirestore = async (
         {
           cookingPreferences: {
             cookingTime,
-            availableUtensils,
             updatedAt: firestore.FieldValue.serverTimestamp(),
           },
         },
@@ -427,7 +454,6 @@ export const fetchCookingPreferencesFromFirestore = async (userId: string) => {
     if (data?.cookingPreferences) {
       return {
         cookingTime: data.cookingPreferences.cookingTime,
-        availableUtensils: data.cookingPreferences.availableUtensils,
       };
     }
 

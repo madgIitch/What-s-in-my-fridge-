@@ -52,15 +52,6 @@ export type RootStackParamList = {
     | undefined;
 };
 
-// Mantener para compatibilidad con componentes existentes
-export type MainTabParamList = {
-  HomeTab: undefined;
-  ScanTab: undefined;
-  RecipesTab: undefined;
-  CalendarTab: undefined;
-  SettingsTab: undefined;
-};
-
 // Food categories
 export const FOOD_CATEGORIES = [
   'Lácteos',
@@ -130,31 +121,11 @@ export const DEFAULT_UNITS_BY_CATEGORY: Record<FoodCategory, FoodUnit> = {
   'Otros': 'unidad',           // Por defecto unidad
 };
 
-// Kitchen utensils
-export const KITCHEN_UTENSILS = [
-  'oven',
-  'stove',
-  'microwave',
-  'blender',
-  'mixer',
-  'air-fryer',
-  'slow-cooker',
-  'pressure-cooker',
-] as const;
-
-export type KitchenUtensil = typeof KITCHEN_UTENSILS[number];
-
 // Currency
 export type Currency = 'EUR' | 'USD' | 'GBP';
 
 // Subscription tier
 export type SubscriptionTier = 'Free' | 'Pro';
-
-// Recipe limits by tier
-export const RECIPE_LIMITS: Record<SubscriptionTier, number> = {
-  Free: 10,
-  Pro: 100,
-};
 
 // Helper function to get default unit for a category
 export const getDefaultUnitForCategory = (category?: string): FoodUnit => {

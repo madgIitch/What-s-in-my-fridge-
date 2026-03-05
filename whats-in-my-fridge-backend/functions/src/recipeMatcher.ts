@@ -273,6 +273,7 @@ export function findMatchingRecipes(
 import * as functions from "firebase-functions";
 import { logger } from "firebase-functions";
 import * as admin from "firebase-admin";
+import { checkAndIncrementUsage, FREE_RECIPE_LIMIT } from "./usageLimits";
 
 // Cache del vocabulario normalizado
 let vocabularyCache: VocabularyMap | null = null;
@@ -487,6 +488,9 @@ export const getRecipeSuggestions = functions
     const start = Date.now();
 
     try {
+      // Enforce server-side monthly usage limit before doing any work
+      await checkAndIncrementUsage(userId, "recipeCallsUsed", FREE_RECIPE_LIMIT);
+
       // Cargar vocabulario para obtener categorías
       const vocabulary = await loadVocabulary();
 

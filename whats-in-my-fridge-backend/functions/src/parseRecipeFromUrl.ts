@@ -3,10 +3,11 @@ import { logger } from "firebase-functions";
 import axios from "axios";
 import * as cheerio from "cheerio";
 import { YoutubeTranscript } from "youtube-transcript";
+import { checkAndIncrementUsage, FREE_URL_IMPORT_LIMIT } from "./usageLimits";
 
-const OLLAMA_URL = "https://ollama-service-534730978435.europe-west1.run.app";
-const OLLAMA_MODEL = "qwen2.5:3b";
-const WHISPER_URL = "https://whisper-service-534730978435.europe-west1.run.app";
+const OLLAMA_URL = process.env.OLLAMA_URL ?? "https://ollama-service-534730978435.europe-west1.run.app";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? "qwen2.5:3b";
+const WHISPER_URL = process.env.WHISPER_URL ?? "https://whisper-service-534730978435.europe-west1.run.app";
 
 interface ParseRecipeFromUrlRequest {
   url: string;
@@ -36,6 +37,9 @@ export const parseRecipeFromUrl = functions
 
     const start = Date.now();
     const userId = context.auth.uid;
+
+    // Enforce server-side monthly usage limit before doing any work
+    await checkAndIncrementUsage(userId, "urlImportsUsed", FREE_URL_IMPORT_LIMIT);
 
     try {
       let rawText = "";

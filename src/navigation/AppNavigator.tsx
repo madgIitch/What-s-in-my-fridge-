@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useMealStore } from '../stores/useMealStore';
+import { startFirestoreSync } from '../services/firebase/firestore';
 
 // Import screens
 import LoginScreen from '../screens/LoginScreen';
@@ -35,7 +36,11 @@ export const AppNavigator = () => {
   useEffect(() => {
     if (user?.uid) {
       startSync(user.uid);
-      return () => stopSync();
+      const unsubscribeInventory = startFirestoreSync(user.uid);
+      return () => {
+        stopSync();
+        unsubscribeInventory();
+      };
     }
     stopSync();
     return undefined;

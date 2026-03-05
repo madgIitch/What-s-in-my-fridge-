@@ -2,6 +2,7 @@ import { Q } from '@nozbe/watermelondb';
 import { database, collections } from '../database';
 import {
   normalizeScannedIngredient as normalizeWithCloudFunction,
+  normalizeScannedIngredientsBatch as normalizeWithCloudFunctionBatch,
   NormalizationResult,
 } from '../services/firebase/functions';
 
@@ -104,16 +105,67 @@ export const useIngredientNormalizer = () => {
     scannedNames: string[],
     useLlmFallback: boolean = false
   ): Promise<NormalizationResult[]> => {
-    // For now, just normalize one by one
-    // Could be optimized to batch Cloud Function calls for uncached items
-    const results: NormalizationResult[] = [];
+    if (scannedNames.length === 0) return [];
 
-    for (const name of scannedNames) {
-      const result = await normalizeIngredient(name, useLlmFallback);
-      results.push(result);
+    const lowerNames = scannedNames.map((n) => n.toLowerCase().trim());
+
+    // 1. Query the local cache for all names at once
+    const cached = await collections.ingredientMappings
+      .query(Q.where('scanned_name', Q.oneOf(lowerNames)))
+      .fetch();
+
+    const cacheMap = new Map(cached.filter((m) => m.isValid).map((m) => [m.scannedName, m]));
+
+    // 2. Split into hits and misses
+    const hits: NormalizationResult[] = [];
+    const missNames: string[] = [];
+    const missOriginals: string[] = [];
+
+    for (let i = 0; i < scannedNames.length; i++) {
+      const mapping = cacheMap.get(lowerNames[i]);
+      if (mapping) {
+        hits.push({
+          scannedName: scannedNames[i],
+          normalizedName: mapping.normalizedName,
+          confidence: mapping.confidence,
+          method: mapping.method,
+        });
+      } else {
+        missNames.push(scannedNames[i]);
+        missOriginals.push(lowerNames[i]);
+      }
     }
 
-    return results;
+    if (missNames.length === 0) return hits;
+
+    // 3. Single batch call for all cache misses
+    const batchResults = await normalizeWithCloudFunctionBatch(missNames, useLlmFallback);
+
+    // 4. Persist all new results in one write transaction
+    await database.write(async () => {
+      for (let i = 0; i < batchResults.length; i++) {
+        const result = batchResults[i];
+        await collections.ingredientMappings.create((mapping) => {
+          mapping.scannedName = missOriginals[i];
+          mapping.normalizedName = result.normalizedName;
+          mapping.confidence = result.confidence;
+          mapping.method = result.method;
+          mapping.verifiedByUser = false;
+          mapping.timestamp = Date.now();
+        });
+      }
+    });
+
+    // 5. Reconstruct results in original order
+    const batchMap = new Map(batchResults.map((r) => [r.scannedName, r]));
+    return scannedNames.map((name) => {
+      const lower = name.toLowerCase().trim();
+      const cached = cacheMap.get(lower);
+      if (cached) {
+        return { scannedName: name, normalizedName: cached.normalizedName, confidence: cached.confidence, method: cached.method };
+      }
+      return batchMap.get(name) ?? { scannedName: name, normalizedName: null, confidence: 0, method: 'none' as const };
+    });
   };
 
   /**
