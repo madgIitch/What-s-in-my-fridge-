@@ -24,6 +24,7 @@ import { recognizeText } from '../services/ocr/textRecognition';
 import { parseReceiptText } from '../services/ocr/receiptParser';
 import { useDrafts } from '../hooks/useDrafts';
 import { useSubscription } from '../hooks/useSubscription';
+import { useCropStore } from '../stores/useCropStore';
 
 type ScanScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ScanTab'>;
 
@@ -34,11 +35,21 @@ interface Props {
 const ScanScreen: React.FC<Props> = ({ navigation }) => {
   const { saveDraft } = useDrafts();
   const { canUseOcrScans, incrementOcrScans } = useSubscription();
+  const { croppedUri, clearCroppedUri } = useCropStore();
   const wiggleAnim = useRef(new Animated.Value(0)).current;
 
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [ocrText, setOcrText] = useState<string | null>(null);
+
+  // Pick up the cropped URI when returning from CropScreen
+  useEffect(() => {
+    if (croppedUri) {
+      setImageUri(croppedUri);
+      setOcrText(null);
+      clearCroppedUri();
+    }
+  }, [croppedUri, clearCroppedUri]);
 
   // Wiggle animation for emoji
   useEffect(() => {
@@ -85,13 +96,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
 
       if (!result.canceled && result.assets[0]) {
         // Navigate to crop screen
-        navigation.navigate('Crop', {
-          imageUri: result.assets[0].uri,
-          onCropComplete: (croppedUri: string) => {
-            setImageUri(croppedUri);
-            setOcrText(null);
-          },
-        });
+        navigation.navigate('Crop', { imageUri: result.assets[0].uri });
       }
     } catch (error: any) {
       Alert.alert('Error', 'No se pudo tomar la foto');
@@ -119,13 +124,7 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
 
       if (!result.canceled && result.assets[0]) {
         // Navigate to crop screen
-        navigation.navigate('Crop', {
-          imageUri: result.assets[0].uri,
-          onCropComplete: (croppedUri: string) => {
-            setImageUri(croppedUri);
-            setOcrText(null);
-          },
-        });
+        navigation.navigate('Crop', { imageUri: result.assets[0].uri });
       }
     } catch (error: any) {
       Alert.alert('Error', 'No se pudo seleccionar la imagen');

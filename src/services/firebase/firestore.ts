@@ -252,8 +252,13 @@ export const startFirestoreSync = (userId: string) => {
 /**
  * Start bidirectional Firestore sync for meal entries
  */
-export const startMealEntriesSync = (userId: string) => {
+export const startMealEntriesSync = (
+  userId: string,
+  onReady?: () => void,
+  onError?: (error: Error) => void
+) => {
   const BATCH_SIZE = 20;
+  let firstSnapshot = true;
 
   const unsubscribe = firestore()
     .collection('users')
@@ -262,7 +267,16 @@ export const startMealEntriesSync = (userId: string) => {
     .onSnapshot(
       async (snapshot) => {
         const changes = snapshot.docChanges();
-        if (changes.length === 0) return;
+
+        if (firstSnapshot) {
+          firstSnapshot = false;
+          if (changes.length === 0) {
+            onReady?.();
+            return;
+          }
+        } else if (changes.length === 0) {
+          return;
+        }
 
         for (let i = 0; i < changes.length; i += BATCH_SIZE) {
           const batch = changes.slice(i, i + BATCH_SIZE);
@@ -342,9 +356,15 @@ export const startMealEntriesSync = (userId: string) => {
             }
           });
         }
+
+        if (firstSnapshot) {
+          firstSnapshot = false;
+          onReady?.();
+        }
       },
       (error) => {
         console.error('MealEntry Firestore sync error:', error);
+        onError?.(error);
       }
     );
 
@@ -366,7 +386,7 @@ export const saveDraftToFirestore = async (draft: ParsedDraft) => {
     await firestore()
       .collection('users')
       .doc(userId)
-      .collection('scans')
+      .collection('drafts')
       .doc(draft.id)
       .set({
         rawText: draft.rawText,

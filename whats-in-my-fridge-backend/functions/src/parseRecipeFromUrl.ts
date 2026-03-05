@@ -4,9 +4,8 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 import { YoutubeTranscript } from "youtube-transcript";
 import { checkAndIncrementUsage, FREE_URL_IMPORT_LIMIT } from "./usageLimits";
+import { callOllama } from "./utils/ollama";
 
-const OLLAMA_URL = process.env.OLLAMA_URL ?? "https://ollama-service-534730978435.europe-west1.run.app";
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? "qwen2.5:3b";
 const WHISPER_URL = process.env.WHISPER_URL ?? "https://whisper-service-534730978435.europe-west1.run.app";
 
 interface ParseRecipeFromUrlRequest {
@@ -355,23 +354,6 @@ ${inputText}
 Ingredientes:`;
 }
 
-async function callOllama(prompt: string, timeoutMs: number): Promise<string> {
-  const response = await axios.post(
-    `${OLLAMA_URL}/api/generate`,
-    {
-      model: OLLAMA_MODEL,
-      prompt,
-      stream: false,
-    },
-    {
-      timeout: timeoutMs,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-  return response.data.response || "";
-}
 
 async function extractIngredientsWithOllama(text: string): Promise<string[]> {
   try {

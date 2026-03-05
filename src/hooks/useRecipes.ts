@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { database } from '../database';
 import RecipeCache, { RecipeUi } from '../database/models/RecipeCache';
 import { Q } from '@nozbe/watermelondb';
-import functions from '@react-native-firebase/functions';
+import { getRecipeSuggestions as fetchRecipeSuggestions } from '../services/firebase/functions';
 import { FREE_RECIPE_LIMIT } from '../services/stripe';
 import { useSubscriptionStore } from '../stores/useSubscriptionStore';
 import { useRecipeStore } from '../stores/useRecipeStore';
@@ -170,33 +170,19 @@ export function useRecipes() {
       console.log('📡 [useRecipes] No cache found, calling Cloud Function...');
 
       // Call Cloud Function with normalized ingredients
-      // Use httpsCallableFromUrl for europe-west1 region
-      const projectId = 'what-s-in-my-fridge-a2a07';
-      const functionUrl = `https://europe-west1-${projectId}.cloudfunctions.net/getRecipeSuggestions`;
-      const getRecipeSuggestionsCallable = functions().httpsCallableFromUrl(functionUrl);
+      const newRecipes = await fetchRecipeSuggestions({ ingredients: ingredientsList, cookingTime });
 
-      const result = await getRecipeSuggestionsCallable({
-        ingredients: ingredientsList,
-        cookingTime,
-      });
+      console.log('✅ [useRecipes] Cloud Function success! Got', newRecipes.length, 'recipes');
+      setRecipes(newRecipes);
 
-      if (result.data.success && result.data.recipes) {
-        console.log('✅ [useRecipes] Cloud Function success! Got', result.data.recipes.length, 'recipes');
-        const newRecipes = result.data.recipes;
-        setRecipes(newRecipes);
+      // Cache the results
+      await cacheRecipes(ingredientsList, newRecipes);
 
-        // Cache the results
-        await cacheRecipes(ingredientsList, newRecipes);
+      // Increment call counter
+      incrementRecipeCalls();
 
-        // Increment call counter
-        incrementRecipeCalls();
-
-        // Clean up expired caches
-        await deleteExpiredCaches();
-      } else {
-        console.log('❌ [useRecipes] Cloud Function failed');
-        setError('No se pudieron obtener recetas');
-      }
+      // Clean up expired caches
+      await deleteExpiredCaches();
     } catch (err: any) {
       console.error('💥 [useRecipes] Error getting recipe suggestions:', err);
       if (err?.code === 'functions/resource-exhausted') {

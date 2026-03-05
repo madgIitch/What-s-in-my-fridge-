@@ -6,6 +6,18 @@ import MealEntry, { MealType } from '../database/models/MealEntry';
 import { deleteMealEntryFromFirestore, startMealEntriesSync, syncMealEntryToFirestore } from '../services/firebase/firestore';
 import { useAuthStore } from './useAuthStore';
 
+interface MealEntryUpdates {
+  mealType?: MealType;
+  mealDate?: number;
+  recipeId?: string;
+  customName?: string;
+  ingredientsConsumed?: string;
+  notes?: string;
+  caloriesEstimate?: number;
+  userId?: string;
+  consumedAt?: number;
+}
+
 interface MealStore {
   meals: MealEntry[];
   monthAnchor: Date;
@@ -26,7 +38,7 @@ interface MealStore {
     consumedAt: number;
     userId?: string;
   }) => Promise<void>;
-  updateMeal: (mealId: string, updates: Partial<Omit<MealEntry, 'id'>>) => Promise<void>;
+  updateMeal: (mealId: string, updates: MealEntryUpdates) => Promise<void>;
   deleteMeal: (mealId: string) => Promise<void>;
   getMealsByDate: (date: Date) => MealEntry[];
   getTopIngredients: (limit?: number) => { ingredientId: string; count: number }[];
@@ -82,8 +94,9 @@ export const useMealStore = create<MealStore>((set, get) => ({
         throw new Error('Meal entries collection not initialized. Restart the app after migrations.');
       }
 
+      let newEntry: Awaited<ReturnType<typeof mealCollection.create>>;
       await database.write(async () => {
-        const newEntry = await mealCollection.create((entry) => {
+        newEntry = await mealCollection.create((entry) => {
           entry.mealType = data.mealType;
           entry.mealDate = data.mealDate;
           entry.recipeId = data.recipeId;
@@ -94,9 +107,9 @@ export const useMealStore = create<MealStore>((set, get) => ({
           entry.userId = userId;
           entry.consumedAt = data.consumedAt;
         });
-
-        await syncMealEntryToFirestore(newEntry);
       });
+
+      await syncMealEntryToFirestore(newEntry!);
 
       set({ error: null, loading: false });
     } catch (error: any) {
@@ -115,40 +128,23 @@ export const useMealStore = create<MealStore>((set, get) => ({
         throw new Error('Meal entries collection not initialized. Restart the app after migrations.');
       }
 
-      await database.write(async () => {
-        const entry = await mealCollection.find(mealId);
-        await entry.update(() => {
-          if ((updates as any).mealType !== undefined) {
-            entry.mealType = (updates as any).mealType;
-          }
-          if ((updates as any).mealDate !== undefined) {
-            entry.mealDate = (updates as any).mealDate;
-          }
-          if ((updates as any).recipeId !== undefined) {
-            entry.recipeId = (updates as any).recipeId;
-          }
-          if ((updates as any).customName !== undefined) {
-            entry.customName = (updates as any).customName;
-          }
-          if ((updates as any).ingredientsConsumed !== undefined) {
-            entry.ingredientsConsumed = (updates as any).ingredientsConsumed;
-          }
-          if ((updates as any).notes !== undefined) {
-            entry.notes = (updates as any).notes;
-          }
-          if ((updates as any).caloriesEstimate !== undefined) {
-            entry.caloriesEstimate = (updates as any).caloriesEstimate;
-          }
-          if ((updates as any).userId !== undefined) {
-            entry.userId = (updates as any).userId;
-          }
-          if ((updates as any).consumedAt !== undefined) {
-            entry.consumedAt = (updates as any).consumedAt;
-          }
+      const entry = await database.write(async () => {
+        const e = await mealCollection.find(mealId);
+        await e.update(() => {
+          if (updates.mealType !== undefined) e.mealType = updates.mealType;
+          if (updates.mealDate !== undefined) e.mealDate = updates.mealDate;
+          if (updates.recipeId !== undefined) e.recipeId = updates.recipeId;
+          if (updates.customName !== undefined) e.customName = updates.customName;
+          if (updates.ingredientsConsumed !== undefined) e.ingredientsConsumed = updates.ingredientsConsumed;
+          if (updates.notes !== undefined) e.notes = updates.notes;
+          if (updates.caloriesEstimate !== undefined) e.caloriesEstimate = updates.caloriesEstimate;
+          if (updates.userId !== undefined) e.userId = updates.userId;
+          if (updates.consumedAt !== undefined) e.consumedAt = updates.consumedAt;
         });
-
-        await syncMealEntryToFirestore(entry);
+        return e;
       });
+
+      await syncMealEntryToFirestore(entry);
 
       set({ error: null, loading: false });
     } catch (error: any) {
@@ -205,8 +201,11 @@ export const useMealStore = create<MealStore>((set, get) => ({
     }
 
     set({ syncStatus: 'syncing' });
-    syncUnsubscribe = startMealEntriesSync(userId);
-    set({ syncStatus: 'success', lastSyncTime: Date.now() });
+    syncUnsubscribe = startMealEntriesSync(
+      userId,
+      () => set({ syncStatus: 'success', lastSyncTime: Date.now() }),
+      () => set({ syncStatus: 'error' })
+    );
   },
 
   stopSync: () => {

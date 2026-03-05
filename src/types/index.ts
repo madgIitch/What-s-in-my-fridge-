@@ -23,7 +23,7 @@ export type RootStackParamList = {
   ReviewDraft: { draftId: string };
   Detail: { itemId: string };
   AddItem: undefined;
-  Crop: { imageUri: string; onCropComplete: (uri: string) => void };
+  Crop: { imageUri: string };
   AddMeal: {
     prefillIngredientIds?: string[];
     prefillName?: string;

@@ -70,11 +70,6 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
 
-      // Scan history subcollection
-      match /scans/{scanId} {
-        allow read, write: if isOwner(userId);
-      }
-
       // Saved recipes subcollection
       match /savedRecipes/{recipeId} {
         allow read: if isOwner(userId);

@@ -1,22 +1,10 @@
 // Cloud Function para normalizar ingredientes escaneados
 import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
-import axios from "axios";
+import { levenshteinSimilarity } from "./utils/levenshtein";
+import { loadVocabulary, VocabularyMap as NormalizedVocabulary } from "./utils/vocabulary";
+import { callOllama } from "./utils/ollama";
 
 // ========== INTERFACES ==========
-
-interface NormalizedIngredient {
-  normalized: string;
-  synonyms: string[];
-  category: string;
-  subcategory?: string;
-  categorySpanish?: string; // Categoría en español para la app
-  frequency: number;
-}
-
-interface NormalizedVocabulary {
-  [key: string]: NormalizedIngredient;
-}
 
 interface NormalizationResult {
   scannedName: string;
@@ -26,83 +14,7 @@ interface NormalizationResult {
   method: "exact" | "synonym" | "partial" | "fuzzy" | "llm" | "none";
 }
 
-// ========== CACHÉ DEL VOCABULARIO ==========
-
-let vocabularyCache: NormalizedVocabulary | null = null;
-let vocabularyCacheTime: number = 0;
-const CACHE_TTL_MS = 3600000; // 1 hora
-
-/**
- * Carga el vocabulario normalizado desde Firebase Storage
- */
-async function loadVocabulary(): Promise<NormalizedVocabulary> {
-  const now = Date.now();
-
-  // Usar caché si está disponible y no ha expirado
-  if (vocabularyCache && now - vocabularyCacheTime < CACHE_TTL_MS) {
-    return vocabularyCache;
-  }
-
-  console.log("📥 Cargando vocabulario normalizado desde Storage...");
-
-  const bucket = admin.storage().bucket();
-  const file = bucket.file("normalized-ingredients.json");
-
-  const [contents] = await file.download();
-  const data = JSON.parse(contents.toString());
-
-  vocabularyCache = data.ingredients;
-  vocabularyCacheTime = now;
-
-  console.log(`✅ Vocabulario cargado: ${Object.keys(vocabularyCache!).length} ingredientes`);
-
-  return vocabularyCache!;
-}
-
 // ========== ALGORITMOS DE MATCHING ==========
-
-/**
- * Calcula similitud de Levenshtein (normalizada 0-1)
- */
-function levenshteinSimilarity(str1: string, str2: string): number {
-  const longer = str1.length > str2.length ? str1 : str2;
-  const shorter = str1.length > str2.length ? str2 : str1;
-
-  if (longer.length === 0) {
-    return 1.0;
-  }
-
-  const distance = levenshteinDistance(longer, shorter);
-  return (longer.length - distance) / longer.length;
-}
-
-function levenshteinDistance(str1: string, str2: string): number {
-  const matrix: number[][] = [];
-
-  for (let i = 0; i <= str2.length; i++) {
-    matrix[i] = [i];
-  }
-
-  for (let j = 0; j <= str1.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  for (let i = 1; i <= str2.length; i++) {
-    for (let j = 1; j <= str1.length; j++) {
-      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        );
-      }
-    }
-  }
-
-  return matrix[str2.length][str1.length];
-}
 
 /**
  * Limpia términos de marketing/etiquetas ecológicas del nombre del ingrediente
@@ -174,7 +86,7 @@ async function normalizeIngredient(
 
   // 2. Búsqueda en sinónimos
   for (const [, data] of Object.entries(vocabulary)) {
-    if (data.synonyms.some((syn) => syn.toLowerCase() === scannedLower)) {
+    if (data.synonyms?.some((syn) => syn.toLowerCase() === scannedLower)) {
       return {
         scannedName,
         normalizedName: data.normalized,
@@ -207,7 +119,7 @@ async function normalizeIngredient(
 
     // Comparar con sinónimos
     const scoreSynonyms = Math.max(
-      ...data.synonyms.map((syn) => levenshteinSimilarity(scannedLower, syn.toLowerCase()))
+      ...(data.synonyms ?? []).map((syn) => levenshteinSimilarity(scannedLower, syn.toLowerCase()))
     );
 
     const score = Math.max(scoreNormalized, scoreSynonyms);
@@ -299,25 +211,7 @@ Examples:
 Normalized ingredient:`;
 
   try {
-    // Intentar con Ollama local primero
-    const ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434/api/generate";
-
-    const response = await axios.post(
-      ollamaUrl,
-      {
-        model: "llama3.1:8b",
-        prompt: prompt,
-        stream: false,
-        options: {
-          temperature: 0.1,
-        },
-      },
-      {
-        timeout: 30000,
-      }
-    );
-
-    const result = response.data.response.trim().toLowerCase();
+    const result = (await callOllama(prompt, 30000)).trim().toLowerCase();
 
     // Validar que el resultado existe en el vocabulario
     if (vocabulary[result]) {
@@ -326,7 +220,7 @@ Normalized ingredient:`;
 
     // Buscar en sinónimos
     for (const [, data] of Object.entries(vocabulary)) {
-      if (data.synonyms.some((syn) => syn.toLowerCase() === result)) {
+      if (data.synonyms?.some((syn) => syn.toLowerCase() === result)) {
         return data.normalized;
       }
     }

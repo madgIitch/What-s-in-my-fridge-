@@ -29,13 +29,14 @@ export const parseReceipt = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("unauthenticated", "Usuario debe estar autenticado");
   }
 
-  const { imageUri } = data;
+  const { imageUri, locale } = data;
   if (!imageUri) {
     throw new functions.https.HttpsError("invalid-argument", "imageUri es requerido");
   }
 
   const start = Date.now();
   const userId = isEmulator ? "test-user-123" : context.auth!.uid;
+  const parserConfig = getParserConfig(locale);
 
   try {
     // Enforce server-side monthly usage limit (skip in emulator)
@@ -48,23 +49,24 @@ export const parseReceipt = functions.https.onCall(async (data, context) => {
     // Usar texto simulado en emuladores, Vision API en producción
     if (isEmulator) {
       console.log("🔧 Modo emulador: usando texto OCR simulado");
-      rawText = `  
-E-Center Berlin  
-Kaiserin-Augusta-Str. 123  
-Tel: 030-12345678  
-  
-Datum: 28.01.2025  
-  
-Milch Frisch                 1,20 A  
-Brot Vollkorn                2,50 A  
-Tomate Bio                   3,30 A  
-Käse Gouda                   4,80 A  
-  
-SUMME  
-11,80  
-  
-MwSt 7%: 0,83  
-Vielen Dank für Ihren Einkauf!  
+      rawText = `
+Mercadona S.A.
+C/ Gran Via 45
+Tel: 910-123456
+
+Fecha: 28/01/2025 Hora: 11:32
+
+LECHE FRESCA 1L              0,65 A
+PAN INTEGRAL 500G            1,20 A
+TOMATE 1KG                   1,85 A
+QUESO MANCHEGO 250G          3,50 B
+
+TOTAL
+7,20
+
+IVA 4%: 0,08
+IVA 10%: 0,37
+Gracias por su compra
       `.trim();
     } else {
       console.log("🔐 Modo producción: usando Vision API");
@@ -74,7 +76,7 @@ Vielen Dank für Ihren Einkauf!
     }
 
     // Parsear texto extraído
-    const parsedInfo = parseReceiptText(rawText);
+    const parsedInfo = parseReceiptText(rawText, parserConfig);
 
     // Crear draft entity
     const draft: ParsedDraftEntity = {
@@ -124,11 +126,107 @@ Vielen Dank für Ihren Einkauf!
   }
 });
 
+// ── Locale-aware parser config ──────────────────────────────────────────────
+
+interface ReceiptParserConfig {
+  /** Keywords that appear on the line preceding the total amount. */
+  totalKeywords: string[];
+  /** Substrings that identify non-product (metadata) lines. */
+  metadataKeywords: string[];
+  /** Pattern to detect address lines. */
+  addressPattern: RegExp;
+  /** Pattern for a standalone product name line (no price on same line). */
+  namePattern: RegExp;
+  /** Hints used to identify the merchant line. */
+  merchantKeywords: string[];
+  /** Decimal separator used by this locale. */
+  decimalSeparator: "," | ".";
+  /** Fallback currency when none is detected from the receipt text. */
+  defaultCurrency: string;
+}
+
+const LOCALE_CONFIGS: Record<string, ReceiptParserConfig> = {
+  "de-DE": {
+    totalKeywords: ["SUMME", "GESAMT", "ZU ZAHLEN"],
+    metadataKeywords: [
+      "Tel", "UID", "Steuer", "SUMME", "MwSt", "Vielen Dank",
+      "Posten", "EUR", "Visa", "Beleg", "Datum", "Uhrzeit",
+      "Trace", "Bezahlung", "Contactless", "Debit",
+    ],
+    addressPattern: /(str\.?|strasse|damm|weg|platz|allee|gasse)\b/i,
+    namePattern: /^([A-ZÄÖÜ&][A-ZÄÖÜa-zäöü&.\s-]+)$/,
+    merchantKeywords: ["Center", "Market", "Markt", "E-"],
+    decimalSeparator: ",",
+    defaultCurrency: "EUR",
+  },
+  "es-ES": {
+    totalKeywords: ["TOTAL", "IMPORTE", "A PAGAR", "TOTAL A PAGAR", "TOTAL FACTURA"],
+    metadataKeywords: [
+      "Tel", "NIF", "CIF", "IVA", "Gracias", "TOTAL", "Fecha",
+      "Hora", "Ticket", "Factura", "Base", "Cuota", "Subtotal",
+      "Visa", "Contactless", "Debit", "EUR",
+    ],
+    addressPattern: /(calle|c\/|avda|av\.|plaza|paseo|pol\.)\b/i,
+    namePattern: /^([A-ZÁÉÍÓÚÜÑ&][A-ZÁÉÍÓÚÜÑa-záéíóúüñ&.\s-]+)$/,
+    merchantKeywords: [
+      "Mercadona", "Carrefour", "Lidl", "Dia", "Eroski",
+      "El Corte", "Supercor", "Supermercado", "Alimentación",
+    ],
+    decimalSeparator: ",",
+    defaultCurrency: "EUR",
+  },
+  "es-MX": {
+    totalKeywords: ["TOTAL", "TOTAL A PAGAR", "IMPORTE TOTAL", "SUBTOTAL"],
+    metadataKeywords: [
+      "Tel", "RFC", "IVA", "Gracias", "TOTAL", "Fecha",
+      "Hora", "Ticket", "Folio", "Subtotal", "Visa",
+      "Contactless", "Debit", "MXN",
+    ],
+    addressPattern: /(calle|col\.|colonia|av\.|blvd\.|fracc\.)\b/i,
+    namePattern: /^([A-ZÁÉÍÓÚÜÑ&][A-ZÁÉÍÓÚÜÑa-záéíóúüñ&.\s-]+)$/,
+    merchantKeywords: [
+      "Walmart", "Soriana", "Oxxo", "Chedraui", "Costco",
+      "La Comer", "Superama", "HEB",
+    ],
+    decimalSeparator: ".",
+    defaultCurrency: "MXN",
+  },
+};
+
+const DEFAULT_LOCALE = process.env.RECEIPT_LOCALE ?? "es-ES";
+
+function getParserConfig(locale?: string): ReceiptParserConfig {
+  const key = locale ?? DEFAULT_LOCALE;
+  return LOCALE_CONFIGS[key] ?? LOCALE_CONFIGS["es-ES"];
+}
+
+/** Detects the currency from symbols or keywords in the receipt text. */
+function detectCurrency(text: string, fallback: string): string {
+  if (text.includes("€")) return "EUR";
+  if (/\bEUR\b/.test(text)) return "EUR";
+  if (text.includes("£")) return "GBP";
+  if (/\bGBP\b/.test(text)) return "GBP";
+  if (/\bMXN\b/.test(text) || /\$\s*\d/.test(text) && /RFC|OXXO|Walmart/i.test(text)) return "MXN";
+  if (text.includes("$") && /\bUSD\b/.test(text)) return "USD";
+  if (text.includes("$")) return "USD";
+  return fallback;
+}
+
+/** Parses a locale-formatted decimal string into a JS number. */
+function parseDecimal(integer: string, fraction: string): number {
+  return parseFloat(`${integer}.${fraction}`);
+}
+
+// ── Main parser ──────────────────────────────────────────────────────────────
+
 /**
- * Parsea texto OCR para extraer información estructurada del ticket
- * Lógica adaptada de ScanVm.kt:162-403 del proyecto Android
+ * Parsea texto OCR para extraer información estructurada del ticket.
+ * Acepta un config de locale para soportar diferentes mercados.
  */
-function parseReceiptText(text: string): {
+function parseReceiptText(
+  text: string,
+  config: ReceiptParserConfig = LOCALE_CONFIGS["es-ES"]
+): {
   merchant: string | null;
   date: string | null;
   currency: string;
@@ -137,226 +235,168 @@ function parseReceiptText(text: string): {
   unrecognizedLines: string[];
 } {
   const lines = text.split("\n");
+  const dec = config.decimalSeparator === "," ? "," : "\\.";
 
-  // Buscar merchant (tiendas conocidas)
-  const merchantCandidates = lines
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
+  // ── Merchant ──
+  const merchantCandidates = lines.map((l) => l.trim()).filter((l) => l.length > 0);
   const merchant =
     merchantCandidates.find(
-      (line) =>
-        (line.includes("Center") || line.includes("Market") || line.includes("E-")) &&
-        !/\d/.test(line)
+      (line) => config.merchantKeywords.some((kw) => line.includes(kw)) && !/\d/.test(line)
     ) ||
     merchantCandidates.find((line) => !/\d/.test(line)) ||
     null;
 
-  // Buscar fecha con regex
+  // ── Date ──
   const dateRegex = /(\d{2}[./]\d{2}[./]\d{4})|(\d{4}-\d{2}-\d{2})/;
   const dateMatch = text.match(dateRegex);
   const date = dateMatch ? dateMatch[0].substring(0, 10) : null;
 
-  // Buscar total después de "SUMME"
-  const summeIndex = lines.findIndex((line) => line.trim().startsWith("SUMME"));
+  // ── Currency ──
+  const currency = detectCurrency(text, config.defaultCurrency);
+
+  // ── Total ──
+  const totalLineIndex = lines.findIndex((line) =>
+    config.totalKeywords.some((kw) => line.trim().toUpperCase().startsWith(kw))
+  );
   let total: number | null = null;
-  if (summeIndex >= 0) {
-    for (let i = summeIndex + 1; i < Math.min(summeIndex + 30, lines.length); i++) {
-      const amountMatch = lines[i].trim().match(/^(\d+),(\d{2})$/);
-      if (amountMatch) {
-        total = parseFloat(`${amountMatch[1]}.${amountMatch[2]}`);
-        break;
+
+  // Try to find total on the same line first (e.g. "TOTAL   7,20")
+  if (totalLineIndex >= 0) {
+    const totalLineText = lines[totalLineIndex];
+    const inlineMatch = totalLineText.match(new RegExp(`(\\d+)${dec}(\\d{2})\\s*$`));
+    if (inlineMatch) {
+      total = parseDecimal(inlineMatch[1], inlineMatch[2]);
+    } else {
+      // Look on the lines immediately after
+      for (let i = totalLineIndex + 1; i < Math.min(totalLineIndex + 5, lines.length); i++) {
+        const amountMatch = lines[i].trim().match(new RegExp(`^(\\d+)${dec}(\\d{2})$`));
+        if (amountMatch) {
+          total = parseDecimal(amountMatch[1], amountMatch[2]);
+          break;
+        }
       }
     }
   }
 
-  // Parsear items individuales
-  const items: ParsedItem[] = [];
-  const unrecognizedLines: string[] = [];
-  const productNames: string[] = [];
-  const productPrices: number[] = [];
-
-  // Patrones regex para diferentes formatos de tickets
-  const namePattern = /^([A-ZÄÖÜ&][A-ZÄÖÜa-zäöü&.\s-]+)$/;
-  const pricePatternA = /^(\d+),(\d{2})\s+A$/;
-  const pricePatternB = /^(\d+),?\s*(\d{2})\s+B$/;
-  const weightPattern = /^\s*(\d+),?\s*(\d+)\s*kg\s*x\s*(\d+),(\d{2})\s*EUR\/kg/;
-  // Quantity + item name pattern (e.g., "3 GO BIO TOMATEN")
-  const quantityItemPattern = /^(\d+)\s+([A-ZÄÖÜ][A-ZÄÖÜa-zäöü&.\s-]+)$/;
-  // Unit price pattern (e.g., "á 2,09" or "á 2,09     6,27")
-  const unitPricePattern = /^á\s*(\d+)[,.](\d{2})(?:\s+(\d+)[,.](\d{2}))?$/;
+  // ── Line patterns ──
+  const priceWithTaxSuffix = new RegExp(`^(\\d+)${dec}(\\d{2})\\s+[AB]$`);
+  const weightPattern = new RegExp(
+    `^\\s*(\\d+)${dec}?\\s*(\\d+)\\s*kg\\s*x\\s*(\\d+)${dec}(\\d{2})\\s*(EUR|MXN|USD|GBP)?/kg`,
+    "i"
+  );
+  const quantityItemPattern = new RegExp(
+    `^(\\d+)\\s+([A-ZÁÉÍÓÚÜÑÄÖÜ][A-ZÁÉÍÓÚÜÑÄÖÜa-záéíóúüñäöü&.\\s-]+)$`
+  );
+  const unitPricePattern = new RegExp(`^á\\s*(\\d+)[${dec}.](\\d{2})(?:\\s+(\\d+)[${dec}.](\\d{2}))?$`);
+  // Inline price at end of line: "LECHE ENTERA 1L   0,65 A" or "TOMATE 1KG   1,85"
+  const inlineNamePricePattern = new RegExp(
+    `^([A-ZÁÉÍÓÚÜÑÄÖÜ][A-ZÁÉÍÓÚÜÑÄÖÜa-záéíóúüñäöü0-9&.\\s%-]+?)\\s{2,}(\\d+)${dec}(\\d{2})(?:\\s+[AB])?$`
+  );
 
   const isMetadataLine = (line: string): boolean => {
     const normalized = line.trim();
-    if (!normalized) {
-      return true;
-    }
-
-    if (merchant && normalized === merchant) {
-      return true;
-    }
-
-    if (
-      normalized.includes("Tel") ||
-      normalized.includes("UID") ||
-      normalized.includes("Steuer") ||
-      normalized.includes("SUMME") ||
-      normalized.includes("MwSt") ||
-      normalized.includes("Vielen Dank") ||
-      normalized.includes("Posten") ||
-      normalized === "EUR" ||
-      normalized.includes("Visa") ||
-      normalized.includes("Beleg") ||
-      normalized.includes("Datum") ||
-      normalized.includes("Uhrzeit") ||
-      normalized.includes("Trace") ||
-      normalized.includes("Bezahlung") ||
-      normalized.includes("Contactless") ||
-      normalized.includes("Debit")
-    ) {
-      return true;
-    }
-
-    if (/^\d{5}\b/.test(normalized)) {
-      return true;
-    }
-
-    if (/^\d{1,2}:\d{2}:\d{2}/.test(normalized)) {
-      return true;
-    }
-
-    if (/(str\.?|strasse|damm|weg|platz|allee|gasse)\b/i.test(normalized)) {
-      return true;
-    }
-
+    if (!normalized) return true;
+    if (merchant && normalized === merchant) return true;
+    if (config.metadataKeywords.some((kw) => normalized.includes(kw))) return true;
+    if (/^\d{5}\b/.test(normalized)) return true;          // postal code
+    if (/^\d{1,2}:\d{2}(:\d{2})?/.test(normalized)) return true; // time
+    if (config.addressPattern.test(normalized)) return true;
     return false;
   };
+
+  // ── Parse items ──
+  const items: ParsedItem[] = [];
+  const unrecognizedLines: string[] = [];
+  const pendingNames: string[] = [];
+  const pendingPrices: number[] = [];
 
   let i = 0;
   while (i < lines.length) {
     const line = lines[i].trim();
 
-    if (isMetadataLine(line)) {
-      i++;
-      continue;
-    }
-
-    // Ignorar líneas vacías y metadata
-    if (
-      !line ||
-      line.length < 2 ||
-      line.includes("Tel") ||
-      line.includes("UID") ||
-      line.includes("Steuer") ||
-      line.includes("SUMME") ||
-      line.includes("MwSt") ||
-      line.includes("Vielen Dank")
-    ) {
+    if (isMetadataLine(line) || !line || line.length < 2) {
       i++;
       continue;
     }
 
     let matched = false;
 
-    // Capturar precio formato A (E-Center)
-    const priceMatchA = line.match(pricePatternA);
-    if (priceMatchA) {
-      const price = parseFloat(`${priceMatchA[1]}.${priceMatchA[2]}`);
-      productPrices.push(price);
+    // 1. Inline name + price on same line (most Spanish receipts)
+    const inlineMatch = line.match(inlineNamePricePattern);
+    if (inlineMatch) {
+      items.push({
+        name: inlineMatch[1].trim(),
+        quantity: 1,
+        price: parseDecimal(inlineMatch[2], inlineMatch[3]),
+      });
       matched = true;
       i++;
       continue;
     }
 
-    // Capturar precio formato B (Kaiserin)
-    const priceMatchB = line.match(pricePatternB);
-    if (priceMatchB) {
-      const price = parseFloat(`${priceMatchB[1]}.${priceMatchB[2]}`);
-      productPrices.push(price);
+    // 2. Standalone price line with tax suffix (e.g. "1,20 A")
+    const priceMatch = line.match(priceWithTaxSuffix);
+    if (priceMatch) {
+      pendingPrices.push(parseDecimal(priceMatch[1], priceMatch[2]));
       matched = true;
       i++;
       continue;
     }
 
-    // Capturar cantidad + nombre + precio unitario en siguiente línea (e.g., "3 GO BIO TOMATEN")
+    // 3. Quantity + name, price on next line (e.g. "3 TOMATES" / "á 1,09")
     const quantityItemMatch = line.match(quantityItemPattern);
     if (quantityItemMatch && i + 1 < lines.length) {
       const quantity = parseInt(quantityItemMatch[1], 10);
       const name = quantityItemMatch[2].trim();
       const nextLine = lines[i + 1].trim();
       const unitPriceMatch = nextLine.match(unitPricePattern);
-
       if (unitPriceMatch) {
-        const unitPrice = parseFloat(`${unitPriceMatch[1]}.${unitPriceMatch[2]}`);
-        // Si el precio total está en la misma línea, usarlo; sino calcularlo
-        const totalPrice = unitPriceMatch[3] && unitPriceMatch[4] ?
-          parseFloat(`${unitPriceMatch[3]}.${unitPriceMatch[4]}`) :
-          unitPrice * quantity;
-
-        items.push({
-          name: quantity > 1 ? `${name} (${quantity}x)` : name,
-          quantity,
-          price: totalPrice,
-        });
-        matched = true;
-        i += 2; // Saltar nombre + línea de precio unitario
-        continue;
-      }
-    }
-
-    // Capturar nombre + peso en siguiente línea
-    const nameMatch = line.match(namePattern);
-    if (nameMatch && i + 1 < lines.length) {
-      const nextLine = lines[i + 1];
-      const weightMatch = nextLine.match(weightPattern);
-
-      if (weightMatch) {
-        const weight = parseFloat(`${weightMatch[1]}.${weightMatch[2]}`);
-        const pricePerKg = parseFloat(`${weightMatch[3]}.${weightMatch[4]}`);
-        const totalPrice = pricePerKg * weight;
-
-        items.push({
-          name: `${nameMatch[1].trim()} (${weight}kg)`,
-          quantity: 1,
-          price: totalPrice,
-        });
+        const unitPrice = parseDecimal(unitPriceMatch[1], unitPriceMatch[2]);
+        const totalPrice =
+          unitPriceMatch[3] && unitPriceMatch[4]
+            ? parseDecimal(unitPriceMatch[3], unitPriceMatch[4])
+            : unitPrice * quantity;
+        items.push({ name: quantity > 1 ? `${name} (${quantity}x)` : name, quantity, price: totalPrice });
         matched = true;
         i += 2;
         continue;
       }
+    }
 
-      // Guardar nombre para emparejar después
+    // 4. Name line followed by weight line (e.g. "LOMO" / "0,350 kg x 12,50 EUR/kg")
+    const nameMatch = line.match(config.namePattern);
+    if (nameMatch && i + 1 < lines.length) {
+      const nextLine = lines[i + 1];
+      const weightMatch = nextLine.match(weightPattern);
+      if (weightMatch) {
+        const weight = parseDecimal(weightMatch[1], weightMatch[2]);
+        const pricePerKg = parseDecimal(weightMatch[3], weightMatch[4]);
+        items.push({ name: `${nameMatch[1].trim()} (${weight}kg)`, quantity: 1, price: pricePerKg * weight });
+        matched = true;
+        i += 2;
+        continue;
+      }
+      // Standalone name line — queue for deferred price pairing
       const name = nameMatch[1].trim();
-      if (name.length > 3 && !name.includes("Berlin")) {
-        productNames.push(name);
+      if (name.length > 2) {
+        pendingNames.push(name);
         matched = true;
         i++;
         continue;
       }
     }
 
-    // Línea no reconocida
-    if (!matched && line.length > 2) {
+    if (!matched) {
       unrecognizedLines.push(line);
     }
     i++;
   }
 
-  // Emparejar nombres con precios
-  const minSize = Math.min(productNames.length, productPrices.length);
+  // Pair any deferred names with deferred prices (German-style layout)
+  const minSize = Math.min(pendingNames.length, pendingPrices.length);
   for (let j = 0; j < minSize; j++) {
-    items.push({
-      name: productNames[j],
-      quantity: 1,
-      price: productPrices[j],
-    });
+    items.push({ name: pendingNames[j], quantity: 1, price: pendingPrices[j] });
   }
 
-  return {
-    merchant,
-    date,
-    currency: "EUR",
-    total,
-    items,
-    unrecognizedLines,
-  };
+  return { merchant, date, currency, total, items, unrecognizedLines };
 }

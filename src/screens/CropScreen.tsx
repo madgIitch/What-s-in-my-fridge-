@@ -16,6 +16,7 @@ import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { Button } from '../components/common/Button';
 import { colors, typography, spacing } from '../theme';
 import { X } from 'lucide-react-native';
+import { useCropStore } from '../stores/useCropStore';
 
 type CropScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Crop'>;
 type CropScreenRouteProp = RouteProp<RootStackParamList, 'Crop'>;
@@ -28,7 +29,8 @@ interface Props {
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const CropScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { imageUri, onCropComplete } = route.params;
+  const { imageUri } = route.params;
+  const setCroppedUri = useCropStore((s) => s.setCroppedUri);
   const [processing, setProcessing] = useState(false);
 
   const handleCrop = async () => {
@@ -42,7 +44,7 @@ const CropScreen: React.FC<Props> = ({ navigation, route }) => {
         { compress: 0.8, format: SaveFormat.JPEG }
       );
 
-      onCropComplete(manipResult.uri);
+      setCroppedUri(manipResult.uri);
       navigation.goBack();
     } catch (error) {
       console.error('Error cropping image:', error);

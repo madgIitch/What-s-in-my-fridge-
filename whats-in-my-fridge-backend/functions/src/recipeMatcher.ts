@@ -1,18 +1,13 @@
 import * as fs from "fs";
 import * as path from "path";
 import { Recipe, RecipeMatch } from "./types";
+import { levenshteinSimilarity } from "./utils/levenshtein";
+import { loadVocabulary, VocabularyMap } from "./utils/vocabulary";
 
 let cachedRecipes: Recipe[] | null = null;
 let recipeCategoryIndex: Map<string, Recipe[]> | null = null;
 let synonymCategoryIndex: Map<string, string> | null = null;
-
-type VocabularyIngredient = {
-  categorySpanish?: string;
-  category?: string;
-  synonyms?: string[];
-};
-
-type VocabularyMap = Record<string, VocabularyIngredient>;
+let lastVocabulary: VocabularyMap | null = null;
 
 type NormalizedInventoryItem = {
   original: string;
@@ -93,38 +88,6 @@ function normalizeInventoryItems(inventoryItems: string[]): NormalizedInventoryI
   });
 }
 
-function calculateSimilarityNormalized(s1: string, s2: string): number {
-  if (s1 === s2) return 1.0;
-
-  const len1 = s1.length;
-  const len2 = s2.length;
-
-  if (len1 === 0 || len2 === 0) return 0;
-
-  // Levenshtein distance
-  const matrix: number[][] = [];
-  for (let i = 0; i <= len1; i++) {
-    matrix[i] = [i];
-  }
-  for (let j = 0; j <= len2; j++) {
-    matrix[0][j] = j;
-  }
-
-  for (let i = 1; i <= len1; i++) {
-    for (let j = 1; j <= len2; j++) {
-      const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
-      matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1, // deletion
-        matrix[i][j - 1] + 1, // insertion
-        matrix[i - 1][j - 1] + cost // substitution
-      );
-    }
-  }
-
-  const distance = matrix[len1][len2];
-  const maxLen = Math.max(len1, len2);
-  return 1 - distance / maxLen;
-}
 
 /**
  * Verifica si un ingrediente de receta coincide con algún item del inventario
@@ -194,7 +157,7 @@ function matchIngredient(
     }
 
     // Estrategia 4: Fuzzy matching (fallback)
-    const similarity = calculateSimilarityNormalized(normalizedIngredient, normalizedItem);
+    const similarity = levenshteinSimilarity(normalizedIngredient, normalizedItem);
     if (similarity >= threshold && similarity > bestScore) {
       bestScore = similarity;
       bestMatch = item.original;
@@ -275,11 +238,6 @@ import { logger } from "firebase-functions";
 import * as admin from "firebase-admin";
 import { checkAndIncrementUsage, FREE_RECIPE_LIMIT } from "./usageLimits";
 
-// Cache del vocabulario normalizado
-let vocabularyCache: VocabularyMap | null = null;
-let vocabularyCacheTime: number = 0;
-const CACHE_TTL_MS = 3600000; // 1 hora
-
 function buildSynonymCategoryIndex(vocabulary: VocabularyMap): Map<string, string> {
   const index = new Map<string, string>();
 
@@ -301,33 +259,16 @@ function buildSynonymCategoryIndex(vocabulary: VocabularyMap): Map<string, strin
   return index;
 }
 
-/**
- * Carga el vocabulario normalizado desde Firebase Storage
- */
-async function loadVocabulary(): Promise<VocabularyMap> {
-  const now = Date.now();
+async function loadVocabularyWithIndexes(): Promise<VocabularyMap> {
+  const vocabulary = await loadVocabulary();
 
-  // Usar caché si está disponible y no ha expirado
-  if (vocabularyCache && now - vocabularyCacheTime < CACHE_TTL_MS) {
-    return vocabularyCache;
+  if (vocabulary !== lastVocabulary) {
+    lastVocabulary = vocabulary;
+    synonymCategoryIndex = buildSynonymCategoryIndex(vocabulary);
+    recipeCategoryIndex = null;
   }
 
-  console.log("📥 Cargando vocabulario normalizado desde Storage...");
-
-  const bucket = admin.storage().bucket();
-  const file = bucket.file("normalized-ingredients.json");
-
-  const [contents] = await file.download();
-  const data = JSON.parse(contents.toString());
-
-  vocabularyCache = (data.ingredients ?? {}) as VocabularyMap;
-  vocabularyCacheTime = now;
-  synonymCategoryIndex = buildSynonymCategoryIndex(vocabularyCache);
-  recipeCategoryIndex = null;
-
-  console.log(`✅ Vocabulario cargado: ${Object.keys(vocabularyCache!).length} ingredientes`);
-
-  return vocabularyCache!;
+  return vocabulary;
 }
 
 /**
@@ -492,7 +433,7 @@ export const getRecipeSuggestions = functions
       await checkAndIncrementUsage(userId, "recipeCallsUsed", FREE_RECIPE_LIMIT);
 
       // Cargar vocabulario para obtener categorías
-      const vocabulary = await loadVocabulary();
+      const vocabulary = await loadVocabularyWithIndexes();
 
       // Obtener items del inventario del usuario desde Firestore
       const inventorySnapshot = await admin
@@ -561,6 +502,7 @@ export const getRecipeSuggestions = functions
               return !normalizedMatches.has(normalizeString(normalized));
             });
           })(),
+          ingredientsWithMeasures: match.recipe.ingredientsWithMeasures ?? [],
           instructions: match.recipe.instructions,
         })),
       };

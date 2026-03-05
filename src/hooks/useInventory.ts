@@ -59,8 +59,8 @@ export const useInventory = () => {
         // Continue without normalization if it fails
       }
 
-      await database.write(async () => {
-        const newItem = await collections.foodItems.create((item) => {
+      const newItem = await database.write(async () => {
+        return collections.foodItems.create((item) => {
           item.name = itemData.name;
           item.normalizedName = normalizedName || undefined;
           item.expiryDate = itemData.expiryDate;
@@ -72,10 +72,10 @@ export const useInventory = () => {
           item.addedAt = Date.now();
           item.source = itemData.source;
         });
-
-        // Sync to Firestore
-        await syncToFirestore(newItem);
       });
+
+      // Sync to Firestore
+      await syncToFirestore(newItem);
 
       store.setError(null);
     } catch (error: any) {
