@@ -1,7 +1,8 @@
-﻿// whats-in-my-fridge-backend/functions/src/normalizeRecipesLlama.ts  
-import * as fs from "fs";  
-import * as path from "path";  
-import axios from "axios";  
+﻿// whats-in-my-fridge-backend/functions/src/normalizeRecipesLlama.ts
+import * as fs from "fs";
+import * as path from "path";
+import axios from "axios";
+import { OLLAMA_BASE_URL, OLLAMA_MODEL } from "./utils/ollama";
   
 // ========== INTERFACES ==========  
   
@@ -29,8 +30,8 @@ interface Progress {
   
 // ========== CONFIGURACI├ôN ==========  
   
-const OLLAMA_URL = "http://localhost:11434/api/generate";  
-const MODEL = "llama3.1:8b";  
+const OLLAMA_URL = `${OLLAMA_BASE_URL}/api/generate`;
+const MODEL = OLLAMA_MODEL;
 const TIMEOUT = 120000; // 120 segundos  
 const BATCH_SIZE = 10; // Procesamiento paralelo conservador  
 const SAVE_INTERVAL = 50; // Guardar cada 50 recetas  

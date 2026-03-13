@@ -171,64 +171,6 @@ function matchIngredient(
   return bestMatch;
 }
 
-/**
- * Encuentra recetas que se pueden hacer con los items del inventario
- * @param inventoryItems Lista de nombres de items disponibles
- * @param minMatchPercentage Porcentaje mínimo de ingredientes necesarios (default: 0.75)
- * @returns Lista de recetas ordenadas por % de match descendente
- */
-export function findMatchingRecipes(
-  inventoryItems: string[],
-  minMatchPercentage: number = 0.75
-): RecipeMatch[] {
-  const matches: RecipeMatch[] = [];
-  const recipes = getRecipes();
-  const normalizedInventoryItems = normalizeInventoryItems(inventoryItems);
-
-  for (const recipe of recipes) {
-    const matchedIngredients: string[] = [];
-
-    // Usar ingredientsNormalized para hacer el matching (si existe)
-    // pero SIEMPRE calcular el porcentaje basado en la lista original de ingredients
-    const ingredientsForMatching = recipe.ingredientsNormalized || recipe.ingredients;
-    const totalIngredientsCount = recipe.ingredients.length; // Siempre usar la lista original para el conteo
-
-    // Verificar cada ingrediente de la receta
-    for (const ingredient of ingredientsForMatching) {
-      const match = matchIngredient(ingredient, normalizedInventoryItems);
-      if (match) {
-        matchedIngredients.push(match);
-      }
-    }
-
-    // Calcular porcentaje de match basado en la cantidad REAL de ingredientes de la receta
-    const matchPercentage = matchedIngredients.length / totalIngredientsCount;
-    const missingCount = totalIngredientsCount - matchedIngredients.length;
-
-    // Verificar si cumple requisitos mínimos
-    if (
-      matchedIngredients.length >= recipe.minIngredients &&
-      matchPercentage >= minMatchPercentage
-    ) {
-      matches.push({
-        recipe,
-        matchedIngredients,
-        matchPercentage,
-        missingCount,
-      });
-    }
-  }
-
-  // Ordenar por porcentaje de match descendente
-  matches.sort((a, b) => {
-    if (a.missingCount !== b.missingCount) {
-      return a.missingCount - b.missingCount;
-    }
-    return b.matchPercentage - a.matchPercentage;
-  });
-
-  return matches;
-}
 
 /**
  * Cloud Function para obtener sugerencias de recetas
@@ -514,6 +456,9 @@ export const getRecipeSuggestions = functions
         success: false,
         error: error.message,
       });
+      if (error instanceof functions.https.HttpsError) {
+        throw error;
+      }
       throw new functions.https.HttpsError("internal", "Error obteniendo sugerencias de recetas");
     }
   });

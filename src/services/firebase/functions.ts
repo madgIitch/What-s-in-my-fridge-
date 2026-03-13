@@ -66,20 +66,10 @@ const callCallableUrl = async <T>(
 };
 
 /**
- * Parameters for getRecipeSuggestions Cloud Function
+ * Get recipe suggestions from Cloud Function.
+ * The backend reads the user's inventory directly from Firestore.
  */
-export interface GetRecipeSuggestionsParams {
-  ingredients: string[];
-  cookingTime: number;
-}
-
-/**
- * Get recipe suggestions from Cloud Function
- * Equivalent to calling Firebase Functions from Android app
- */
-export const getRecipeSuggestions = async (
-  params: GetRecipeSuggestionsParams
-): Promise<RecipeUi[]> => {
+export const getRecipeSuggestions = async (): Promise<RecipeUi[]> => {
   try {
     const callable = functions().httpsCallableFromUrl(
       getCallableUrl('europe-west1', 'getRecipeSuggestions'),
@@ -87,13 +77,14 @@ export const getRecipeSuggestions = async (
         timeout: 300000, // 5 minutes (300 seconds in milliseconds)
       }
     );
-    const result = await callable(params);
+    const result = await callable({});
 
-    if (!result.data || !result.data.recipes) {
+    const data = result.data as { recipes: RecipeUi[] };
+    if (!data || !data.recipes) {
       throw new Error('Invalid response from Cloud Function');
     }
 
-    return result.data.recipes;
+    return data.recipes;
   } catch (error: any) {
     console.error('Error calling getRecipeSuggestions:', error);
 
@@ -112,18 +103,19 @@ export const getRecipeSuggestions = async (
 /**
  * Parse receipt using Cloud Vision API via Cloud Function
  */
-export const parseReceipt = async (imageUri: string): Promise<string> => {
+export const parseReceipt = async (imageUri: string): Promise<{ draftId: string; draft: any }> => {
   try {
     const callable = functions().httpsCallableFromUrl(
       getCallableUrl('us-central1', 'parseReceipt')
     );
     const result = await callable({ imageUri });
 
-    if (!result.data || !result.data.text) {
+    const data = result.data as { draftId: string; draft: any };
+    if (!data || !data.draftId) {
       throw new Error('Invalid response from Cloud Function');
     }
 
-    return result.data.text;
+    return data;
   } catch (error: any) {
     console.error('Error calling parseReceipt:', error);
 
@@ -131,6 +123,8 @@ export const parseReceipt = async (imageUri: string): Promise<string> => {
       throw new Error('Debes iniciar sesión para escanear recibos');
     } else if (error.code === 'functions/invalid-argument') {
       throw new Error('Imagen inválida');
+    } else if (error.code === 'functions/resource-exhausted') {
+      throw new Error('Has alcanzado el límite de escaneos mensuales');
     }
 
     throw new Error('Error al procesar el recibo');
@@ -140,18 +134,29 @@ export const parseReceipt = async (imageUri: string): Promise<string> => {
 /**
  * Upload receipt image to Firebase Storage and trigger parsing
  */
-export const uploadReceipt = async (imageUri: string): Promise<{ uploadUrl: string }> => {
+export const uploadReceipt = async (imageUri: string): Promise<{ draftId: string; imageUrl: string; draft: any }> => {
   try {
+    // Convert local file URI to base64
+    const fetchResponse = await fetch(imageUri);
+    const blob = await fetchResponse.blob();
+    const imageBase64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string).split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+
     const callable = functions().httpsCallableFromUrl(
       getCallableUrl('us-central1', 'uploadReceipt')
     );
-    const result = await callable({ imageUri });
+    const result = await callable({ imageBase64 });
 
-    if (!result.data || !result.data.uploadUrl) {
+    const data = result.data as { draftId: string; imageUrl: string; draft: any };
+    if (!data || !data.draftId) {
       throw new Error('Invalid response from Cloud Function');
     }
 
-    return result.data;
+    return data;
   } catch (error: any) {
     console.error('Error calling uploadReceipt:', error);
     throw new Error('Error al subir el recibo');

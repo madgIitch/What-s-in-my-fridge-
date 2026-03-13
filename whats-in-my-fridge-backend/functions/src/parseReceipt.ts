@@ -122,6 +122,9 @@ Gracias por su compra
       success: false,
       error: error.message,
     });
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
     throw new functions.https.HttpsError("internal", `Error procesando imagen: ${error.message}`);
   }
 });

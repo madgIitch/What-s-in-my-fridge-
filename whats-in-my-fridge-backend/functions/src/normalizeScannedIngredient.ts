@@ -102,7 +102,7 @@ async function normalizeIngredient(
     if (scannedLower.includes(normalized.toLowerCase())) {
       return {
         scannedName,
-        normalizedName: normalized,
+        normalizedName: data.normalized,
         categorySpanish: data.categorySpanish,
         confidence: 0.8,
         method: "partial",
