@@ -23,6 +23,7 @@ import { RootStackParamList } from '../types';
 import { useFavorites } from '../hooks/useFavorites';
 import { RecipeUi } from '../database/models/RecipeCache';
 import { useSubscription } from '../hooks/useSubscription';
+import { useRecipeJobStore } from '../stores/useRecipeJobStore';
 
 type AddRecipeFromUrlNavigationProp = StackNavigationProp<RootStackParamList, 'AddRecipeFromUrl'>;
 
@@ -41,6 +42,8 @@ const AddRecipeFromUrlScreen = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ParseRecipeFromUrlResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [submittedJobId, setSubmittedJobId] = useState<string | null>(null);
+  const completedJobsQueue = useRecipeJobStore((state) => state.completedJobsQueue);
 
   // Get user inventory for matching
   const inventoryNames = items
@@ -60,10 +63,18 @@ const AddRecipeFromUrlScreen = () => {
     setLoading(true);
     setError(null);
     setResult(null);
+    setSubmittedJobId(null);
 
     try {
-      const data = await parseRecipeFromUrl({ url: url.trim() });
-      setResult(data);
+      const jobId = await useRecipeJobStore.getState().submitJob(url.trim());
+
+      if (jobId === null) {
+        const data = await parseRecipeFromUrl({ url: url.trim() });
+        setResult(data);
+      } else {
+        setSubmittedJobId(jobId);
+      }
+
       if (!isPro) {
         incrementUrlImports();
       }
@@ -74,6 +85,23 @@ const AddRecipeFromUrlScreen = () => {
       setLoading(false);
     }
   };
+
+  React.useEffect(() => {
+    if (!submittedJobId) return;
+
+    const completedJob = completedJobsQueue.find((job) => job.jobId === submittedJobId && job.result);
+    if (!completedJob?.result) return;
+
+    setResult({
+      ingredients: completedJob.result.ingredients,
+      steps: completedJob.result.steps,
+      sourceType: completedJob.sourceType,
+      rawText: completedJob.result.rawText,
+      recipeTitle: completedJob.result.recipeTitle,
+    });
+    useRecipeJobStore.getState().dismissCompleted(submittedJobId);
+    setSubmittedJobId(null);
+  }, [completedJobsQueue, submittedJobId]);
 
   const handleSaveRecipe = async () => {
     if (!result) return;
@@ -195,6 +223,15 @@ const AddRecipeFromUrlScreen = () => {
             <Text style={styles.loadingText}>Analizando receta...</Text>
             <Text style={styles.loadingSubtext}>
               Esto puede tomar 1-2 minutos
+            </Text>
+          </Card>
+        )}
+
+        {!!submittedJobId && !loading && !result && (
+          <Card style={styles.loadingCard}>
+            <Text style={styles.loadingText}>Job enviado</Text>
+            <Text style={styles.loadingSubtext}>
+              Te notificaremos cuando la receta este lista.
             </Text>
           </Card>
         )}

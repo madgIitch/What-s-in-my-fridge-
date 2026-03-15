@@ -278,10 +278,59 @@ export const migrateInventoryNormalization = async (): Promise<{
       throw new Error('Invalid response from Cloud Function');
     }
 
-    return result.data;
+    return result.data as {
+      success: boolean;
+      totalItems: number;
+      updatedCount: number;
+      errorCount: number;
+      updates: Array<{
+        id: string;
+        originalName: string;
+        normalizedName: string;
+        category?: string;
+        method: string;
+        confidence: number;
+      }>;
+    };
   } catch (error: any) {
     console.error('Error calling migrateInventoryNormalization:', error);
     throw new Error('Error al migrar normalización del inventario');
+  }
+};
+
+export interface SubmitRecipeJobParams {
+  url: string;
+}
+
+export interface SubmitRecipeJobResult {
+  jobId: string;
+}
+
+export const submitRecipeJobFn = async (
+  params: SubmitRecipeJobParams
+): Promise<SubmitRecipeJobResult> => {
+  try {
+    const callable = functions().httpsCallableFromUrl(
+      getCallableUrl('europe-west1', 'submitRecipeJob'),
+      {
+        timeout: 30000,
+      }
+    );
+    const result = await callable(params);
+
+    if (!result.data) {
+      throw new Error('Invalid response from Cloud Function');
+    }
+
+    return result.data as SubmitRecipeJobResult;
+  } catch (error: any) {
+    console.error('Error calling submitRecipeJob:', error);
+
+    if (error.code === 'functions/invalid-argument') {
+      throw new Error(error.message || 'URL no valida para flujo asinc');
+    }
+
+    throw new Error(error.message || 'Error al crear el job de receta');
   }
 };
 
@@ -331,7 +380,7 @@ export const parseRecipeFromUrl = async (
       throw new Error('Invalid response from Cloud Function');
     }
 
-    return result.data;
+    return result.data as ParseRecipeFromUrlResult;
   } catch (error: any) {
     console.error('Error calling parseRecipeFromUrl:', error);
 

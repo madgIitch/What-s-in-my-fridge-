@@ -4,6 +4,9 @@ import {parseReceipt} from "./parseReceipt";
 import {getRecipeSuggestions} from "./recipeMatcher";
 import {normalizeScannedIngredient, normalizeScannedIngredientsBatch} from "./normalizeScannedIngredient";
 import {parseRecipeFromUrl} from "./parseRecipeFromUrl";
+import {submitRecipeJob} from "./submitRecipeJob";
+import {processRecipeJob} from "./processRecipeJob";
+import {cleanupRecipeJobs} from "./cleanupRecipeJobs";
 import {createCheckoutSession} from "./stripe/createCheckoutSession";
 import {stripeWebhook} from "./stripe/stripeWebhook";
 import {getSubscriptionStatus} from "./stripe/getSubscriptionStatus";
@@ -25,6 +28,9 @@ export {normalizeScannedIngredient, normalizeScannedIngredientsBatch};
 
 // Función de parsing de recetas desde URLs (YouTube, Instagram, TikTok, blogs)
 export {parseRecipeFromUrl};
+export {submitRecipeJob};
+export {processRecipeJob};
+export {cleanupRecipeJobs};
 
 // ========== Stripe — Sistema de pagos ==========
 export {createCheckoutSession};

@@ -20,7 +20,6 @@ import { colors, typography, spacing } from '../theme';
 import { borderRadius } from '../theme/spacing';
 import { useInventoryStore } from '../stores/useInventoryStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
-import { useUrlRecipeStore } from '../stores/useUrlRecipeStore';
 import { useRecipes } from '../hooks/useRecipes';
 import { useFavorites } from '../hooks/useFavorites';
 import { useSubscription } from '../hooks/useSubscription';
@@ -30,6 +29,9 @@ import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { LoadingNeverito } from '../components/common';
 import { FREE_RECIPE_LIMIT } from '../services/stripe';
+import { ParseRecipeFromUrlResult, parseRecipeFromUrl } from '../services/firebase/functions';
+import { useRecipeJobStore } from '../stores/useRecipeJobStore';
+import RecipeJobProgress from '../components/RecipeJobProgress';
 
 type RecipesNavigationProp = StackNavigationProp<RootStackParamList, 'RecipesTab'>;
 
@@ -53,11 +55,12 @@ const RecipesProScreen = () => {
   const { recipes, loading, error, getRecipeSuggestions } = useRecipes();
   const { isFavorite, toggleFavorite, addFavorite } = useFavorites();
 
-  const {
-    urlInput, setUrlInput,
-    urlLoading, urlResult, urlError,
-    parseUrlRecipe, clearUrlState,
-  } = useUrlRecipeStore();
+  const [urlInput, setUrlInput] = useState('');
+  const [urlLoading, setUrlLoading] = useState(false);
+  const [urlResult, setUrlResult] = useState<ParseRecipeFromUrlResult | null>(null);
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const [submittedJobId, setSubmittedJobId] = useState<string | null>(null);
+  const completedJobsQueue = useRecipeJobStore((state) => state.completedJobsQueue);
 
   const [localCookingTime, setLocalCookingTime] = useState<number>(cookingTime);
   const [selectedIngredientFilters, setSelectedIngredientFilters] = useState<string[]>([]);
@@ -142,6 +145,14 @@ const RecipesProScreen = () => {
 
   const handleRecipeModeChange = (mode: 'local' | 'url') => {
     setRecipeMode(mode);
+  };
+
+  const clearUrlState = () => {
+    setUrlInput('');
+    setUrlLoading(false);
+    setUrlResult(null);
+    setUrlError(null);
+    setSubmittedJobId(null);
   };
 
 
@@ -243,20 +254,54 @@ const RecipesProScreen = () => {
   };
 
   // --- URL mode handlers ---
-  const handleParseUrl = () => {
+  const handleParseUrl = async () => {
     if (!canUseUrlImports) {
       navigation.navigate('Paywall', { source: 'url_recipes' });
       return;
     }
-    if (!urlInput.trim()) return;
-    parseUrlRecipe(urlInput.trim())
-      .then(() => {
-        if (!isPro) incrementUrlImports();
-      })
-      .catch(() => {
-        // error is already managed by useUrlRecipeStore
-      });
+    if (!urlInput.trim()) {
+      setUrlError('Introduce una URL valida');
+      return;
+    }
+
+    setUrlLoading(true);
+    setUrlError(null);
+    setUrlResult(null);
+    setSubmittedJobId(null);
+
+    try {
+      const jobId = await useRecipeJobStore.getState().submitJob(urlInput.trim());
+
+      if (jobId === null) {
+        const data = await parseRecipeFromUrl({ url: urlInput.trim() });
+        setUrlResult(data);
+      } else {
+        setSubmittedJobId(jobId);
+      }
+
+      if (!isPro) incrementUrlImports();
+    } catch (error: any) {
+      setUrlError(error?.message || 'Error al procesar la receta. Intenta con otra URL.');
+    } finally {
+      setUrlLoading(false);
+    }
   };
+
+  useEffect(() => {
+    if (!submittedJobId) return;
+    const completedJob = completedJobsQueue.find((job) => job.jobId === submittedJobId && job.result);
+    if (!completedJob?.result) return;
+
+    setUrlResult({
+      ingredients: completedJob.result.ingredients,
+      steps: completedJob.result.steps,
+      sourceType: completedJob.sourceType,
+      rawText: completedJob.result.rawText,
+      recipeTitle: completedJob.result.recipeTitle,
+    });
+    useRecipeJobStore.getState().dismissCompleted(submittedJobId);
+    setSubmittedJobId(null);
+  }, [completedJobsQueue, submittedJobId]);
 
   const urlMatchedIngredients = urlResult?.ingredients.filter((ing) =>
     ingredientNames.some((inv) =>
@@ -377,6 +422,8 @@ const RecipesProScreen = () => {
 
       {recipeMode === 'url' ? (
         <>
+          <RecipeJobProgress />
+
           {/* URL Input */}
           <Card style={styles.urlInputCard}>
             <Text style={styles.sectionTitle}>🔗 Pega la URL</Text>
@@ -422,6 +469,13 @@ const RecipesProScreen = () => {
               <LoadingNeverito size={80} speed={120} />
               <Text style={styles.loadingText}>Analizando video...</Text>
               <Text style={styles.loadingSubtext}>Esto puede tomar 20-30 segundos</Text>
+            </Card>
+          )}
+
+          {!!submittedJobId && !urlLoading && !urlResult && (
+            <Card style={styles.inlineLoadingCard}>
+              <Text style={styles.loadingText}>Job enviado</Text>
+              <Text style={styles.loadingSubtext}>Te notificaremos cuando la receta este lista.</Text>
             </Card>
           )}
 

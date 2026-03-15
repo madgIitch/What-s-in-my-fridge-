@@ -7,19 +7,36 @@ import { onAuthStateChanged } from './src/services/firebase/auth';
 import { useAuthStore } from './src/stores/useAuthStore';
 import { fetchSubscriptionStatus } from './src/services/stripe';
 import { useSubscriptionStore } from './src/stores/useSubscriptionStore';
+import { registerFcmToken, setupNotificationListeners } from './src/services/notifications';
+import { useRecipeJobStore } from './src/stores/useRecipeJobStore';
 
 export default function App() {
   // Firebase is auto-initialized via google-services.json
 
   useEffect(() => {
+    let cleanupNotifications: (() => void) | undefined;
+
     // Listen to auth state changes
     const unsubscribe = onAuthStateChanged((user) => {
       void (async () => {
+        if (cleanupNotifications) {
+          cleanupNotifications();
+          cleanupNotifications = undefined;
+        }
+
         if (user) {
           useAuthStore.getState().setUser({
             uid: user.uid,
             email: user.email,
             displayName: user.displayName,
+          });
+
+          registerFcmToken(user.uid).catch(() => {
+            // Silent - do not block auth flow
+          });
+
+          cleanupNotifications = setupNotificationListeners((jobId) => {
+            useRecipeJobStore.getState().onJobNotificationReceived(jobId);
           });
 
           try {
@@ -33,13 +50,19 @@ export default function App() {
           useAuthStore.getState().setUser(null);
           useSubscriptionStore.getState().setProStatus(false);
           useSubscriptionStore.getState().setInitialized(false);
+          useRecipeJobStore.getState().reset();
         }
       })().catch((error) => {
         console.error('Error syncing auth/subscription state:', error);
       });
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (cleanupNotifications) {
+        cleanupNotifications();
+      }
+    };
   }, []);
 
   return (

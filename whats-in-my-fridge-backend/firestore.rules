@@ -77,6 +77,12 @@ service cloud.firestore {
         allow update: if isOwner(userId) && isValidSavedRecipe();
         allow delete: if isOwner(userId);
       }
+
+      // Recipe async jobs (read-only from client)
+      match /recipe_jobs/{jobId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
     }
 
     // Deny access to any other path

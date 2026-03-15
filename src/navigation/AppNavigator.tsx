@@ -1,10 +1,13 @@
 import React, { useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useMealStore } from '../stores/useMealStore';
 import { startFirestoreSync } from '../services/firebase/firestore';
+import { useRecipeJobStore } from '../stores/useRecipeJobStore';
+import RecipeJobNotification from '../components/RecipeJobNotification';
+import { RecipeUi } from '../database/models/RecipeCache';
 
 // Import screens
 import LoginScreen from '../screens/LoginScreen';
@@ -28,26 +31,64 @@ import ShoppingListScreen from '../screens/ShoppingListScreen';
 import PaywallScreen from '../screens/PaywallScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
+const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 export const AppNavigator = () => {
   const user = useAuthStore((state) => state.user);
   const { startSync, stopSync } = useMealStore();
+  const pendingNavigation = useRecipeJobStore((state) => state.pendingNavigation);
+  const completedJobsQueue = useRecipeJobStore((state) => state.completedJobsQueue);
 
   useEffect(() => {
     if (user?.uid) {
       startSync(user.uid);
       const unsubscribeInventory = startFirestoreSync(user.uid);
+      void useRecipeJobStore.getState().loadActiveJobs();
+      void useRecipeJobStore.getState().loadRecentCompletedJobs(2);
       return () => {
         stopSync();
         unsubscribeInventory();
+        useRecipeJobStore.getState().reset();
       };
     }
     stopSync();
+    useRecipeJobStore.getState().reset();
     return undefined;
   }, [user?.uid, startSync, stopSync]);
 
+  useEffect(() => {
+    if (!pendingNavigation || !navigationRef.isReady()) {
+      return;
+    }
+
+    const job = completedJobsQueue.find((item) => item.jobId === pendingNavigation);
+    if (!job?.result) {
+      return;
+    }
+
+    const recipe: RecipeUi = {
+      id: `job_${job.jobId}`,
+      name: job.result.recipeTitle || 'Receta transcrita',
+      matchPercentage: 0,
+      matchedIngredients: [],
+      missingIngredients: [],
+      ingredientsWithMeasures: job.result.ingredients,
+      instructions: job.result.steps.join('\n'),
+    };
+
+    navigationRef.navigate('RecipeSteps', { recipe });
+    useRecipeJobStore.getState().dismissCompleted(job.jobId);
+  }, [pendingNavigation, completedJobsQueue]);
+
+  const handleViewRecipeFromNotification = (recipe: RecipeUi) => {
+    if (!navigationRef.isReady()) {
+      return;
+    }
+    navigationRef.navigate('RecipeSteps', { recipe });
+  };
+
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
         initialRouteName={user ? 'HomeTab' : 'Login'}
       >
@@ -185,6 +226,7 @@ export const AppNavigator = () => {
           </>
         )}
       </Stack.Navigator>
+      <RecipeJobNotification onViewRecipe={handleViewRecipeFromNotification} />
     </NavigationContainer>
   );
 };
