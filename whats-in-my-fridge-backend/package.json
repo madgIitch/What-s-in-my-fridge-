@@ -1,3 +1,25 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:364e12f7d443776cfb1fb3e2df6e4c6b5b1a58ea7303be260413df00e5c815d7
-size 620
+{
+  "name": "whats-in-my-fridge-backend",
+  "version": "1.0.0",
+  "description": "Backend scripts and data for What's in my fridge app",
+  "scripts": {
+    "extract-actions": "node scripts/extract-cooking-actions.js",
+    "example-usage": "node scripts/example-usage.js",
+    "find-max-steps": "node scripts/find-max-instructions.js",
+    "check-ollama": "curl http://localhost:11434/api/tags"
+  },
+  "keywords": [
+    "recipes",
+    "cooking",
+    "ollama",
+    "ai"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/cheerio": "^0.22.35"
+  }
+}

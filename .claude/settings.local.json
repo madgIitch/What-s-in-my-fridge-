@@ -1,3 +1,45 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:cef7799496264a4a06cc281911c5e869df1b9276511bc641f2a8694a6bcf8dc0
-size 3000
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-expo-app@latest whats-in-my-fridge-rn --template expo-template-blank-typescript)",
+      "Bash(npm install:*)",
+      "Bash(npx expo install:*)",
+      "Bash(npx expo start:*)",
+      "Bash(./gradlew clean:*)",
+      "Bash(./gradlew app:assembleDebug:*)",
+      "Bash(tee:*)",
+      "Bash(ls:*)",
+      "Bash(dir \"c:\\\\Users\\\\peorr\\\\Desktop\\\\What-s-in-my-fridge-\\\\whats-in-my-fridge-rn\\\\android\\\\app\\\\build\\\\outputs\\\\apk\\\\debug\"\" | findstr \"apk \")",
+      "Bash(npx tsc:*)",
+      "Bash(npx expo prebuild:*)",
+      "Bash(where:*)",
+      "Bash(java -version:*)",
+      "Bash(dir \"C:\\\\Program Files\\\\Java\")",
+      "Bash(dir:*)",
+      "Bash(./gradlew assembleRelease:*)",
+      "Bash(npm run lint)",
+      "Bash(firebase functions:log:*)",
+      "Bash(firebase login:*)",
+      "Bash(firebase projects:list:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(firebase functions:delete:*)",
+      "Bash(npx expo run:android:*)",
+      "Bash(./gradlew:*)",
+      "Bash(node:*)",
+      "Bash(npm run upload-vocab:*)",
+      "Bash(npm run)",
+      "Bash(test:*)",
+      "Bash(firebase storage:upload:*)",
+      "Bash(gcloud projects list:*)",
+      "Bash(gcloud builds submit:*)",
+      "Bash(gcloud run deploy:*)",
+      "Bash(gcloud:*)",
+      "Bash(python3:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(/tmp/update-ingredients.js:*)",
+      "Bash(C:/Users/peorr/Desktop/What-s-in-my-fridge-/update-ingredients.js << 'EOF'\nconst fs = require\\('fs'\\);\n\nconst jsonPath = 'C:/Users/peorr/Desktop/What-s-in-my-fridge-/whats-in-my-fridge-backend/data/normalized-ingredients.json';\n\n// Read the JSON file\nconst content = fs.readFileSync\\(jsonPath, 'utf8'\\);\nconst data = JSON.parse\\(content\\);\n\n// Update oil\ndata.oil.synonyms = ['oil', 'oils', 'aceite', 'aceites', 'öl', 'huile', 'olio'];\n\n// Update broth\ndata.broth.synonyms = ['broth', 'broths', 'caldo', 'caldos', 'brühe', 'bouillon', 'consomé'];\n\n// Update olive\ndata.olive.synonyms = ['olive', 'olives', 'aceituna', 'aceitunas', 'oliva', 'oliven'];\n\n// Update orange\ndata.orange.synonyms = ['orange', 'oranges', 'naranja', 'naranjas', 'orange', 'orangen', 'arancia'];\n\n// Update whiskey\ndata.whiskey.synonyms = ['whiskey', 'whisky', 'güisqui', 'bourbon', 'whiskey irlandés', 'scotch'];\n\n// Update scallops\ndata.scallops.synonyms = ['scallops', 'scallop', 'vieira', 'veiras', 'coquille', 'kammuschel'];\n\n// Update fish broth\ndata['fish broth'].synonyms = ['fish broth', 'fish stock', 'caldo de pescado', 'caldo de pez', 'fischbrühe', 'fumet de poisson'];\n\n// Update sesame oil\ndata['sesame oil'].synonyms = ['sesame oil', 'aceite de sésamo', 'aceite de ajonjolí', 'sésamöl', 'huile de sésame', 'olio di sesamo'];\n\n// Save\nfs.writeFileSync\\(jsonPath, JSON.stringify\\(data, null, 2\\), 'utf8'\\);\nconsole.log\\('Updated successfully'\\);\nEOF)",
+      "Bash(find:*)",
+      "Bash(du -sh:*)"
+    ]
+  }
+}

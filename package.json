@@ -1,3 +1,52 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:e5d63602c2e5754caf1426af94da936d7478742af95e2de394e3440d918f779a
-size 1721
+{
+  "name": "whats-in-my-fridge-rn",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@nozbe/watermelondb": "^0.28.0",
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-community/datetimepicker": "8.4.4",
+    "@react-native-community/slider": "^5.1.2",
+    "@react-native-firebase/app": "^23.8.3",
+    "@react-native-firebase/auth": "^23.8.3",
+    "@react-native-firebase/firestore": "^23.8.3",
+    "@react-native-firebase/functions": "^23.8.3",
+    "@react-native-firebase/storage": "^23.8.3",
+    "@react-navigation/bottom-tabs": "^7.10.1",
+    "@react-navigation/native": "^7.1.28",
+    "@react-navigation/stack": "^7.6.16",
+    "@types/crypto-js": "^4.2.2",
+    "crypto-js": "^4.2.0",
+    "date-fns": "^4.1.0",
+    "expo": "~54.0.31",
+    "expo-background-fetch": "~14.0.9",
+    "expo-image": "~3.0.11",
+    "expo-image-manipulator": "~14.0.8",
+    "expo-image-picker": "~17.0.10",
+    "expo-notifications": "~0.32.16",
+    "expo-status-bar": "~3.0.9",
+    "expo-task-manager": "~14.0.9",
+    "lucide-react-native": "^0.563.0",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-gesture-handler": "~2.28.0",
+    "react-native-image-crop-picker": "^0.42.0",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-svg": "15.12.1",
+    "react-native-vector-icons": "^10.3.0",
+    "zustand": "^5.0.10"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.0",
+    "@types/react-native-vector-icons": "^6.4.18",
+    "typescript": "~5.9.2"
+  },
+  "private": true
+}

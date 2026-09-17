@@ -1,3 +1,33 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:37f4866818db66b7ff33f222d4ce75ad842037111368ff76ef34852888609e48
-size 744
+{
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "data/**",
+        "src/applyNormalizedIngredients.ts",
+        "src/normalizeIngredients.ts",
+        "src/replaceRecipes.ts",
+        "lib/src/applyNormalizedIngredients.js",
+        "lib/src/normalizeIngredients.js",
+        "lib/src/replaceRecipes.js",
+        "*.bat",
+        "*.md"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ],
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}

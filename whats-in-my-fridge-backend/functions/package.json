@@ -1,3 +1,43 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:948821443dab25e91313d06368592356f258428cd9eb843ca451d82e5d806819
-size 1302
+{
+  "name": "functions",
+  "description": "Cloud Functions for What's in my Fridge",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts .",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions,firestore",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@google-cloud/firestore": "^7.0.0",
+    "@google-cloud/storage": "^7.0.0",
+    "@google-cloud/vision": "^4.0.0",
+    "axios": "^1.13.1",
+    "cheerio": "^1.2.0",
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^5.0.0",
+    "youtube-transcript": "^1.2.1",
+    "stripe": "^17.0.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/cheerio": "^0.22.35",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.2",
+    "prettier": "^3.6.2",
+    "typescript": "^5.0.0"
+  },
+  "private": true
+}

@@ -1,3 +1,58 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:ae48329dc3110da1a9e410dd7cc7a409bb9ad2f921da4a87dcb45ab667c1511e
-size 1768
+{
+  "expo": {
+    "name": "What's in my Fridge",
+    "slug": "whats-in-my-fridge-rn",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.jpg",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "scheme": "neverito",
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.jpg",
+        "backgroundColor": "#A8E6CF"
+      },
+      "largeHeap": true,
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.whatsinmyfridge",
+      "googleServicesFile": "./google-services.json",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "neverito" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "@react-native-community/datetimepicker",
+      "@react-native-firebase/app"
+    ],
+    "extra": {
+      "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyD9WEvA5By48UY1cuRvBeJkpZDwdm42-mA",
+      "EXPO_PUBLIC_FIREBASE_APP_ID": "1:534730978435:android:d94b7c8acb3aefa01f57b6",
+      "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "534730978435",
+      "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "what-s-in-my-fridge-a2a07",
+      "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "what-s-in-my-fridge-a2a07.firebasestorage.app",
+      "EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY": "",
+      "EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID": "pro",
+      "eas": {
+        "projectId": "db764346-9c59-4aee-aa97-1a8f4da4bf02"
+      }
+    }
+  }
+}

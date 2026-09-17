@@ -1,3 +1,29 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:ae04b4d49bba7995b97c7086f14fe4c4b9b5336f9fa1a130b322578a9ec7e521
-size 699
+{
+  "project_info": {
+    "project_number": "534730978435",
+    "project_id": "what-s-in-my-fridge-a2a07",
+    "storage_bucket": "what-s-in-my-fridge-a2a07.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:534730978435:android:ec42bb5bacead5281f57b6",
+        "android_client_info": {
+          "package_name": "com.whatsinmyfridge"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9WEvA5By48UY1cuRvBeJkpZDwdm42-mA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

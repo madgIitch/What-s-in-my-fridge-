@@ -44,3 +44,5 @@ yarn-error.*
 # large local backups
 whats-in-my-fridge-backend/data/recipes.json.backup
 whats-in-my-fridge-backend/functions/.env.what-s-in-my-fridge-a2a07
+.harness/harness-state.json
+.harness/interviews/

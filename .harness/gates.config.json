@@ -1,0 +1,8 @@
+{
+  "gates": [
+    { "name": "typecheck", "cmd": "npx tsc --noEmit", "blocking": true },
+    { "name": "lint", "cmd": "npx eslint . --format unix", "maxWarnings": 0, "warningPattern": "warning", "blocking": true },
+    { "name": "test", "cmd": "npm test --silent", "blocking": true },
+    { "name": "diff-scope", "blocking": true }
+  ]
+}

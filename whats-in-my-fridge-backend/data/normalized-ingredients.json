@@ -1,3 +1,4763 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:2861534a13b5f9d504d8cbf77ce2c5baa48c9a1931787f947dc029c021100fc0
-size 107074
+{
+  "version": "1.2.0",
+  "lastUpdated": "2026-02-12T00:00:00.000Z",
+  "model": "llama3.1:8b",
+  "totalIngredients": 291,
+  "ingredients": {
+    "salt": {
+      "normalized": "salt",
+      "synonyms": [
+        "salt",
+        "sal",
+        "salz"
+      ],
+      "category": "spice",
+      "subcategory": "mineral_spice",
+      "frequency": 60,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "butter": {
+      "normalized": "butter",
+      "synonyms": [
+        "butter",
+        "mantequilla",
+        "buttermilch",
+        "margarine"
+      ],
+      "category": "dairy",
+      "subcategory": "spread",
+      "frequency": 75,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "garlic": {
+      "normalized": "garlic",
+      "synonyms": [
+        "garlic",
+        "ajo",
+        "ajos",
+        "knoblauch"
+      ],
+      "category": "vegetable",
+      "subcategory": "bulbous_vegetable",
+      "frequency": 60,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "oil": {
+      "normalized": "oil",
+      "synonyms": [
+        "oil",
+        "oils",
+        "aceite",
+        "aceites",
+        "öl",
+        "huile",
+        "olio"
+      ],
+      "category": "other",
+      "subcategory": "",
+      "frequency": 77,
+      "embedding": null,
+      "categorySpanish": "Aceites"
+    },
+    "pepper": {
+      "normalized": "pepper",
+      "synonyms": [
+        "pepper",
+        "pimienta",
+        "pfeffer",
+        "piment"
+      ],
+      "category": "vegetable",
+      "subcategory": "spicy_pepper",
+      "frequency": 60,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "water": {
+      "normalized": "water",
+      "synonyms": [
+        "water",
+        "agua",
+        "wasser"
+      ],
+      "category": "beverage",
+      "subcategory": "",
+      "frequency": 278,
+      "embedding": null,
+      "categorySpanish": "Agua"
+    },
+    "egg": {
+      "normalized": "egg",
+      "synonyms": [
+        "egg",
+        "huevo",
+        "eier"
+      ],
+      "category": "dairy",
+      "subcategory": "liquid_dairy",
+      "frequency": 482,
+      "embedding": null,
+      "categorySpanish": "Huevos"
+    },
+    "onion": {
+      "normalized": "onion",
+      "synonyms": [
+        "onion",
+        "onions",
+        "cebolla",
+        "cebollas",
+        "zwiebel",
+        "zwiebeln"
+      ],
+      "category": "vegetable",
+      "subcategory": "bulbous_vegetable",
+      "frequency": 61,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "flour": {
+      "normalized": "flour",
+      "synonyms": [
+        "flour",
+        "harina",
+        "mehl"
+      ],
+      "category": "grain",
+      "subcategory": "grain_product",
+      "frequency": 70,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "sugar": {
+      "normalized": "sugar",
+      "synonyms": [
+        "sugar",
+        "azúcar",
+        "zucker"
+      ],
+      "category": "sweetener",
+      "subcategory": "crystalline_sweetener",
+      "frequency": 69,
+      "embedding": null,
+      "categorySpanish": "Postres"
+    },
+    "extract": {
+      "normalized": "extract",
+      "synonyms": [
+        "extract",
+        "esencia",
+        "extrakt",
+        "auszug"
+      ],
+      "category": "spice",
+      "subcategory": "herb",
+      "frequency": 94,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "dairy": {
+      "normalized": "milk",
+      "synonyms": [
+        "dairy",
+        "leche",
+        "milchprodukte",
+        "milch",
+        "h-milch",
+        "laktose"
+      ],
+      "category": "dairy",
+      "subcategory": "liquid",
+      "frequency": 7603,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "juice": {
+      "normalized": "juice",
+      "synonyms": [
+        "juice",
+        "jugo",
+        "saft"
+      ],
+      "category": "beverage",
+      "subcategory": "liquid",
+      "frequency": 61,
+      "embedding": null,
+      "categorySpanish": "Jugos"
+    },
+    "powder": {
+      "normalized": "powder",
+      "synonyms": [
+        "powder",
+        "polvo",
+        "pulver"
+      ],
+      "category": "spice",
+      "subcategory": "other",
+      "frequency": 5158,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "soda": {
+      "normalized": "soda",
+      "synonyms": [
+        "soda",
+        "pop",
+        "soft drink",
+        "limonade",
+        "saft",
+        "sprudel"
+      ],
+      "category": "beverage",
+      "subcategory": "carbonated",
+      "frequency": 87,
+      "embedding": null,
+      "categorySpanish": "Refrescos"
+    },
+    "herb": {
+      "normalized": "herb",
+      "synonyms": [
+        "herb",
+        "hoja de menta",
+        "kräuter"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 62,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "spice": {
+      "normalized": "spice",
+      "synonyms": [
+        "mace",
+        "macis",
+        "gewürz",
+        "zutat",
+        "aromastoff"
+      ],
+      "category": "spice",
+      "subcategory": "",
+      "frequency": 76,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "grain": {
+      "normalized": "grain",
+      "synonyms": [
+        "matzo meal",
+        "matzah meal",
+        "korn",
+        "getreide"
+      ],
+      "category": "grain",
+      "subcategory": "processed_grain",
+      "frequency": 64,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "celery": {
+      "normalized": "celery",
+      "synonyms": [
+        "celery",
+        "apio",
+        "sellerie"
+      ],
+      "category": "vegetable",
+      "subcategory": "stalk",
+      "frequency": 76,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "cheese": {
+      "normalized": "cheese",
+      "synonyms": [
+        "cheese",
+        "queso",
+        "käse",
+        "kase",
+        "weichkäse"
+      ],
+      "category": "dairy",
+      "subcategory": "hard_cheese",
+      "frequency": 60,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "broth": {
+      "normalized": "broth",
+      "synonyms": [
+        "broth",
+        "broths",
+        "caldo",
+        "caldos",
+        "brühe",
+        "bouillon",
+        "consomé"
+      ],
+      "category": "beverage",
+      "subcategory": "liquid",
+      "frequency": 75,
+      "embedding": null,
+      "categorySpanish": "Conservas"
+    },
+    "cream": {
+      "normalized": "cream",
+      "synonyms": [
+        "cream",
+        "crema",
+        "sahne"
+      ],
+      "category": "dairy",
+      "subcategory": "liquid_dairy",
+      "frequency": 109,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "honey": {
+      "normalized": "honey",
+      "synonyms": [
+        "honey",
+        "miel",
+        "honig"
+      ],
+      "category": "other",
+      "subcategory": "",
+      "frequency": 3220,
+      "embedding": null,
+      "categorySpanish": "Bebidas"
+    },
+    "vegetable": {
+      "normalized": "vegetable",
+      "synonyms": [
+        "artichoke",
+        "alcaucil",
+        "gemüse"
+      ],
+      "category": "vegetable",
+      "subcategory": "flowering_plant",
+      "frequency": 97,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "sauce": {
+      "normalized": "sauce",
+      "synonyms": [
+        "sauce",
+        "salsa",
+        "soße",
+        "saucen"
+      ],
+      "category": "condiment",
+      "subcategory": "hot_sauce",
+      "frequency": 66,
+      "embedding": null,
+      "categorySpanish": "Salsas"
+    },
+    "condiment": {
+      "normalized": "condiment",
+      "synonyms": [
+        "mustard",
+        "mostaza",
+        "zutat",
+        "beigabe",
+        "würze"
+      ],
+      "category": "condiment",
+      "subcategory": "",
+      "frequency": 68,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "nut": {
+      "normalized": "nut",
+      "synonyms": [
+        "nut",
+        "castaña",
+        "nuss",
+        "kern"
+      ],
+      "category": "fruit",
+      "subcategory": "tree_nut",
+      "frequency": 79,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "ginger": {
+      "normalized": "ginger",
+      "synonyms": [
+        "ginger",
+        "jengibre",
+        "ingwer",
+        "ingwerwurzel",
+        "zitronengras"
+      ],
+      "category": "vegetable",
+      "subcategory": "root",
+      "frequency": 103,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "pork_belly": {
+      "normalized": "pork_belly",
+      "synonyms": [
+        "pork belly",
+        "panceta",
+        "schweinebauch",
+        "speck",
+        "bauchstück"
+      ],
+      "category": "meat",
+      "subcategory": "processed_meat",
+      "frequency": 2292,
+      "embedding": null,
+      "categorySpanish": "Embutidos"
+    },
+    "bell pepper": {
+      "normalized": "bell pepper",
+      "synonyms": [
+        "bell pepper",
+        "pimiento",
+        "pimientos",
+        "sweet pepper",
+        "paprika"
+      ],
+      "category": "vegetable",
+      "subcategory": "sweet_pepper",
+      "frequency": 88,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "starch": {
+      "normalized": "starch",
+      "synonyms": [
+        "starch",
+        "almidón",
+        "staub",
+        "zucker",
+        "stärke"
+      ],
+      "category": "grain",
+      "subcategory": "processed_grain",
+      "frequency": 69,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "cinnamon": {
+      "normalized": "cinnamon",
+      "synonyms": [
+        "cinnamon",
+        "canela",
+        "zimt",
+        "zuckerrohrzimt"
+      ],
+      "category": "spice",
+      "subcategory": "ground_spice",
+      "frequency": 235,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "potato": {
+      "normalized": "potato",
+      "synonyms": [
+        "potato",
+        "potatoes",
+        "patata",
+        "patatas",
+        "papa",
+        "papas",
+        "kartoffel",
+        "kartoffeln"
+      ],
+      "category": "vegetable",
+      "subcategory": "root_vegetable",
+      "frequency": 76,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "mushroom": {
+      "normalized": "mushroom",
+      "synonyms": [
+        "mushroom",
+        "seta",
+        "champiñon",
+        "champiñones",
+        "champignon",
+        "champignons",
+        "pilz",
+        "pilze"
+      ],
+      "category": "vegetable",
+      "subcategory": "fungi",
+      "frequency": 60,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "citrus": {
+      "normalized": "citrus",
+      "synonyms": [
+        "lime",
+        "lemon",
+        "orange",
+        "zitronen"
+      ],
+      "category": "fruit",
+      "subcategory": "",
+      "frequency": 943,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "tomato": {
+      "normalized": "tomato",
+      "synonyms": [
+        "tomato",
+        "tomatoes",
+        "tomate",
+        "tomates",
+        "jitomate",
+        "tomaten",
+        "tomate cherry",
+        "cherry tomato"
+      ],
+      "category": "vegetable",
+      "subcategory": "fruit_vegetable",
+      "frequency": 116,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "wine": {
+      "normalized": "wine",
+      "synonyms": [
+        "wine",
+        "vino",
+        "wein"
+      ],
+      "category": "beverage",
+      "subcategory": "alcoholic_beverage",
+      "frequency": 63,
+      "embedding": null,
+      "categorySpanish": "Vinos"
+    },
+    "mustard": {
+      "normalized": "mustard",
+      "synonyms": [
+        "mustard",
+        "mostaza",
+        "senf",
+        "muskatnussmusarde"
+      ],
+      "category": "spice",
+      "subcategory": "powder",
+      "frequency": 70,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "beef": {
+      "normalized": "beef",
+      "synonyms": [
+        "beef",
+        "carne de res",
+        "rindfleisch",
+        "roh rinderfleisch",
+        "rinderfleisch"
+      ],
+      "category": "meat",
+      "subcategory": "red_meat",
+      "frequency": 60,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "poultry": {
+      "normalized": "poultry",
+      "synonyms": [
+        "chicken",
+        "duck",
+        "goose",
+        "fowl",
+        "vollkornfleisch",
+        "hähnchen",
+        "putenfleisch"
+      ],
+      "category": "meat",
+      "subcategory": "poultry",
+      "frequency": 68,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "eggs": {
+      "normalized": "eggs",
+      "synonyms": [
+        "eggs",
+        "huevos",
+        "eier"
+      ],
+      "category": "dairy",
+      "subcategory": "egg",
+      "frequency": 75,
+      "embedding": null,
+      "categorySpanish": "Huevos"
+    },
+    "dried_fruit": {
+      "normalized": "dried_fruit",
+      "synonyms": [
+        "currant",
+        "dried_grape",
+        "trockene frucht",
+        "getrockneter fruchtkuchen"
+      ],
+      "category": "fruit",
+      "subcategory": "dried",
+      "frequency": 121,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "zucchini": {
+      "normalized": "zucchini",
+      "synonyms": [
+        "zucchini",
+        "calabacín",
+        "zucchinis",
+        "courgette",
+        "gurke"
+      ],
+      "category": "vegetable",
+      "subcategory": "summer_squash",
+      "frequency": 72,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "vinegar": {
+      "normalized": "vinegar",
+      "synonyms": [
+        "vinegar",
+        "vinagre",
+        "essig"
+      ],
+      "category": "condiment",
+      "subcategory": "acidic",
+      "frequency": 77,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "shrimp": {
+      "normalized": "shrimp",
+      "synonyms": [
+        "shrimp",
+        "camarón",
+        "schwammerl",
+        "garnelen",
+        "hummer"
+      ],
+      "category": "seafood",
+      "subcategory": "",
+      "frequency": 1359,
+      "embedding": null,
+      "categorySpanish": "Pescados"
+    },
+    "citrus peel": {
+      "normalized": "citrus peel",
+      "synonyms": [
+        "citrus peel",
+        "limón piel",
+        "zitronenschale",
+        "zitronenabrieb"
+      ],
+      "category": "fruit",
+      "subcategory": "citrus",
+      "frequency": 126,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "carrot": {
+      "normalized": "carrot",
+      "synonyms": [
+        "carrot",
+        "zucchini",
+        "naranja",
+        "karotte"
+      ],
+      "category": "vegetable",
+      "subcategory": "root_vegetable",
+      "frequency": 1311,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "fat": {
+      "normalized": "fat",
+      "synonyms": [
+        "fat",
+        "grasa",
+        "fett"
+      ],
+      "category": "dairy",
+      "subcategory": "animal_fat",
+      "frequency": 1304,
+      "embedding": null,
+      "categorySpanish": "Aceites"
+    },
+    "milk": {
+      "normalized": "milk",
+      "synonyms": [
+        "milk",
+        "leche",
+        "milch",
+        "weidemilch",
+        "vollmilch",
+        "frischmilch"
+      ],
+      "category": "dairy",
+      "subcategory": "liquid_dairy",
+      "frequency": 65,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "butter substitute": {
+      "normalized": "butter substitute",
+      "synonyms": [
+        "butter substitute",
+        "vegetable spread",
+        "margarine",
+        "pflanzliches fett",
+        "weichmacher"
+      ],
+      "category": "dairy",
+      "subcategory": "spread",
+      "frequency": 1243,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "crumbs": {
+      "normalized": "crumbs",
+      "synonyms": [
+        "crumbs",
+        "pedazos",
+        "bröckchen",
+        "brocken",
+        "krümel"
+      ],
+      "category": "grain",
+      "subcategory": "processed_grain",
+      "frequency": 104,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "chicken": {
+      "normalized": "chicken",
+      "synonyms": [
+        "chicken",
+        "pollo",
+        "hähnchen",
+        "hühnerfleisch",
+        "putenfleisch"
+      ],
+      "category": "meat",
+      "subcategory": "poultry",
+      "frequency": 66,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "nut_butter": {
+      "normalized": "nut_butter",
+      "synonyms": [
+        "peanut butter",
+        "cashew butter",
+        "hazelnut butter",
+        "nussbutter"
+      ],
+      "category": "dairy",
+      "subcategory": "plant_based_dairy",
+      "frequency": 90,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "chocolate": {
+      "normalized": "chocolate",
+      "synonyms": [
+        "chocolate",
+        "cacao",
+        "schokolade"
+      ],
+      "category": "dairy",
+      "subcategory": "sweetener",
+      "frequency": 63,
+      "embedding": null,
+      "categorySpanish": "Postres"
+    },
+    "leaf": {
+      "normalized": "leaf",
+      "synonyms": [
+        "leaf",
+        "hoja",
+        "blatt",
+        "blätter"
+      ],
+      "category": "vegetable",
+      "subcategory": "herb",
+      "frequency": 1102,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "fruit": {
+      "normalized": "fruit",
+      "synonyms": [
+        "papaya",
+        "fruta papaya",
+        "frucht",
+        "obst"
+      ],
+      "category": "fruit",
+      "subcategory": "",
+      "frequency": 72,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "powdered onion": {
+      "normalized": "powdered onion",
+      "synonyms": [
+        "powdered onion",
+        "cebolla en polvo",
+        "pulverartige zwiebel",
+        "zwiebelpulver"
+      ],
+      "category": "vegetable",
+      "subcategory": "processed_vegetable",
+      "frequency": 1069,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "stock": {
+      "normalized": "stock",
+      "synonyms": [
+        "stock",
+        "caldo",
+        "brühe"
+      ],
+      "category": "liquid",
+      "subcategory": "broth",
+      "frequency": 157,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "leafy_green": {
+      "normalized": "leafy_green",
+      "synonyms": [
+        "arugula",
+        "rucola",
+        "grüner salat",
+        "blattsalat",
+        "grün"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 78,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "olive oil": {
+      "normalized": "olive oil",
+      "synonyms": [
+        "olive oil",
+        "aceite de oliva",
+        "olivenoel",
+        "olivenöl",
+        "nativ. olivenoel",
+        "natives olivenoel"
+      ],
+      "category": "oil",
+      "subcategory": "",
+      "frequency": 193,
+      "embedding": null,
+      "categorySpanish": "Aceites"
+    },
+    "nutmeg": {
+      "normalized": "nutmeg",
+      "synonyms": [
+        "nutmeg",
+        "nuez moscada",
+        "nussmuschel",
+        "muskatnuss"
+      ],
+      "category": "spice",
+      "subcategory": "ground_spice",
+      "frequency": 893,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "apple": {
+      "normalized": "apple",
+      "synonyms": [
+        "apple",
+        "manzana",
+        "apfel"
+      ],
+      "category": "fruit",
+      "subcategory": "",
+      "frequency": 117,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "cucumber": {
+      "normalized": "cucumber",
+      "synonyms": [
+        "cucumber",
+        "pepino",
+        "eisbergsalat",
+        "gurke"
+      ],
+      "category": "vegetable",
+      "subcategory": "gourd",
+      "frequency": 61,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "yeast": {
+      "normalized": "yeast",
+      "synonyms": [
+        "yeast",
+        "levadura",
+        "hefe"
+      ],
+      "category": "other",
+      "subcategory": "",
+      "frequency": 75,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "banana": {
+      "normalized": "banana",
+      "synonyms": [
+        "banana",
+        "plátano",
+        "banane"
+      ],
+      "category": "fruit",
+      "subcategory": "tropical_fruit",
+      "frequency": 835,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "syrup": {
+      "normalized": "syrup",
+      "synonyms": [
+        "syrup",
+        "sirope",
+        "sirup",
+        "sirupe",
+        "siroop"
+      ],
+      "category": "condiment",
+      "subcategory": "sweetener",
+      "frequency": 76,
+      "embedding": null,
+      "categorySpanish": "Bebidas"
+    },
+    "beans": {
+      "normalized": "beans",
+      "synonyms": [
+        "beans",
+        "frijoles",
+        "bohnen",
+        "bohnenstrudel"
+      ],
+      "category": "vegetable",
+      "subcategory": "legume",
+      "frequency": 61,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "cocoa": {
+      "normalized": "cocoa",
+      "synonyms": [
+        "cocoa",
+        "chocolate",
+        "kakaobutter",
+        "kakaopulver",
+        "cacao"
+      ],
+      "category": "fruit",
+      "subcategory": "dried_fruit",
+      "frequency": 154,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "ice": {
+      "normalized": "ice",
+      "synonyms": [
+        "ice",
+        "hielo",
+        "eis"
+      ],
+      "category": "other",
+      "subcategory": "",
+      "frequency": 121,
+      "embedding": null,
+      "categorySpanish": "Bebidas"
+    },
+    "cocoa_powder": {
+      "normalized": "cocoa_powder",
+      "synonyms": [
+        "cocoa_powder",
+        "chocolate_powder",
+        "kakaopulver"
+      ],
+      "category": "grain",
+      "subcategory": "processed_grain",
+      "frequency": 737,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "seed": {
+      "normalized": "seed",
+      "synonyms": [
+        "seed",
+        "semilla",
+        "saat",
+        "samen"
+      ],
+      "category": "spice",
+      "subcategory": "herb",
+      "frequency": 65,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "dairy_product": {
+      "normalized": "dairy_product",
+      "synonyms": [
+        "cream",
+        "crema",
+        "milchprodukt",
+        "milchzubereitung",
+        "laktose"
+      ],
+      "category": "dairy",
+      "subcategory": "liquid_dairy",
+      "frequency": 166,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "oats": {
+      "normalized": "oats",
+      "synonyms": [
+        "oats",
+        "avena",
+        "hafer"
+      ],
+      "category": "grain",
+      "subcategory": "rolled_grain",
+      "frequency": 76,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "broccoli": {
+      "normalized": "broccoli",
+      "synonyms": [
+        "broccoli",
+        "rabano rabio",
+        "brokkoli"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 88,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "berry": {
+      "normalized": "berry",
+      "synonyms": [
+        "berry",
+        "fruta",
+        "beeren",
+        "frucht",
+        "obst"
+      ],
+      "category": "fruit",
+      "subcategory": "berry",
+      "frequency": 85,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "olive": {
+      "normalized": "olive",
+      "synonyms": [
+        "olive",
+        "olives",
+        "aceituna",
+        "aceitunas",
+        "oliva",
+        "oliven"
+      ],
+      "category": "fruit",
+      "subcategory": "small_fruit",
+      "frequency": 108,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "capers": {
+      "normalized": "capers",
+      "synonyms": [
+        "capers",
+        "alcaparras",
+        "kapern"
+      ],
+      "category": "vegetable",
+      "subcategory": "pickled",
+      "frequency": 662,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "cabbage": {
+      "normalized": "cabbage",
+      "synonyms": [
+        "cabbage",
+        "col",
+        "kohl",
+        "rohkohl",
+        "blattkohl"
+      ],
+      "category": "vegetable",
+      "subcategory": "cruciferous",
+      "frequency": 119,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "tomatoes": {
+      "normalized": "tomatoes",
+      "synonyms": [
+        "tomatoes",
+        "tomates",
+        "tomaten"
+      ],
+      "category": "vegetable",
+      "subcategory": "fruit_vegetable",
+      "frequency": 64,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "molasses": {
+      "normalized": "molasses",
+      "synonyms": [
+        "molasses",
+        "melaza",
+        "schwarze sirup"
+      ],
+      "category": "fruit",
+      "subcategory": "other",
+      "frequency": 61,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "nuts": {
+      "normalized": "nuts",
+      "synonyms": [
+        "nuts",
+        "frutos secos",
+        "nüsse"
+      ],
+      "category": "fruit",
+      "subcategory": "tree_nut",
+      "frequency": 65,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "cumin": {
+      "normalized": "cumin",
+      "synonyms": [
+        "cumin",
+        "comino",
+        "kummin"
+      ],
+      "category": "spice",
+      "subcategory": "seed",
+      "frequency": 599,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "herb blend": {
+      "normalized": "herb blend",
+      "synonyms": [
+        "herb blend",
+        "spice mix",
+        "kräutermischung"
+      ],
+      "category": "spice",
+      "subcategory": "",
+      "frequency": 595,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "potatoes": {
+      "normalized": "potatoes",
+      "synonyms": [
+        "potatoes",
+        "patatas",
+        "papas",
+        "kartoffeln"
+      ],
+      "category": "vegetable",
+      "subcategory": "root_vegetable",
+      "frequency": 76,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "liquor": {
+      "normalized": "liquor",
+      "synonyms": [
+        "whiskey",
+        "liquor",
+        "alcohol",
+        "alkohol",
+        "spirituosen",
+        "alkoholhaltig"
+      ],
+      "category": "beverage",
+      "subcategory": "spirits",
+      "frequency": 129,
+      "embedding": null,
+      "categorySpanish": "Licores"
+    },
+    "ground_beef": {
+      "normalized": "ground_beef",
+      "synonyms": [
+        "ground beef",
+        "beef",
+        "gebratenes rindfleisch",
+        "hackfleisch",
+        "rinderhack"
+      ],
+      "category": "meat",
+      "subcategory": "raw_meat",
+      "frequency": 566,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "peppercorn": {
+      "normalized": "peppercorn",
+      "synonyms": [
+        "peppercorn",
+        "pimienta",
+        "pfefferkörner"
+      ],
+      "category": "spice",
+      "subcategory": "seed",
+      "frequency": 565,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "soup": {
+      "normalized": "soup",
+      "synonyms": [
+        "soup",
+        "sopa",
+        "suppe",
+        "eintopf"
+      ],
+      "category": "dairy",
+      "subcategory": "processed_dairy",
+      "frequency": 75,
+      "embedding": null,
+      "categorySpanish": "Conservas"
+    },
+    "corn": {
+      "normalized": "corn",
+      "synonyms": [
+        "corn",
+        "maíz",
+        "mais",
+        "korn",
+        "choclo",
+        "elote"
+      ],
+      "category": "vegetable",
+      "subcategory": "grain",
+      "frequency": 68,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "coconut": {
+      "normalized": "coconut",
+      "synonyms": [
+        "coconut",
+        "coco",
+        "kokosnuss",
+        "kokos"
+      ],
+      "category": "fruit",
+      "subcategory": "dried",
+      "frequency": 62,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "cloves": {
+      "normalized": "cloves",
+      "synonyms": [
+        "cloves",
+        "clavos",
+        "nelken"
+      ],
+      "category": "spice",
+      "subcategory": "aromatic_spice",
+      "frequency": 100,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "cured_pork": {
+      "normalized": "cured_pork",
+      "synonyms": [
+        "ham",
+        "jamón",
+        "schweinebauch",
+        "speck"
+      ],
+      "category": "meat",
+      "subcategory": "cured_meat",
+      "frequency": 520,
+      "embedding": null,
+      "categorySpanish": "Embutidos"
+    },
+    "tortilla": {
+      "normalized": "tortilla",
+      "synonyms": [
+        "tortilla",
+        "tortilla de maíz",
+        "torte",
+        "fladen"
+      ],
+      "category": "grain",
+      "subcategory": "flatbread",
+      "frequency": 352,
+      "embedding": null,
+      "categorySpanish": "Pan"
+    },
+    "pumpkin": {
+      "normalized": "pumpkin",
+      "synonyms": [
+        "pumpkin",
+        "calabaza",
+        "kürbis",
+        "kurbis",
+        "pumpe"
+      ],
+      "category": "fruit",
+      "subcategory": "vegetable",
+      "frequency": 215,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "tartar": {
+      "normalized": "tartar",
+      "synonyms": [
+        "tartar",
+        "tarta",
+        "tartarensoße",
+        "tatar"
+      ],
+      "category": "spice",
+      "subcategory": "acidic",
+      "frequency": 491,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "rice": {
+      "normalized": "rice",
+      "synonyms": [
+        "rice",
+        "arroz",
+        "reis",
+        "basmati reis",
+        "basmati",
+        "jasmin reis"
+      ],
+      "category": "grain",
+      "subcategory": "unprocessed_grain",
+      "frequency": 65,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "spray": {
+      "normalized": "spray",
+      "synonyms": [
+        "spray",
+        "rociador",
+        "sprühspray",
+        "sprühmittel"
+      ],
+      "category": "other",
+      "subcategory": "",
+      "frequency": 481,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "peel": {
+      "normalized": "peel",
+      "synonyms": [
+        "peel",
+        "cáscara",
+        "schale",
+        "haut"
+      ],
+      "category": "fruit",
+      "subcategory": "citrus",
+      "frequency": 480,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "squash": {
+      "normalized": "squash",
+      "synonyms": [
+        "squash",
+        "calabaza",
+        "kürbis",
+        "zucchini"
+      ],
+      "category": "vegetable",
+      "subcategory": "winter_squash",
+      "frequency": 83,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "bread": {
+      "normalized": "bread",
+      "synonyms": [
+        "bread",
+        "pan",
+        "brot",
+        "brotchen",
+        "laugen"
+      ],
+      "category": "grain",
+      "subcategory": "baked_goods",
+      "frequency": 72,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "lemon": {
+      "normalized": "lemon",
+      "synonyms": [
+        "lemon",
+        "limón",
+        "limone",
+        "zitronen"
+      ],
+      "category": "fruit",
+      "subcategory": "citrus",
+      "frequency": 72,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "pork": {
+      "normalized": "pork",
+      "synonyms": [
+        "pork",
+        "cerdo",
+        "schwein",
+        "speck"
+      ],
+      "category": "meat",
+      "subcategory": "red_meat",
+      "frequency": 82,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "root_vegetable": {
+      "normalized": "root_vegetable",
+      "synonyms": [
+        "rutabaga",
+        "nabo rústico",
+        "wurzelgemüse"
+      ],
+      "category": "vegetable",
+      "subcategory": "root_vegetable",
+      "frequency": 59,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "vanilla": {
+      "normalized": "vanilla",
+      "synonyms": [
+        "vanilla",
+        "vainilla",
+        "vanille"
+      ],
+      "category": "spice",
+      "subcategory": "flavoring",
+      "frequency": 69,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "beverage": {
+      "normalized": "beverage",
+      "synonyms": [
+        "beer",
+        "cerveza",
+        "getränk"
+      ],
+      "category": "beverage",
+      "subcategory": "",
+      "frequency": 438,
+      "embedding": null,
+      "categorySpanish": "Cervezas"
+    },
+    "parsley": {
+      "normalized": "parsley",
+      "synonyms": [
+        "parsley",
+        "perejil",
+        "petersilie"
+      ],
+      "category": "vegetable",
+      "subcategory": "herb",
+      "frequency": 66,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "avocado": {
+      "normalized": "avocado",
+      "synonyms": [
+        "avocado",
+        "aguacate",
+        "palta",
+        "avocadofrucht",
+        "guacamolepflanze"
+      ],
+      "category": "fruit",
+      "subcategory": "",
+      "frequency": 423,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "raisin": {
+      "normalized": "raisin",
+      "synonyms": [
+        "raisin",
+        "pasas",
+        "trauben"
+      ],
+      "category": "fruit",
+      "subcategory": "dried_fruit",
+      "frequency": 421,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "fruit juice": {
+      "normalized": "fruit juice",
+      "synonyms": [
+        "fruit juice",
+        "jugo de fruta",
+        "fruchtensaft",
+        "fruchtsaft"
+      ],
+      "category": "fruit",
+      "subcategory": "juice",
+      "frequency": 83,
+      "embedding": null,
+      "categorySpanish": "Bebidas"
+    },
+    "pasta": {
+      "normalized": "pasta",
+      "synonyms": [
+        "pasta",
+        "noodles",
+        "nudeln",
+        "spaghetti"
+      ],
+      "category": "grain",
+      "subcategory": "pasta",
+      "frequency": 63,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "ice cream": {
+      "normalized": "ice cream",
+      "synonyms": [
+        "ice cream",
+        "helado",
+        "eiscreme",
+        "eiskrem"
+      ],
+      "category": "dairy",
+      "subcategory": "frozen_dessert",
+      "frequency": 76,
+      "embedding": null,
+      "categorySpanish": "Postres"
+    },
+    "fruit puree": {
+      "normalized": "fruit puree",
+      "synonyms": [
+        "apple sauce",
+        "fruta puré",
+        "fruchtmasse",
+        "fruchtpüree"
+      ],
+      "category": "fruit",
+      "subcategory": "processed_fruit",
+      "frequency": 400,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "crust": {
+      "normalized": "crust",
+      "synonyms": [
+        "crust",
+        "corteza",
+        "kruste",
+        "panzer",
+        "hülle"
+      ],
+      "category": "grain",
+      "subcategory": "baked_good",
+      "frequency": 94,
+      "embedding": null,
+      "categorySpanish": "Pan"
+    },
+    "eggplant": {
+      "normalized": "eggplant",
+      "synonyms": [
+        "eggplant",
+        "berenjena",
+        "eierfrucht",
+        "aubergine"
+      ],
+      "category": "vegetable",
+      "subcategory": "nightshade",
+      "frequency": 140,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "pea": {
+      "normalized": "pea",
+      "synonyms": [
+        "pea",
+        "guisante",
+        "erbsen"
+      ],
+      "category": "vegetable",
+      "subcategory": "legume",
+      "frequency": 377,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "topping": {
+      "normalized": "topping",
+      "synonyms": [
+        "topping",
+        "salsa",
+        "belegung",
+        "bestandteil"
+      ],
+      "category": "dairy",
+      "subcategory": "cream",
+      "frequency": 374,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "chive": {
+      "normalized": "chive",
+      "synonyms": [
+        "chive",
+        "cebolla de verdeo",
+        "schalotten",
+        "knoblauchzwiebel"
+      ],
+      "category": "vegetable",
+      "subcategory": "herb",
+      "frequency": 369,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "pineapple": {
+      "normalized": "pineapple",
+      "synonyms": [
+        "pineapple",
+        "piña",
+        "ananas"
+      ],
+      "category": "fruit",
+      "subcategory": "tropical_fruit",
+      "frequency": 365,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "bean": {
+      "normalized": "bean",
+      "synonyms": [
+        "bean",
+        "frijol",
+        "bohne",
+        "bohnen"
+      ],
+      "category": "vegetable",
+      "subcategory": "legume",
+      "frequency": 73,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "lettuce": {
+      "normalized": "lettuce",
+      "synonyms": [
+        "lettuce",
+        "lechuga",
+        "salat"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 61,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "cured_meat": {
+      "normalized": "cured_meat",
+      "synonyms": [
+        "salami",
+        "cured_meat",
+        "fuet",
+        "geräuchertes fleisch",
+        "wurst",
+        "schinken"
+      ],
+      "category": "meat",
+      "subcategory": "processed_meat",
+      "frequency": 66,
+      "embedding": null,
+      "categorySpanish": "Embutidos"
+    },
+    "spirit": {
+      "normalized": "spirit",
+      "synonyms": [
+        "gin",
+        "espiritu",
+        "geist",
+        "alkohol"
+      ],
+      "category": "beverage",
+      "subcategory": "distilled",
+      "frequency": 349,
+      "embedding": null,
+      "categorySpanish": "Licores"
+    },
+    "corn_syrup": {
+      "normalized": "corn_syrup",
+      "synonyms": [
+        "corn_syrup",
+        "miel_de_maiz",
+        "mais-sirup",
+        "weizenhirse-sirup",
+        "zuckerrohr-sirup"
+      ],
+      "category": "sweetener",
+      "subcategory": "refined_sugar",
+      "frequency": 99,
+      "embedding": null,
+      "categorySpanish": "Conservas"
+    },
+    "seafood": {
+      "normalized": "seafood",
+      "synonyms": [
+        "scallops",
+        "calamares",
+        "meeresfrüchte",
+        "fischereierzeugnisse"
+      ],
+      "category": "seafood",
+      "subcategory": "",
+      "frequency": 64,
+      "embedding": null,
+      "categorySpanish": "Pescados"
+    },
+    "noodles": {
+      "normalized": "noodles",
+      "synonyms": [
+        "noodles",
+        "fideos",
+        "nudeln",
+        "nüsse"
+      ],
+      "category": "grain",
+      "subcategory": "pasta",
+      "frequency": 67,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "turkey": {
+      "normalized": "turkey",
+      "synonyms": [
+        "turkey",
+        "pavo",
+        "hähnchen",
+        "putenfleisch",
+        "putenbrust"
+      ],
+      "category": "meat",
+      "subcategory": "poultry",
+      "frequency": 318,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "basil": {
+      "normalized": "basil",
+      "synonyms": [
+        "basil",
+        "albahaca",
+        "basilikum",
+        "basilikumblätter",
+        "basilikumkraut"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 142,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "lime": {
+      "normalized": "lime",
+      "synonyms": [
+        "lime",
+        "limón",
+        "limette",
+        "zitronenlimo",
+        "saure limone"
+      ],
+      "category": "fruit",
+      "subcategory": "citrus",
+      "frequency": 66,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "whipped topping": {
+      "normalized": "whipped topping",
+      "synonyms": [
+        "whipped topping",
+        "crema batida",
+        "schlagsahne"
+      ],
+      "category": "dairy",
+      "subcategory": "processed_dairy",
+      "frequency": 307,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "pastry": {
+      "normalized": "pastry",
+      "synonyms": [
+        "pastry",
+        "pastel",
+        "teig",
+        "pastete",
+        "tarte"
+      ],
+      "category": "grain",
+      "subcategory": "baked_good",
+      "frequency": 100,
+      "embedding": null,
+      "categorySpanish": "Pan"
+    },
+    "cake mix": {
+      "normalized": "cake mix",
+      "synonyms": [
+        "cake mix",
+        "gato",
+        "teigmischung",
+        "backmix"
+      ],
+      "category": "grain",
+      "subcategory": "baked_goods",
+      "frequency": 60,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "rum": {
+      "normalized": "rum",
+      "synonyms": [
+        "rum",
+        "ron",
+        "rhum",
+        "rumwasser",
+        "brauner rum"
+      ],
+      "category": "beverage",
+      "subcategory": "distilled_spirit",
+      "frequency": 59,
+      "embedding": null,
+      "categorySpanish": "Licores"
+    },
+    "fish": {
+      "normalized": "fish",
+      "synonyms": [
+        "fish",
+        "pescado",
+        "fisch",
+        "fische"
+      ],
+      "category": "seafood",
+      "subcategory": "fin_fish",
+      "frequency": 79,
+      "embedding": null,
+      "categorySpanish": "Pescados"
+    },
+    "cider": {
+      "normalized": "cider",
+      "synonyms": [
+        "cider",
+        "sidra",
+        "apfelschorle",
+        "apfelwein",
+        "zitronenlimonade"
+      ],
+      "category": "beverage",
+      "subcategory": "fruit_juice",
+      "frequency": 294,
+      "embedding": null,
+      "categorySpanish": "Jugos"
+    },
+    "beet": {
+      "normalized": "beet",
+      "synonyms": [
+        "beet",
+        "remolacha",
+        "rote beete",
+        "rosenkohl",
+        "borschtschbeete"
+      ],
+      "category": "vegetable",
+      "subcategory": "root_vegetable",
+      "frequency": 294,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "fennel": {
+      "normalized": "fennel",
+      "synonyms": [
+        "fennel",
+        "hinojo",
+        "fenchel"
+      ],
+      "category": "vegetable",
+      "subcategory": "bulb",
+      "frequency": 92,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "dill": {
+      "normalized": "dill",
+      "synonyms": [
+        "dill",
+        "eneldo",
+        "dinkel",
+        "kerbel"
+      ],
+      "category": "herb",
+      "subcategory": "leafy_green",
+      "frequency": 282,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "orange": {
+      "normalized": "orange",
+      "synonyms": [
+        "orange",
+        "oranges",
+        "naranja",
+        "naranjas",
+        "orange",
+        "orangen",
+        "arancia"
+      ],
+      "category": "fruit",
+      "subcategory": "citrus",
+      "frequency": 75,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "marshmallow": {
+      "normalized": "marshmallow",
+      "synonyms": [
+        "marshmallow",
+        "malva",
+        "weichmacherkuss",
+        "schokomarshmallow"
+      ],
+      "category": "other",
+      "subcategory": "",
+      "frequency": 150,
+      "embedding": null,
+      "categorySpanish": "Postres"
+    },
+    "soup mix": {
+      "normalized": "soup mix",
+      "synonyms": [
+        "soup mix",
+        "salsa de cebolla seca",
+        "suppenmischung",
+        "suppengemüse"
+      ],
+      "category": "condiment",
+      "subcategory": "seasoning",
+      "frequency": 272,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "leek": {
+      "normalized": "leek",
+      "synonyms": [
+        "leek",
+        "porro",
+        "petersilie",
+        "lauch"
+      ],
+      "category": "vegetable",
+      "subcategory": "allium",
+      "frequency": 270,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "lemon juice": {
+      "normalized": "lemon juice",
+      "synonyms": [
+        "lemon juice",
+        "jugo de limón",
+        "limettensaft",
+        "zitronensaft"
+      ],
+      "category": "fruit",
+      "subcategory": "citrus",
+      "frequency": 267,
+      "embedding": null,
+      "categorySpanish": "Bebidas"
+    },
+    "yogurt": {
+      "normalized": "yogurt",
+      "synonyms": [
+        "yogurt",
+        "yogur",
+        "joghurt"
+      ],
+      "category": "dairy",
+      "subcategory": "fermented_dairy",
+      "frequency": 105,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "mint": {
+      "normalized": "mint",
+      "synonyms": [
+        "mint",
+        "menta",
+        "minze"
+      ],
+      "category": "vegetable",
+      "subcategory": "herb",
+      "frequency": 169,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "seasoning": {
+      "normalized": "seasoning",
+      "synonyms": [
+        "seasoning",
+        "sazonamiento",
+        "gewürz",
+        "zutat",
+        "aromat"
+      ],
+      "category": "condiment",
+      "subcategory": "spice",
+      "frequency": 61,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "peppers": {
+      "normalized": "peppers",
+      "synonyms": [
+        "peppers",
+        "pimientos",
+        "paprika",
+        "paprikaschoten",
+        "pfefferoni"
+      ],
+      "category": "vegetable",
+      "subcategory": "sweet_pepper",
+      "frequency": 148,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "cherries": {
+      "normalized": "cherries",
+      "synonyms": [
+        "cherries",
+        "ciruelas",
+        "kirschen",
+        "kirschenfrüchte",
+        "erdbeeren"
+      ],
+      "category": "fruit",
+      "subcategory": "stone_fruit",
+      "frequency": 73,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "paprika": {
+      "normalized": "paprika",
+      "synonyms": [
+        "paprika",
+        "pimienta dulce",
+        "paprikaschote",
+        "pfefferminze"
+      ],
+      "category": "spice",
+      "subcategory": "powdered_spice",
+      "frequency": 92,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "allspice": {
+      "normalized": "allspice",
+      "synonyms": [
+        "allspice",
+        "pimienta de Jamaica",
+        "nagellackpfeffer",
+        "pimenta",
+        "muskatblüte"
+      ],
+      "category": "spice",
+      "subcategory": "whole_spice",
+      "frequency": 246,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "whiskey": {
+      "normalized": "whiskey",
+      "synonyms": [
+        "whiskey",
+        "whisky",
+        "güisqui",
+        "bourbon",
+        "whiskey irlandés",
+        "scotch"
+      ],
+      "category": "beverage",
+      "subcategory": "spirits",
+      "frequency": 85,
+      "embedding": null,
+      "categorySpanish": "Licores"
+    },
+    "gelatin": {
+      "normalized": "gelatin",
+      "synonyms": [
+        "gelatin",
+        "goma",
+        "wasserstoffperoxid"
+      ],
+      "category": "other",
+      "subcategory": "",
+      "frequency": 110,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "peas": {
+      "normalized": "peas",
+      "synonyms": [
+        "peas",
+        "porotos negros",
+        "erbsen"
+      ],
+      "category": "vegetable",
+      "subcategory": "legume",
+      "frequency": 130,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "parmesan": {
+      "normalized": "parmesan",
+      "synonyms": [
+        "parmesan",
+        "queso parmesano",
+        "parmesankäse",
+        "parmesangerießer"
+      ],
+      "category": "dairy",
+      "subcategory": "hard_cheese",
+      "frequency": 236,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "apricot": {
+      "normalized": "apricot",
+      "synonyms": [
+        "apricot",
+        "albaricoque",
+        "aprikose"
+      ],
+      "category": "fruit",
+      "subcategory": "dried_fruit",
+      "frequency": 228,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "shortening": {
+      "normalized": "shortening",
+      "synonyms": [
+        "shortening",
+        "mantequilla",
+        "fett",
+        "schmalz"
+      ],
+      "category": "dairy",
+      "subcategory": "fats",
+      "frequency": 227,
+      "embedding": null,
+      "categorySpanish": "Aceites"
+    },
+    "spinach": {
+      "normalized": "spinach",
+      "synonyms": [
+        "spinach",
+        "espinaca",
+        "spinat"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 117,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "bun": {
+      "normalized": "bun",
+      "synonyms": [
+        "bun",
+        "pan",
+        "brötchen",
+        "brot"
+      ],
+      "category": "grain",
+      "subcategory": "bread",
+      "frequency": 216,
+      "embedding": null,
+      "categorySpanish": "Pan"
+    },
+    "saffron": {
+      "normalized": "saffron",
+      "synonyms": [
+        "saffron",
+        "azafran",
+        "safran"
+      ],
+      "category": "spice",
+      "subcategory": "aromatic",
+      "frequency": 213,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "cornmeal": {
+      "normalized": "cornmeal",
+      "synonyms": [
+        "cornmeal",
+        "maíz molido",
+        "mais-meal",
+        "maismehl",
+        "maisenmeil"
+      ],
+      "category": "grain",
+      "subcategory": "ground_grain",
+      "frequency": 109,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "pear": {
+      "normalized": "pear",
+      "synonyms": [
+        "pear",
+        "pera",
+        "birne"
+      ],
+      "category": "fruit",
+      "subcategory": "stone_fruit",
+      "frequency": 79,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "scallops": {
+      "normalized": "scallops",
+      "synonyms": [
+        "scallops",
+        "scallop",
+        "vieira",
+        "veiras",
+        "coquille",
+        "kammuschel"
+      ],
+      "category": "seafood",
+      "subcategory": "shellfish",
+      "frequency": 75,
+      "embedding": null,
+      "categorySpanish": "Pescados"
+    },
+    "bacon": {
+      "normalized": "bacon",
+      "synonyms": [
+        "bacon",
+        "tapa",
+        "schweinebauch",
+        "speck"
+      ],
+      "category": "meat",
+      "subcategory": "cured_meat",
+      "frequency": 119,
+      "embedding": null,
+      "categorySpanish": "Embutidos"
+    },
+    "sour cream": {
+      "normalized": "sour cream",
+      "synonyms": [
+        "sour cream",
+        "crema agria",
+        "sahne",
+        "saure sahne"
+      ],
+      "category": "dairy",
+      "subcategory": "soft_cheese",
+      "frequency": 207,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "fish broth": {
+      "normalized": "fish broth",
+      "synonyms": [
+        "fish broth",
+        "fish stock",
+        "caldo de pescado",
+        "caldo de pez",
+        "fischbrühe",
+        "fumet de poisson"
+      ],
+      "category": "seafood",
+      "subcategory": "liquid",
+      "frequency": 204,
+      "embedding": null,
+      "categorySpanish": "Pescados"
+    },
+    "food coloring": {
+      "normalized": "food coloring",
+      "synonyms": [
+        "food coloring",
+        "colorante alimenticio",
+        "farbstoffe"
+      ],
+      "category": "other",
+      "subcategory": "",
+      "frequency": 101,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "sausage": {
+      "normalized": "sausage",
+      "synonyms": [
+        "sausage",
+        "salchicha",
+        "chorizo",
+        "embutido",
+        "wurst",
+        "wurscht",
+        "brätwurst"
+      ],
+      "category": "meat",
+      "subcategory": "processed_meat",
+      "frequency": 62,
+      "embedding": null,
+      "categorySpanish": "Embutidos"
+    },
+    "coffee": {
+      "normalized": "coffee",
+      "synonyms": [
+        "coffee",
+        "café",
+        "kaffee"
+      ],
+      "category": "beverage",
+      "subcategory": "ground_beverage",
+      "frequency": 60,
+      "embedding": null,
+      "categorySpanish": "Café y Té"
+    },
+    "vegetables": {
+      "normalized": "vegetables",
+      "synonyms": [
+        "vegetables",
+        "verduras",
+        "gemüse"
+      ],
+      "category": "vegetable",
+      "subcategory": "mixed",
+      "frequency": 199,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "sprout": {
+      "normalized": "sprout",
+      "synonyms": [
+        "sprout",
+        "broccolini",
+        "keimling",
+        "sprössling"
+      ],
+      "category": "vegetable",
+      "subcategory": "cruciferous",
+      "frequency": 199,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "cardamom": {
+      "normalized": "cardamom",
+      "synonyms": [
+        "cardamom",
+        "cardamomo",
+        "kardamom",
+        "kardamon"
+      ],
+      "category": "spice",
+      "subcategory": "herb",
+      "frequency": 197,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "tofu": {
+      "normalized": "tofu",
+      "synonyms": [
+        "tofu",
+        "toufu",
+        "tvp",
+        "sojaprotein"
+      ],
+      "category": "dairy",
+      "subcategory": "plant_based_dairy",
+      "frequency": 74,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "bread crumb": {
+      "normalized": "bread crumb",
+      "synonyms": [
+        "bread crumb",
+        "tostadura",
+        "bröckchen",
+        "brotkrumen",
+        "brösel"
+      ],
+      "category": "grain",
+      "subcategory": "processed_grain",
+      "frequency": 192,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "almonds": {
+      "normalized": "almonds",
+      "synonyms": [
+        "almonds",
+        "almendras",
+        "mazedonen",
+        "mandeln"
+      ],
+      "category": "grain",
+      "subcategory": "nut",
+      "frequency": 67,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "smoke flavoring": {
+      "normalized": "smoke flavoring",
+      "synonyms": [
+        "smoke flavoring",
+        "flavor de humo",
+        "rauchextrakt",
+        "raucharoma",
+        "rauchsalz"
+      ],
+      "category": "condiment",
+      "subcategory": "seasoning",
+      "frequency": 184,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "carrots": {
+      "normalized": "carrots",
+      "synonyms": [
+        "carrots",
+        "zanos",
+        "apio",
+        "karotten"
+      ],
+      "category": "vegetable",
+      "subcategory": "root_vegetable",
+      "frequency": 184,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "sesame_paste": {
+      "normalized": "sesame_paste",
+      "synonyms": [
+        "tahini",
+        "sesame paste",
+        "tahin"
+      ],
+      "category": "grain",
+      "subcategory": "seed",
+      "frequency": 182,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "coriander": {
+      "normalized": "coriander",
+      "synonyms": [
+        "coriander",
+        "cilantro",
+        "koriander",
+        "korinthen"
+      ],
+      "category": "spice",
+      "subcategory": "seed",
+      "frequency": 177,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "liqueur": {
+      "normalized": "liqueur",
+      "synonyms": [
+        "liqueur",
+        "licor",
+        "likör",
+        "wasseralkohol",
+        "alkoholbrennvin"
+      ],
+      "category": "beverage",
+      "subcategory": "spirit",
+      "frequency": 68,
+      "embedding": null,
+      "categorySpanish": "Licores"
+    },
+    "shellfish": {
+      "normalized": "shellfish",
+      "synonyms": [
+        "oysters",
+        "mollusks",
+        "meeresfrüchte",
+        "schalentiere",
+        "muscheln"
+      ],
+      "category": "seafood",
+      "subcategory": "bivalve",
+      "frequency": 99,
+      "embedding": null,
+      "categorySpanish": "Pescados"
+    },
+    "legume": {
+      "normalized": "legume",
+      "synonyms": [
+        "lentil",
+        "legume",
+        "bohne",
+        "körner",
+        "leguminose pflanze"
+      ],
+      "category": "vegetable",
+      "subcategory": "pulse",
+      "frequency": 174,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "green_onion": {
+      "normalized": "green_onion",
+      "synonyms": [
+        "green onion",
+        "spring onion",
+        "grüne zwiebel",
+        "frische knoblauchzwiebel"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 174,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "sprouts": {
+      "normalized": "sprouts",
+      "synonyms": [
+        "sprouts",
+        "judiones",
+        "keimlinge",
+        "sprossen"
+      ],
+      "category": "vegetable",
+      "subcategory": "legume",
+      "frequency": 169,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "steak": {
+      "normalized": "steak",
+      "synonyms": [
+        "steak",
+        "tira de asada",
+        "rindersteak",
+        "steack",
+        "rumpsteak"
+      ],
+      "category": "meat",
+      "subcategory": "red_meat",
+      "frequency": 83,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "cracker": {
+      "normalized": "cracker",
+      "synonyms": [
+        "cracker",
+        "galleta",
+        "krümelbrei",
+        "knäckebröd",
+        "crackers"
+      ],
+      "category": "grain",
+      "subcategory": "processed_grain",
+      "frequency": 98,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "sweet_rice_wine": {
+      "normalized": "sweet_rice_wine",
+      "synonyms": [
+        "mirin",
+        "sweet_sake",
+        "reiswein"
+      ],
+      "category": "beverage",
+      "subcategory": "fermented_beverage",
+      "frequency": 161,
+      "embedding": null,
+      "categorySpanish": "Vinos"
+    },
+    "pudding": {
+      "normalized": "pudding",
+      "synonyms": [
+        "pudding",
+        "postre",
+        "püree",
+        "puding"
+      ],
+      "category": "dairy",
+      "subcategory": "dessert",
+      "frequency": 99,
+      "embedding": null,
+      "categorySpanish": "Postres"
+    },
+    "jam": {
+      "normalized": "jam",
+      "synonyms": [
+        "jam",
+        "marmalada",
+        "konserve",
+        "marmelade"
+      ],
+      "category": "fruit",
+      "subcategory": "preserved_fruit",
+      "frequency": 76,
+      "embedding": null,
+      "categorySpanish": "Postres"
+    },
+    "currant": {
+      "normalized": "currant",
+      "synonyms": [
+        "currant",
+        "pasas",
+        "beeren",
+        "rosenkirschen"
+      ],
+      "category": "fruit",
+      "subcategory": "dried_fruit",
+      "frequency": 160,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "nectar": {
+      "normalized": "nectar",
+      "synonyms": [
+        "nectar",
+        "miel de agave",
+        "honignektar",
+        "nectarin"
+      ],
+      "category": "sweetener",
+      "subcategory": "plant_based",
+      "frequency": 159,
+      "embedding": null,
+      "categorySpanish": "Bebidas"
+    },
+    "onions": {
+      "normalized": "onions",
+      "synonyms": [
+        "onions",
+        "cebollas",
+        "cebolla",
+        "zwiebeln"
+      ],
+      "category": "vegetable",
+      "subcategory": "bulbous_vegetable",
+      "frequency": 76,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "dressing": {
+      "normalized": "dressing",
+      "synonyms": [
+        "dressing",
+        "salsa",
+        "aderezo",
+        "soße",
+        "beigabe"
+      ],
+      "category": "condiment",
+      "subcategory": "cream_based",
+      "frequency": 103,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "chips": {
+      "normalized": "chips",
+      "synonyms": [
+        "chips",
+        "tortilla chips",
+        "knödel",
+        "fritten"
+      ],
+      "category": "grain",
+      "subcategory": "snack",
+      "frequency": 64,
+      "embedding": null,
+      "categorySpanish": "Snacks"
+    },
+    "salmon": {
+      "normalized": "salmon",
+      "synonyms": [
+        "salmon",
+        "salmón",
+        "lachs"
+      ],
+      "category": "seafood",
+      "subcategory": "fish",
+      "frequency": 152,
+      "embedding": null,
+      "categorySpanish": "Pescados"
+    },
+    "oranges": {
+      "normalized": "oranges",
+      "synonyms": [
+        "oranges",
+        "naranjas",
+        "orange",
+        "apfelsine"
+      ],
+      "category": "fruit",
+      "subcategory": "citrus",
+      "frequency": 151,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "clementines": {
+      "normalized": "clementines",
+      "synonyms": [
+        "clementines",
+        "clementinen",
+        "clementinas",
+        "mandarins",
+        "mandarinen",
+        "mandarinas",
+        "tangerines"
+      ],
+      "category": "fruit",
+      "subcategory": "citrus",
+      "frequency": 70,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "dried_plum": {
+      "normalized": "dried_plum",
+      "synonyms": [
+        "plums",
+        "dried_plums",
+        "trockene pflaume",
+        "getrockneter aprikosenplum"
+      ],
+      "category": "fruit",
+      "subcategory": "dried_fruit",
+      "frequency": 149,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "brandy": {
+      "normalized": "brandy",
+      "synonyms": [
+        "brandy",
+        "coñac",
+        "brandewein",
+        "brandywein",
+        "brandeau"
+      ],
+      "category": "beverage",
+      "subcategory": "spirits",
+      "frequency": 144,
+      "embedding": null,
+      "categorySpanish": "Licores"
+    },
+    "anise": {
+      "normalized": "anise",
+      "synonyms": [
+        "anise",
+        "estrella de anís",
+        "anis",
+        "anissamen",
+        "aniseliebe"
+      ],
+      "category": "spice",
+      "subcategory": "seed",
+      "frequency": 144,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "bok choy": {
+      "normalized": "bok choy",
+      "synonyms": [
+        "bok choy",
+        "choy sum",
+        "pak choi"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 143,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "melon": {
+      "normalized": "melon",
+      "synonyms": [
+        "melon",
+        "sandía",
+        "melone",
+        "wassermelone"
+      ],
+      "category": "fruit",
+      "subcategory": "muskmelon",
+      "frequency": 83,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "chili pepper": {
+      "normalized": "chili pepper",
+      "synonyms": [
+        "chili pepper",
+        "pimiento serrano",
+        "pfeffer",
+        "chili",
+        "paprika"
+      ],
+      "category": "vegetable",
+      "subcategory": "hot_pepper",
+      "frequency": 92,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "fruit filling": {
+      "normalized": "fruit filling",
+      "synonyms": [
+        "fruit filling",
+        "relleno de fruta",
+        "fruchtfüllung",
+        "fruchtmasse"
+      ],
+      "category": "other",
+      "subcategory": "",
+      "frequency": 137,
+      "embedding": null,
+      "categorySpanish": "Postres"
+    },
+    "lamb": {
+      "normalized": "lamb",
+      "synonyms": [
+        "lamb",
+        "cordero",
+        "schafskäse",
+        "lammfleisch",
+        "schafsbraten"
+      ],
+      "category": "meat",
+      "subcategory": "red_meat",
+      "frequency": 73,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "animal_fat": {
+      "normalized": "animal_fat",
+      "synonyms": [
+        "lard",
+        "pig fat",
+        "tierfett",
+        "tierische fettsäure",
+        "lecithin"
+      ],
+      "category": "meat",
+      "subcategory": "animal_product",
+      "frequency": 136,
+      "embedding": null,
+      "categorySpanish": "Aceites"
+    },
+    "strawberry": {
+      "normalized": "strawberry",
+      "synonyms": [
+        "strawberry",
+        "fresa",
+        "erdbeeren"
+      ],
+      "category": "fruit",
+      "subcategory": "",
+      "frequency": 135,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "chard": {
+      "normalized": "chard",
+      "synonyms": [
+        "chard",
+        "cardo",
+        "schwarzwurzel",
+        "schwarzkohl",
+        "blattspinat"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 135,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "noodle": {
+      "normalized": "noodle",
+      "synonyms": [
+        "noodle",
+        "fideo",
+        "nudel",
+        "nüsse",
+        "spätzle"
+      ],
+      "category": "grain",
+      "subcategory": "pasta",
+      "frequency": 134,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "marmalade": {
+      "normalized": "marmalade",
+      "synonyms": [
+        "marmalade",
+        "marmelada",
+        "marillenkonfit",
+        "marmelade"
+      ],
+      "category": "condiment",
+      "subcategory": "fruit_preserve",
+      "frequency": 133,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "grape": {
+      "normalized": "grape",
+      "synonyms": [
+        "grape",
+        "uva",
+        "traube"
+      ],
+      "category": "fruit",
+      "subcategory": "",
+      "frequency": 131,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "soft drink": {
+      "normalized": "soft drink",
+      "synonyms": [
+        "soft drink",
+        "refresco",
+        "süßes getränk",
+        "limettensoda",
+        "cola"
+      ],
+      "category": "beverage",
+      "subcategory": "carbonated",
+      "frequency": 131,
+      "embedding": null,
+      "categorySpanish": "Refrescos"
+    },
+    "raspberry": {
+      "normalized": "raspberry",
+      "synonyms": [
+        "raspberry",
+        "fresa",
+        "erdbeere"
+      ],
+      "category": "fruit",
+      "subcategory": "berry",
+      "frequency": 128,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "bouillon": {
+      "normalized": "bouillon",
+      "synonyms": [
+        "bouillon",
+        "caldo",
+        "brühe"
+      ],
+      "category": "other",
+      "subcategory": "",
+      "frequency": 69,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "dough": {
+      "normalized": "dough",
+      "synonyms": [
+        "dough",
+        "masa",
+        "teig"
+      ],
+      "category": "grain",
+      "subcategory": "processed_grain",
+      "frequency": 87,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "lime juice": {
+      "normalized": "lime juice",
+      "synonyms": [
+        "lime juice",
+        "jugo de limón",
+        "limettensaft",
+        "zitronensaft"
+      ],
+      "category": "fruit",
+      "subcategory": "citrus",
+      "frequency": 126,
+      "embedding": null,
+      "categorySpanish": "Bebidas"
+    },
+    "brisket": {
+      "normalized": "brisket",
+      "synonyms": [
+        "brisket",
+        "costilla",
+        "schulterstück",
+        "rinderbrust"
+      ],
+      "category": "meat",
+      "subcategory": "red_meat",
+      "frequency": 122,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "relish": {
+      "normalized": "relish",
+      "synonyms": [
+        "relish",
+        "mostaza",
+        "senfsoße",
+        "scharfes gemüse",
+        "chutney"
+      ],
+      "category": "condiment",
+      "subcategory": "pickled",
+      "frequency": 121,
+      "embedding": null,
+      "categorySpanish": "Salsas"
+    },
+    "herb_paste": {
+      "normalized": "herb_paste",
+      "synonyms": [
+        "pesto",
+        "salsa verde",
+        "kräuterpaste",
+        "pflanzengewürz"
+      ],
+      "category": "condiment",
+      "subcategory": "herb_based",
+      "frequency": 120,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "salad_dressing": {
+      "normalized": "salad_dressing",
+      "synonyms": [
+        "salad_dressing",
+        "salsa_de_ensalada",
+        "salatsoße",
+        "dressing",
+        "salatsauce"
+      ],
+      "category": "condiment",
+      "subcategory": "dressing",
+      "frequency": 119,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "roast": {
+      "normalized": "roast",
+      "synonyms": [
+        "roast",
+        "asado",
+        "braten",
+        "geröstet",
+        "gebraten"
+      ],
+      "category": "meat",
+      "subcategory": "raw_meat",
+      "frequency": 81,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "plum": {
+      "normalized": "plum",
+      "synonyms": [
+        "plum",
+        "ciruela",
+        "apfelweinplumme",
+        "weichsel",
+        "wilde plombe"
+      ],
+      "category": "fruit",
+      "subcategory": "",
+      "frequency": 116,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "cranberry": {
+      "normalized": "cranberry",
+      "synonyms": [
+        "cranberry",
+        "fresca de arándano",
+        "kranbeere"
+      ],
+      "category": "fruit",
+      "subcategory": "berry",
+      "frequency": 116,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "noodle wrapper": {
+      "normalized": "noodle wrapper",
+      "synonyms": [
+        "noodle wrapper",
+        "wonton skin",
+        "nudelhülle",
+        "lauchblätter",
+        "nüsslisblätter"
+      ],
+      "category": "grain",
+      "subcategory": "pasta",
+      "frequency": 115,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "okra": {
+      "normalized": "okra",
+      "synonyms": [
+        "okra",
+        "gumbo",
+        "ökra",
+        "okraschote",
+        "ladyfingern"
+      ],
+      "category": "vegetable",
+      "subcategory": "pod",
+      "frequency": 115,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "root vegetable": {
+      "normalized": "root vegetable",
+      "synonyms": [
+        "root",
+        "vegetable",
+        "wurzelgemüse"
+      ],
+      "category": "vegetable",
+      "subcategory": "root",
+      "frequency": 84,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "blueberry": {
+      "normalized": "blueberry",
+      "synonyms": [
+        "blueberry",
+        "arándano",
+        "blaubeere",
+        "blaubärchen",
+        "blaubeeren"
+      ],
+      "category": "fruit",
+      "subcategory": "berry",
+      "frequency": 109,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "tenderloin": {
+      "normalized": "tenderloin",
+      "synonyms": [
+        "tenderloin",
+        "lomo de cerdo",
+        "filet mignon",
+        "rinderfilet"
+      ],
+      "category": "meat",
+      "subcategory": "red_meat",
+      "frequency": 109,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "creme": {
+      "normalized": "creme",
+      "synonyms": [
+        "creme",
+        "crema",
+        "sahne"
+      ],
+      "category": "dairy",
+      "subcategory": "spread",
+      "frequency": 107,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "cereal": {
+      "normalized": "cereal",
+      "synonyms": [
+        "cereal",
+        "avena",
+        "haferflocken",
+        "cornflakes"
+      ],
+      "category": "grain",
+      "subcategory": "breakfast_cereal",
+      "frequency": 96,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "cherry": {
+      "normalized": "cherry",
+      "synonyms": [
+        "cherry",
+        "cereza",
+        "kirsche",
+        "kirschfrucht"
+      ],
+      "category": "fruit",
+      "subcategory": "dried_fruit",
+      "frequency": 102,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "short_ribs": {
+      "normalized": "short_ribs",
+      "synonyms": [
+        "short_ribs",
+        "costillas",
+        "kurzrippen"
+      ],
+      "category": "meat",
+      "subcategory": "red_meat",
+      "frequency": 104,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "chile": {
+      "normalized": "chile",
+      "synonyms": [
+        "chile",
+        "guajillo",
+        "jalapeño",
+        "chili",
+        "chilischoten"
+      ],
+      "category": "vegetable",
+      "subcategory": "hot_pepper",
+      "frequency": 61,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "herbs": {
+      "normalized": "herbs",
+      "synonyms": [
+        "herbs",
+        "especias",
+        "kräuter"
+      ],
+      "category": "spice",
+      "subcategory": "mixed_spices",
+      "frequency": 101,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "caramel": {
+      "normalized": "caramel",
+      "synonyms": [
+        "caramel",
+        "caramelo",
+        "karamell"
+      ],
+      "category": "sweetener",
+      "subcategory": "confectionery",
+      "frequency": 101,
+      "embedding": null,
+      "categorySpanish": "Postres"
+    },
+    "bitters": {
+      "normalized": "bitters",
+      "synonyms": [
+        "bitters",
+        "bitter",
+        "bitterling"
+      ],
+      "category": "spice",
+      "subcategory": "other",
+      "frequency": 99,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "greens": {
+      "normalized": "greens",
+      "synonyms": [
+        "greens",
+        "verduras",
+        "salat",
+        "grünpfropfen",
+        "blattsalat"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 73,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "rice_wine": {
+      "normalized": "rice_wine",
+      "synonyms": [
+        "sake",
+        "saké",
+        "rice wine",
+        "reiswein",
+        "weisswein"
+      ],
+      "category": "beverage",
+      "subcategory": "fermented_beverage",
+      "frequency": 99,
+      "embedding": null,
+      "categorySpanish": "Vinos"
+    },
+    "walnut": {
+      "normalized": "walnut",
+      "synonyms": [
+        "walnut",
+        "nuez",
+        "walnuss"
+      ],
+      "category": "fruit",
+      "subcategory": "tree_nut",
+      "frequency": 78,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "applesauce": {
+      "normalized": "applesauce",
+      "synonyms": [
+        "applesauce",
+        "salsa de manzana",
+        "apfelmus"
+      ],
+      "category": "fruit",
+      "subcategory": "processed_fruit",
+      "frequency": 96,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "chili": {
+      "normalized": "chili",
+      "synonyms": [
+        "chili",
+        "chile",
+        "pfefferminze"
+      ],
+      "category": "vegetable",
+      "subcategory": "hot_pepper",
+      "frequency": 65,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "vermouth": {
+      "normalized": "vermouth",
+      "synonyms": [
+        "vermouth",
+        "vino dulce",
+        "wermut"
+      ],
+      "category": "beverage",
+      "subcategory": "liqueur",
+      "frequency": 94,
+      "embedding": null,
+      "categorySpanish": "Licores"
+    },
+    "rolls": {
+      "normalized": "rolls",
+      "synonyms": [
+        "rolls",
+        "bollos",
+        "rolle",
+        "roulade"
+      ],
+      "category": "grain",
+      "subcategory": "baked_goods",
+      "frequency": 94,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "sesame oil": {
+      "normalized": "sesame oil",
+      "synonyms": [
+        "sesame oil",
+        "aceite de sésamo",
+        "aceite de ajonjolí",
+        "sésamöl",
+        "huile de sésamo",
+        "olio di sesamo"
+      ],
+      "category": "oil",
+      "subcategory": "seed oil",
+      "frequency": 61,
+      "embedding": null,
+      "categorySpanish": "Aceites"
+    },
+    "chicken breast": {
+      "normalized": "chicken breast",
+      "synonyms": [
+        "chicken breast",
+        "pechuga de pollo",
+        "hähnchenbrust",
+        "putenbrust"
+      ],
+      "category": "meat",
+      "subcategory": "poultry",
+      "frequency": 91,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "chicken fillet": {
+      "normalized": "chicken fillet",
+      "synonyms": [
+        "chicken fillet",
+        "chicken tender",
+        "chicken tenderloin",
+        "filete de pollo",
+        "solomillo de pollo",
+        "hähncheninnenfilet",
+        "hähnchenschnitzel",
+        "hähnchenfilet"
+      ],
+      "category": "meat",
+      "subcategory": "poultry",
+      "frequency": 85,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "turmeric": {
+      "normalized": "turmeric",
+      "synonyms": [
+        "turmeric",
+        "jengibre",
+        "gelbwurzel",
+        "kurkuma"
+      ],
+      "category": "spice",
+      "subcategory": "root_spice",
+      "frequency": 91,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "maple syrup": {
+      "normalized": "maple syrup",
+      "synonyms": [
+        "maple syrup",
+        "sirope de arce",
+        "ahornsirup",
+        "kanadischer sirup"
+      ],
+      "category": "sweetener",
+      "subcategory": "liquid sweetener",
+      "frequency": 88,
+      "embedding": null,
+      "categorySpanish": "Bebidas"
+    },
+    "barley": {
+      "normalized": "barley",
+      "synonyms": [
+        "barley",
+        "cebada",
+        "gerste"
+      ],
+      "category": "grain",
+      "subcategory": "whole_grain",
+      "frequency": 86,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "peach": {
+      "normalized": "peach",
+      "synonyms": [
+        "peach",
+        "melocotón",
+        "pfirsich",
+        "apfeltraube"
+      ],
+      "category": "fruit",
+      "subcategory": "stone_fruit",
+      "frequency": 84,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "pickles": {
+      "normalized": "pickles",
+      "synonyms": [
+        "pickles",
+        "escabeches",
+        "sauerkraut",
+        "gurken"
+      ],
+      "category": "vegetable",
+      "subcategory": "canned_vegetable",
+      "frequency": 83,
+      "embedding": null,
+      "categorySpanish": "Conservas"
+    },
+    "margarine": {
+      "normalized": "margarine",
+      "synonyms": [
+        "margarine",
+        "butter",
+        "weiches butterersatzmittel",
+        "weisses fett"
+      ],
+      "category": "dairy",
+      "subcategory": "spread",
+      "frequency": 82,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "dried fruit": {
+      "normalized": "dried fruit",
+      "synonyms": [
+        "dried fruit",
+        "fruta seca",
+        "trockene frucht",
+        "getrocknete früchte"
+      ],
+      "category": "fruit",
+      "subcategory": "dried",
+      "frequency": 80,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "juice_concentrate": {
+      "normalized": "juice_concentrate",
+      "synonyms": [
+        "juice_concentrate",
+        "limonada concentrada",
+        "saftkonzentrat"
+      ],
+      "category": "beverage",
+      "subcategory": "frozen_dessert",
+      "frequency": 80,
+      "embedding": null,
+      "categorySpanish": "Jugos"
+    },
+    "bread_crumb": {
+      "normalized": "bread_crumb",
+      "synonyms": [
+        "bread crumb",
+        "panceta",
+        "bröckchen",
+        "brotcrümel",
+        "brötchenstücke"
+      ],
+      "category": "grain",
+      "subcategory": "processed_grain",
+      "frequency": 80,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "ham": {
+      "normalized": "ham",
+      "synonyms": [
+        "ham",
+        "jamón",
+        "schweinshaxe",
+        "schinken"
+      ],
+      "category": "meat",
+      "subcategory": "cured_meat",
+      "frequency": 74,
+      "embedding": null,
+      "categorySpanish": "Embutidos"
+    },
+    "almond": {
+      "normalized": "almond",
+      "synonyms": [
+        "almond",
+        "almendra",
+        "marzipan",
+        "mandel",
+        "amandel"
+      ],
+      "category": "fruit",
+      "subcategory": "tree_nut",
+      "frequency": 65,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "sage": {
+      "normalized": "sage",
+      "synonyms": [
+        "sage",
+        "salvia",
+        "salbei"
+      ],
+      "category": "herb",
+      "subcategory": "leafy_green",
+      "frequency": 61,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "bread crumbs": {
+      "normalized": "bread crumbs",
+      "synonyms": [
+        "bread crumbs",
+        "pan rallado",
+        "bröckchen",
+        "bröseln",
+        "brocken"
+      ],
+      "category": "grain",
+      "subcategory": "processed_grain",
+      "frequency": 76,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "tomato_soup": {
+      "normalized": "tomato_soup",
+      "synonyms": [
+        "tomato_soup",
+        "sopa_de_tomate",
+        "tomatensoße",
+        "tomateensuppe",
+        "tomatsuppe"
+      ],
+      "category": "beverage",
+      "subcategory": "soup",
+      "frequency": 76,
+      "embedding": null,
+      "categorySpanish": "Conservas"
+    },
+    "fish paste": {
+      "normalized": "fish paste",
+      "synonyms": [
+        "fish paste",
+        "pasta de anchoa",
+        "fischpaste",
+        "fischkonserven",
+        "fischwurst"
+      ],
+      "category": "seafood",
+      "subcategory": "cured_fish",
+      "frequency": 75,
+      "embedding": null,
+      "categorySpanish": "Pescados"
+    },
+    "nut paste": {
+      "normalized": "nut paste",
+      "synonyms": [
+        "nut paste",
+        "mantequilla de almendra",
+        "nusspaste",
+        "nusspasta",
+        "pflanzensahne"
+      ],
+      "category": "other",
+      "subcategory": "",
+      "frequency": 75,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "mix": {
+      "normalized": "mix",
+      "synonyms": [
+        "mix",
+        "mezcla",
+        "mischung"
+      ],
+      "category": "grain",
+      "subcategory": "processed_grain",
+      "frequency": 75,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "endive": {
+      "normalized": "endive",
+      "synonyms": [
+        "endive",
+        "escarola",
+        "endivie",
+        "waldsalat"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 62,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "asparagus": {
+      "normalized": "asparagus",
+      "synonyms": [
+        "asparagus",
+        "esparrago",
+        "asperge",
+        "spargel"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 73,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "gum": {
+      "normalized": "gum",
+      "synonyms": [
+        "gum",
+        "alguno",
+        "kautschuk",
+        "gummi"
+      ],
+      "category": "other",
+      "subcategory": "",
+      "frequency": 72,
+      "embedding": null,
+      "categorySpanish": "Otros"
+    },
+    "hot_sauce": {
+      "normalized": "hot_sauce",
+      "synonyms": [
+        "hot sauce",
+        "salsa picante",
+        "scharfes sausen",
+        "scharfe soße",
+        "chili-sauce"
+      ],
+      "category": "condiment",
+      "subcategory": "hot_sauce",
+      "frequency": 66,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "crab meat": {
+      "normalized": "crab meat",
+      "synonyms": [
+        "crab meat",
+        "cangrejo imitación",
+        "krabennocken",
+        "krabfleisch",
+        "hummerfleisch"
+      ],
+      "category": "seafood",
+      "subcategory": "processed_seafood",
+      "frequency": 70,
+      "embedding": null,
+      "categorySpanish": "Pescados"
+    },
+    "chutney": {
+      "normalized": "chutney",
+      "synonyms": [
+        "chutney",
+        "salsa",
+        "chutnee",
+        "chutni"
+      ],
+      "category": "condiment",
+      "subcategory": "fruit_based",
+      "frequency": 70,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "clarified_butter": {
+      "normalized": "clarified_butter",
+      "synonyms": [
+        "clarified butter",
+        "ghee",
+        "germanmargarine"
+      ],
+      "category": "dairy",
+      "subcategory": "fats",
+      "frequency": 69,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "breadcrumbs": {
+      "normalized": "breadcrumbs",
+      "synonyms": [
+        "breadcrumbs",
+        "tostadas",
+        "bröckchen",
+        "brotkrumen"
+      ],
+      "category": "grain",
+      "subcategory": "crushed_grain",
+      "frequency": 69,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "seed meal": {
+      "normalized": "seed meal",
+      "synonyms": [
+        "seed meal",
+        "harina de semilla",
+        "samensaatmehl",
+        "samenmehl",
+        "pflanzenschrotmehl"
+      ],
+      "category": "grain",
+      "subcategory": "other",
+      "frequency": 68,
+      "embedding": null,
+      "categorySpanish": "Frutos Secos"
+    },
+    "vegetable mix": {
+      "normalized": "vegetable mix",
+      "synonyms": [
+        "vegetable mix",
+        "ensalada de repollo",
+        "gemüsemix",
+        "gemüsegemisch",
+        "blumenkohl-mix"
+      ],
+      "category": "vegetable",
+      "subcategory": "prepared",
+      "frequency": 68,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "chili_powder": {
+      "normalized": "chili_powder",
+      "synonyms": [
+        "chili_powder",
+        "pimienta_chili",
+        "chiliflocken",
+        "chili-pulver",
+        "chili-mischung"
+      ],
+      "category": "spice",
+      "subcategory": "ground_spice",
+      "frequency": 67,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "popcorn": {
+      "normalized": "popcorn",
+      "synonyms": [
+        "popcorn",
+        "palomitas",
+        "poppingkorn",
+        "popcornkerne",
+        "pfefferminuspopcorn"
+      ],
+      "category": "grain",
+      "subcategory": "popped_grain",
+      "frequency": 68,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "grass": {
+      "normalized": "grass",
+      "synonyms": [
+        "grass",
+        "pasto",
+        "gras",
+        "grünfutter"
+      ],
+      "category": "vegetable",
+      "subcategory": "herb",
+      "frequency": 67,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "coconut cream": {
+      "normalized": "coconut cream",
+      "synonyms": [
+        "coconut cream",
+        "crema de coco",
+        "kokoscreme",
+        "kokosmilch"
+      ],
+      "category": "dairy",
+      "subcategory": "other",
+      "frequency": 67,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "lentil": {
+      "normalized": "lentil",
+      "synonyms": [
+        "lentil",
+        "lenteja",
+        "linsen"
+      ],
+      "category": "grain",
+      "subcategory": "legume",
+      "frequency": 67,
+      "embedding": null,
+      "categorySpanish": "Granos"
+    },
+    "cassava": {
+      "normalized": "cassava",
+      "synonyms": [
+        "cassava",
+        "yuca",
+        "maniok"
+      ],
+      "category": "grain",
+      "subcategory": "root",
+      "frequency": 66,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "calamari": {
+      "normalized": "calamari",
+      "synonyms": [
+        "calamari",
+        "sepia",
+        "tintenfisch"
+      ],
+      "category": "seafood",
+      "subcategory": "cephalopod",
+      "frequency": 66,
+      "embedding": null,
+      "categorySpanish": "Pescados"
+    },
+    "citrus_fruit": {
+      "normalized": "citrus_fruit",
+      "synonyms": [
+        "grapefruit",
+        "naranja_agria",
+        "zitronenfrucht",
+        "citrusfrucht",
+        "saftapfel"
+      ],
+      "category": "fruit",
+      "subcategory": "acidic",
+      "frequency": 66,
+      "embedding": null,
+      "categorySpanish": "Frutas"
+    },
+    "pesto": {
+      "normalized": "pesto",
+      "synonyms": [
+        "pesto",
+        "salsa verde",
+        "basilikum pesto",
+        "basilikumpesto",
+        "pesto sauce"
+      ],
+      "category": "condiment",
+      "subcategory": "herb_based",
+      "frequency": 65,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "artichokes": {
+      "normalized": "artichokes",
+      "synonyms": [
+        "artichokes",
+        "alcachofas",
+        "artischocken"
+      ],
+      "category": "vegetable",
+      "subcategory": "canned_vegetables",
+      "frequency": 65,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "ribs": {
+      "normalized": "ribs",
+      "synonyms": [
+        "ribs",
+        "costillas",
+        "rippen",
+        "rinderrippen",
+        "ribchen"
+      ],
+      "category": "meat",
+      "subcategory": "pork",
+      "frequency": 65,
+      "embedding": null,
+      "categorySpanish": "Carnes"
+    },
+    "pickle": {
+      "normalized": "pickle",
+      "synonyms": [
+        "pickle",
+        "escabeche",
+        "sauerkraut",
+        "gurke",
+        "dillpickel"
+      ],
+      "category": "condiment",
+      "subcategory": "pickled",
+      "frequency": 64,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "orange juice": {
+      "normalized": "orange juice",
+      "synonyms": [
+        "orange juice",
+        "jugo de naranja",
+        "orangen saft"
+      ],
+      "category": "fruit",
+      "subcategory": "juice",
+      "frequency": 64,
+      "embedding": null,
+      "categorySpanish": "Bebidas"
+    },
+    "substitute": {
+      "normalized": "substitute",
+      "synonyms": [
+        "substitute",
+        "reemplazo",
+        "ersatz"
+      ],
+      "category": "other",
+      "subcategory": "",
+      "frequency": 64,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "green onion": {
+      "normalized": "green onion",
+      "synonyms": [
+        "green onion",
+        "cebolla verde",
+        "grüne zwiebel",
+        "grüner lauch"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 64,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "arugula": {
+      "normalized": "arugula",
+      "synonyms": [
+        "arugula",
+        "rucola",
+        "rosmarinikraut",
+        "rosmarinkraut"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 62,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "sweet_potato": {
+      "normalized": "sweet_potato",
+      "synonyms": [
+        "sweet potato",
+        "batata",
+        "boniato",
+        "süßkartoffel"
+      ],
+      "category": "vegetable",
+      "subcategory": "root_vegetable",
+      "frequency": 62,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "green bean": {
+      "normalized": "green bean",
+      "synonyms": [
+        "green bean",
+        "frijol verde",
+        "grüne bohne",
+        "grüner bohnensprossen"
+      ],
+      "category": "vegetable",
+      "subcategory": "legume",
+      "frequency": 62,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "nutella": {
+      "normalized": "nutella",
+      "synonyms": [
+        "nutella",
+        "crema de chocolate y avellana",
+        "nussela",
+        "nutellahäubchen",
+        "hazelnusscreme"
+      ],
+      "category": "dairy",
+      "subcategory": "spread",
+      "frequency": 61,
+      "embedding": null,
+      "categorySpanish": "Postres"
+    },
+    "cookie": {
+      "normalized": "cookie",
+      "synonyms": [
+        "cookie",
+        "galleta",
+        "plätzchen",
+        "kuchen"
+      ],
+      "category": "grain",
+      "subcategory": "baked_grain_product",
+      "frequency": 60,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "ramen": {
+      "normalized": "ramen",
+      "synonyms": [
+        "ramen",
+        "ramen noodles",
+        "fideos ramen",
+        "fideos instantáneos",
+        "noodles instantáneos",
+        "ramennudeln",
+        "instantnudeln"
+      ],
+      "category": "grain",
+      "subcategory": "pasta",
+      "frequency": 55,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "soy_sauce": {
+      "normalized": "soy_sauce",
+      "synonyms": [
+        "soy sauce",
+        "salsa de soja",
+        "salsa soja",
+        "soja",
+        "sojasosse",
+        "sojasauce",
+        "shoyu",
+        "tamari",
+        "sauce soja"
+      ],
+      "category": "condiment",
+      "subcategory": "sauce",
+      "frequency": 70,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "miso": {
+      "normalized": "miso",
+      "synonyms": [
+        "miso",
+        "pasta de miso",
+        "miso paste",
+        "misopaste",
+        "shiro miso",
+        "aka miso",
+        "miso blanco",
+        "miso rojo"
+      ],
+      "category": "condiment",
+      "subcategory": "paste",
+      "frequency": 40,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "wasabi": {
+      "normalized": "wasabi",
+      "synonyms": [
+        "wasabi",
+        "pasta de wasabi",
+        "wasabi paste",
+        "wasabipaste",
+        "rábano japonés"
+      ],
+      "category": "condiment",
+      "subcategory": "paste",
+      "frequency": 25,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "nori": {
+      "normalized": "nori",
+      "synonyms": [
+        "nori",
+        "alga nori",
+        "hojas de nori",
+        "noriblaetter",
+        "nori sheets",
+        "alga marina",
+        "seaweed sheets"
+      ],
+      "category": "vegetable",
+      "subcategory": "seaweed",
+      "frequency": 35,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "seaweed": {
+      "normalized": "seaweed",
+      "synonyms": [
+        "seaweed",
+        "algas",
+        "alga",
+        "algas marinas",
+        "wakame",
+        "kombu",
+        "seetang",
+        "meeresalgen"
+      ],
+      "category": "vegetable",
+      "subcategory": "seaweed",
+      "frequency": 30,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "kimchi": {
+      "normalized": "kimchi",
+      "synonyms": [
+        "kimchi",
+        "kimchee",
+        "col fermentada coreana",
+        "repollo fermentado coreano",
+        "kimchi coreano"
+      ],
+      "category": "vegetable",
+      "subcategory": "fermented",
+      "frequency": 35,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "edamame": {
+      "normalized": "edamame",
+      "synonyms": [
+        "edamame",
+        "soja verde",
+        "vainas de soja",
+        "habas de soja",
+        "edamame bohnen",
+        "sojabohnen"
+      ],
+      "category": "vegetable",
+      "subcategory": "legume",
+      "frequency": 30,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "shiitake": {
+      "normalized": "shiitake",
+      "synonyms": [
+        "shiitake",
+        "seta shiitake",
+        "setas shiitake",
+        "shiitake pilz",
+        "shiitake pilze",
+        "shiitake mushroom",
+        "shiitake mushrooms"
+      ],
+      "category": "vegetable",
+      "subcategory": "fungi",
+      "frequency": 35,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "coconut_milk": {
+      "normalized": "coconut_milk",
+      "synonyms": [
+        "coconut milk",
+        "leche de coco",
+        "kokosmilch",
+        "kokosnussmilch",
+        "lait de coco",
+        "latte di cocco"
+      ],
+      "category": "dairy",
+      "subcategory": "plant_based_dairy",
+      "frequency": 50,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "fish_sauce": {
+      "normalized": "fish_sauce",
+      "synonyms": [
+        "fish sauce",
+        "salsa de pescado",
+        "nam pla",
+        "nuoc mam",
+        "fischsauce",
+        "fischsosse",
+        "sauce poisson"
+      ],
+      "category": "condiment",
+      "subcategory": "sauce",
+      "frequency": 35,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "oyster_sauce": {
+      "normalized": "oyster_sauce",
+      "synonyms": [
+        "oyster sauce",
+        "salsa de ostras",
+        "austernsosse",
+        "austernsauce",
+        "sauce huitre"
+      ],
+      "category": "condiment",
+      "subcategory": "sauce",
+      "frequency": 35,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "hoisin_sauce": {
+      "normalized": "hoisin_sauce",
+      "synonyms": [
+        "hoisin sauce",
+        "salsa hoisin",
+        "hoisinsosse",
+        "hoisinsauce",
+        "sauce hoisin"
+      ],
+      "category": "condiment",
+      "subcategory": "sauce",
+      "frequency": 30,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "teriyaki_sauce": {
+      "normalized": "teriyaki_sauce",
+      "synonyms": [
+        "teriyaki sauce",
+        "salsa teriyaki",
+        "teriyakisosse",
+        "teriyakisauce",
+        "sauce teriyaki"
+      ],
+      "category": "condiment",
+      "subcategory": "sauce",
+      "frequency": 35,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "sriracha": {
+      "normalized": "sriracha",
+      "synonyms": [
+        "sriracha",
+        "salsa sriracha",
+        "sriracha sauce",
+        "sriracha sosse",
+        "salsa picante tailandesa"
+      ],
+      "category": "condiment",
+      "subcategory": "sauce",
+      "frequency": 30,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "curry_paste": {
+      "normalized": "curry_paste",
+      "synonyms": [
+        "curry paste",
+        "pasta de curry",
+        "currypaste",
+        "red curry paste",
+        "green curry paste",
+        "pasta curry rojo",
+        "pasta curry verde",
+        "yellow curry paste"
+      ],
+      "category": "condiment",
+      "subcategory": "paste",
+      "frequency": 35,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "udon": {
+      "normalized": "udon",
+      "synonyms": [
+        "udon",
+        "fideos udon",
+        "udon noodles",
+        "udonnudeln",
+        "udon nudeln"
+      ],
+      "category": "grain",
+      "subcategory": "pasta",
+      "frequency": 30,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "soba": {
+      "normalized": "soba",
+      "synonyms": [
+        "soba",
+        "fideos soba",
+        "soba noodles",
+        "sobanudeln",
+        "fideos de trigo sarraceno",
+        "buchweizennudeln"
+      ],
+      "category": "grain",
+      "subcategory": "pasta",
+      "frequency": 25,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "rice_noodles": {
+      "normalized": "rice_noodles",
+      "synonyms": [
+        "rice noodles",
+        "fideos de arroz",
+        "reisnudeln",
+        "pad thai noodles",
+        "vermicelli de arroz",
+        "pho noodles"
+      ],
+      "category": "grain",
+      "subcategory": "pasta",
+      "frequency": 35,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "dashi": {
+      "normalized": "dashi",
+      "synonyms": [
+        "dashi",
+        "caldo dashi",
+        "dashi broth",
+        "dashi stock",
+        "dashibruehe",
+        "caldo japonés"
+      ],
+      "category": "condiment",
+      "subcategory": "broth",
+      "frequency": 20,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "tempeh": {
+      "normalized": "tempeh",
+      "synonyms": [
+        "tempeh",
+        "tempe",
+        "soja fermentada",
+        "fermentierte soja"
+      ],
+      "category": "dairy",
+      "subcategory": "plant_based_dairy",
+      "frequency": 25,
+      "embedding": null,
+      "categorySpanish": "Lácteos"
+    },
+    "panko": {
+      "normalized": "panko",
+      "synonyms": [
+        "panko",
+        "pan rallado japonés",
+        "panko breadcrumbs",
+        "panko semmelbroesel",
+        "panko brotkrumen"
+      ],
+      "category": "grain",
+      "subcategory": "baked_grain_product",
+      "frequency": 30,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "lemongrass": {
+      "normalized": "lemongrass",
+      "synonyms": [
+        "lemongrass",
+        "hierba limón",
+        "hierba limonera",
+        "citronela",
+        "zitronengras",
+        "citronnelle"
+      ],
+      "category": "vegetable",
+      "subcategory": "herb",
+      "frequency": 25,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "galangal": {
+      "normalized": "galangal",
+      "synonyms": [
+        "galangal",
+        "galanga",
+        "jengibre tailandés",
+        "galgant",
+        "galangawurzel"
+      ],
+      "category": "vegetable",
+      "subcategory": "root",
+      "frequency": 15,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "bamboo_shoots": {
+      "normalized": "bamboo_shoots",
+      "synonyms": [
+        "bamboo shoots",
+        "brotes de bambú",
+        "bambussprossen",
+        "pousses de bambou",
+        "bambú"
+      ],
+      "category": "vegetable",
+      "subcategory": "shoot",
+      "frequency": 25,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "water_chestnuts": {
+      "normalized": "water_chestnuts",
+      "synonyms": [
+        "water chestnuts",
+        "castañas de agua",
+        "wasserkastanien",
+        "chataignes deau"
+      ],
+      "category": "vegetable",
+      "subcategory": "root",
+      "frequency": 20,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "bean_sprouts": {
+      "normalized": "bean_sprouts",
+      "synonyms": [
+        "bean sprouts",
+        "brotes de soja",
+        "germinados de soja",
+        "brotes de mungo",
+        "sojasprossen",
+        "mungobohnensprossen"
+      ],
+      "category": "vegetable",
+      "subcategory": "sprout",
+      "frequency": 30,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "spring_roll_wrapper": {
+      "normalized": "spring_roll_wrapper",
+      "synonyms": [
+        "spring roll wrapper",
+        "masa de rollito",
+        "obleas de arroz",
+        "rice paper",
+        "papel de arroz",
+        "fruehlingsrollenteig",
+        "reispapier"
+      ],
+      "category": "grain",
+      "subcategory": "pasta",
+      "frequency": 20,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "gyoza": {
+      "normalized": "gyoza",
+      "synonyms": [
+        "gyoza",
+        "empanadillas japonesas",
+        "dumplings",
+        "dumpling",
+        "jiaozi",
+        "gyoza wrappers",
+        "masa de gyoza"
+      ],
+      "category": "grain",
+      "subcategory": "pasta",
+      "frequency": 30,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "sambal": {
+      "normalized": "sambal",
+      "synonyms": [
+        "sambal",
+        "sambal oelek",
+        "salsa sambal",
+        "sambalsosse",
+        "chile sambal"
+      ],
+      "category": "condiment",
+      "subcategory": "sauce",
+      "frequency": 25,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "star_anise": {
+      "normalized": "star_anise",
+      "synonyms": [
+        "star anise",
+        "anís estrellado",
+        "badián",
+        "sternanis",
+        "anis etoile",
+        "anís estrella"
+      ],
+      "category": "spice",
+      "subcategory": "whole_spice",
+      "frequency": 20,
+      "embedding": null,
+      "categorySpanish": "Especias"
+    },
+    "five_spice": {
+      "normalized": "five_spice",
+      "synonyms": [
+        "five spice",
+        "cinco especias",
+        "five spice powder",
+        "polvo cinco especias",
+        "fuenf-gewuerze-pulver",
+        "cinq epices"
+      ],
+      "category": "spice",
+      "subcategory": "ground_spice",
+      "frequency": 20,
+      "embedding": null,
+      "categorySpanish": "Especias"
+    },
+    "thai_basil": {
+      "normalized": "thai_basil",
+      "synonyms": [
+        "thai basil",
+        "albahaca tailandesa",
+        "albahaca thai",
+        "thailaendisches basilikum",
+        "basilic thai"
+      ],
+      "category": "vegetable",
+      "subcategory": "herb",
+      "frequency": 20,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "rice_vinegar": {
+      "normalized": "rice_vinegar",
+      "synonyms": [
+        "rice vinegar",
+        "vinagre de arroz",
+        "reisessig",
+        "vinaigre de riz",
+        "aceto di riso"
+      ],
+      "category": "condiment",
+      "subcategory": "vinegar",
+      "frequency": 35,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "tamarind": {
+      "normalized": "tamarind",
+      "synonyms": [
+        "tamarind",
+        "tamarindo",
+        "pasta de tamarindo",
+        "tamarinde",
+        "tamarindenpaste",
+        "tamarind paste"
+      ],
+      "category": "condiment",
+      "subcategory": "paste",
+      "frequency": 20,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    },
+    "wonton_wrappers": {
+      "normalized": "wonton_wrappers",
+      "synonyms": [
+        "wonton wrappers",
+        "masa de wonton",
+        "obleas de wonton",
+        "wontanblaetter",
+        "wonton skins"
+      ],
+      "category": "grain",
+      "subcategory": "pasta",
+      "frequency": 20,
+      "embedding": null,
+      "categorySpanish": "Harinas"
+    },
+    "enoki_mushroom": {
+      "normalized": "enoki_mushroom",
+      "synonyms": [
+        "enoki mushroom",
+        "enoki",
+        "seta enoki",
+        "setas enoki",
+        "enokipilze",
+        "champignons enoki"
+      ],
+      "category": "vegetable",
+      "subcategory": "fungi",
+      "frequency": 20,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "pak_choi": {
+      "normalized": "pak_choi",
+      "synonyms": [
+        "pak choi",
+        "pak choy",
+        "col china",
+        "repollo chino",
+        "chinese cabbage",
+        "chinakohl",
+        "napa cabbage"
+      ],
+      "category": "vegetable",
+      "subcategory": "leafy_green",
+      "frequency": 30,
+      "embedding": null,
+      "categorySpanish": "Verduras"
+    },
+    "satay_sauce": {
+      "normalized": "satay_sauce",
+      "synonyms": [
+        "satay sauce",
+        "salsa satay",
+        "salsa de cacahuete",
+        "erdnusssauce",
+        "sataysosse",
+        "peanut sauce"
+      ],
+      "category": "condiment",
+      "subcategory": "sauce",
+      "frequency": 20,
+      "embedding": null,
+      "categorySpanish": "Condimentos"
+    }
+  },
+  "classificationModel": "llama3.1:8b",
+  "classificationDate": "2026-02-12T00:00:00.000Z"
+}
