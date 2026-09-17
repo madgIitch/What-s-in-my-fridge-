@@ -1,0 +1,1293 @@
+{
+  "project": "What's In My Fridge??",
+  "description": "Especificación de migración de What's In My Fridge?? desde el cliente React Native/Expo + Firebase actual a una PWA mobile-first desplegada en Vercel, con Supabase como backend de datos/auth/storage/realtime y Google Cloud Run + Cloud Tasks como plano especializado de procesamiento multimedia e IA para imports de recetas desde RRSS.",
+  "vision": "Preservar el producto y sus contratos funcionales mientras se sustituye la infraestructura móvil/Firebase por una PWA web instalable, offline-first y segura. Vercel sirve y orquesta la experiencia web interactiva; Supabase es la fuente de verdad de aplicación; Google Cloud ejecuta únicamente cargas multimedia/IA pesadas y efímeras. El flujo de importación de recetas debe sobrevivir al cierre de la PWA, priorizar texto/captions antes de transcribir audio y producir Recipe JSON estructurado y validado, no prosa que luego deba parsearse.",
+  "release_target": "1.0.0",
+  "architecture": {
+    "web": "Next.js App Router + React + TypeScript + Tailwind, mobile-first, desplegado en Vercel como PWA. La PWA expone rutas normales de pegar URL y, donde el navegador/SO lo soporte, Web Share Target para recibir URLs/archivos compartidos.",
+    "application_backend": "Next.js Server Actions / Route Handlers en runtime Node para lógica interactiva: auth/session, validación, cuotas, CRUD, Stripe, OCR, creación de recipe_jobs y enqueue de Cloud Tasks. Vercel NO descarga/transcodifica vídeo ni ejecuta Whisper/ffmpeg en el flujo normal.",
+    "database": "Supabase PostgreSQL es la fuente de verdad de usuarios de aplicación, inventario, recetas, favoritos, comidas, usage, suscripciones y recipe_jobs.",
+    "database_access": "Migraciones SQL versionadas en supabase/migrations y tipos TypeScript generados desde el esquema; sin ORM obligatorio en 1.0 para mantener RLS y contratos SQL explícitos.",
+    "authentication": "Supabase Auth con sesiones en cookies para Next.js, PKCE y utilidades SSR; migración desde Firebase Auth mediante tooling oficial y mapeo explícito de legacy Firebase UID.",
+    "storage": "Supabase Storage con buckets privados para tickets, uploads de usuario y assets de aplicación. Google Cloud Storage NO es el paso por defecto para URLs de RRSS; solo se usa como spool temporal opcional cuando exista un archivo binario directo, sea necesario reintentar una descarga costosa o el worker requiera desacoplar un medio grande. Todo objeto temporal GCS debe tener TTL/lifecycle corto y nunca ser la copia canónica de usuario.",
+    "realtime": "Supabase Realtime actúa como señal de actualización para recipe_jobs y datos vivos; PostgreSQL sigue siendo autoridad. La PWA siempre puede recuperar el estado por query/polling al reconectar aunque se pierda un evento Realtime.",
+    "local_offline": "IndexedDB mediante Dexie para inventario, favoritos, comidas y cola outbox. Las escrituras offline generan client_mutation_id y se sincronizan al recuperar conectividad; no se cachean respuestas privadas indiscriminadamente en el service worker.",
+    "background_jobs": "Cloud Tasks es la cola durable para los imports multimedia. Una request interactiva autenticada en Vercel crea recipe_jobs en Supabase y, tras reservar cuota/idempotencia, encola una Cloud Task. Cloud Tasks invoca un endpoint privado de Cloud Run usando identidad de servicio. Cloud Run reclama/procesa el job de forma idempotente, actualiza Supabase y termina; no existe worker permanente en Railway para la v1. Vercel Cron puede usarse solo para housekeeping/reconciliación, nunca como mecanismo primario de ejecución multimedia.",
+    "recipe_catalog": "Catálogo actual recipes.json y vocabulario de ingredientes se importan a tablas normalizadas de Supabase con seeds reproducibles; el matcher sigue siendo determinista y versionado.",
+    "ocr": "Captura/selección/crop en navegador, upload temporal privado a Supabase Storage y OCR server-side con Google Cloud Vision mediante Vercel Node Functions; el navegador nunca recibe credenciales de Vision.",
+    "payments": "Stripe Checkout + Customer Portal + webhooks en Vercel; Supabase persiste estado de suscripción y usage mensual con operaciones atómicas server-side.",
+    "external_ai": "Whisper queda detrás de TranscriptionProvider y el LLM detrás de RecipeExtractionProvider. Ningún proveedor se llama desde el navegador. La salida de extracción debe usar structured output compatible con un Recipe schema tipado y pasar validación server-side; no se aceptan listas/prosa del modelo que luego se parseen con heurísticas como contrato principal. Los proveedores admiten timeout, retries acotados, métricas y sustitución futura.",
+    "deployment": "Vercel: PWA Next.js y endpoints interactivos. Supabase: Postgres/Auth/Storage/Realtime. Google Cloud: Cloud Tasks + Cloud Run y GCS temporal opcional. Railway queda fuera de la arquitectura 1.0 para evitar una cuarta plataforma sin ventaja en este workload. Entornos local/preview/staging/production separados.",
+    "data_flow": "Datos normales: Browser/PWA -> IndexedDB/outbox -> Next.js/Supabase bajo RLS -> PostgreSQL. OCR: Browser -> Supabase Storage privado -> Vercel Node -> Google Vision -> PostgreSQL. Import URL/RRSS: Share Target o paste URL -> Vercel -> Supabase recipe_job -> Cloud Tasks -> Cloud Run -> texto/captions si existen -> si hace falta media/audio + ffmpeg + Whisper -> LLM structured output -> Zod/JSON Schema -> Supabase -> Realtime/Web Push -> Browser. Import de archivo directo: Browser -> upload temporal autorizado -> GCS/Supabase según tamaño/estrategia -> Cloud Run -> mismo pipeline desde media.",
+    "migration_strategy": "Strangler migration: crear apps/web junto al cliente móvil legado, migrar verticales una a una, ejecutar importadores Firebase->Supabase repetibles y reconciliables, probar en preview/staging y realizar un cutover final con export completo idempotente.",
+    "legacy_decommission": "Firebase Auth, Firestore, Functions, Storage y FCM solo se retiran cuando el cutover ha sido reconciliado, existe rollback probado y no quedan lecturas/escrituras de producción dependientes de Firebase.",
+    "media_processing": "Cloud Run aloja un contenedor especializado de media/IA con extractores de origen, yt-dlp o equivalente cuando sea legal/técnicamente viable, ffmpeg, un TranscriptionProvider con Whisper como implementación inicial y un RecipeExtractionProvider para el LLM. El worker puede escalar a cero y sus límites de CPU/memoria/concurrencia se configuran independientemente de la PWA.",
+    "recipe_import_pipeline": "Orden obligatorio de extracción: (1) validar/normalizar URL y detectar sourceType; (2) buscar JSON-LD/HTML/caption/description/transcript ya disponible; (3) si el texto obtenido es suficiente, saltar Whisper; (4) solo si falta texto útil, obtener el audio del medio, transcodificar con ffmpeg y transcribir; (5) enviar texto + metadatos al LLM con salida estructurada; (6) validar contra JSON Schema/Zod; (7) persistir Recipe JSON y completar el job. Para archivos de vídeo compartidos directamente se permite staging temporal en GCS antes de Cloud Run."
+  },
+  "rules": {
+    "one_feature_at_a_time": true,
+    "require_tests_to_close": true,
+    "require_previous_dependencies_done": true,
+    "require_approved_spec_to_implement": true,
+    "preserve_previous_acceptance_contracts": true,
+    "valid_status": [
+      "pending",
+      "spec_ready",
+      "review_pending",
+      "done",
+      "blocked"
+    ],
+    "sdd_required_when": "feature tiene \"sdd\": true",
+    "max_attempts": 3,
+    "default_quality_gates": [
+      "pnpm typecheck",
+      "pnpm lint",
+      "pnpm test",
+      "pnpm build",
+      "pnpm test:e2e",
+      "supabase db lint",
+      "pnpm test:rls"
+    ],
+    "migration_invariants": [
+      "No se elimina ni se modifica destructivamente el cliente React Native/Firebase hasta que la PWA tenga paridad y el cutover esté aprobado.",
+      "Cada registro migrado desde Firebase conserva source=FIREBASE y su legacy_id/legacy_uid para poder reconciliar y reimportar sin duplicar.",
+      "Todos los importadores son idempotentes y soportan dry-run, reanudación y generación de un informe de cardinalidades/errores.",
+      "Un rerun de migración con el mismo snapshot no crea usuarios de aplicación, items, favoritos, comidas, drafts, jobs, usage ni suscripciones duplicadas.",
+      "La migración de Auth nunca almacena contraseñas en claro ni registra hashes, salts, refresh tokens o claves privadas.",
+      "Los datos locales puramente cacheables de WatermelonDB —recipe_cache e ingredient_mappings no verificados— no se consideran autoridad y pueden reconstruirse.",
+      "El cutover final incluye reconciliación por usuario y por colección antes de desactivar escrituras Firebase.",
+      "Cualquier dato que no pueda mapearse de forma inequívoca queda en una tabla/quarantine de migración y no se descarta silenciosamente."
+    ],
+    "data_invariants": [
+      "Supabase PostgreSQL es la fuente de verdad server-side después del cutover; IndexedDB es una réplica local y una cola de mutaciones, nunca la autoridad global.",
+      "Toda fila privada pertenece a un auth.users.id y toda lectura/escritura expuesta al cliente está protegida por RLS.",
+      "Las operaciones que consumen ingredientes, cuotas o cambian estado de suscripción se resuelven server-side y de forma atómica.",
+      "Los IDs de cliente para entidades offline se generan como UUID antes de sincronizar y permanecen estables entre dispositivos.",
+      "Las eliminaciones sincronizables usan tombstones/deleted_at hasta que todos los clientes puedan converger; no se confía en borrados locales sin confirmación server-side.",
+      "recipe_jobs, stripe_events y client_mutations tienen claves de idempotencia únicas.",
+      "Los límites Free se aplican en servidor y no pueden saltarse manipulando IndexedDB, JavaScript o requests directas.",
+      "recipe_jobs es la fuente de verdad del estado del import; Cloud Tasks es transporte/orquestación y puede entregar más de una vez, por lo que el worker debe ser idempotente.",
+      "Una receta solo pasa a completed después de que el Recipe JSON haya validado contra el schema de dominio y se haya persistido de forma transaccional.",
+      "Los artefactos multimedia temporales no son datos canónicos y tienen retención finita; su pérdida no debe eliminar una receta ya completada."
+    ],
+    "security_invariants": [
+      "NEXT_PUBLIC_ solo puede contener valores explícitamente publicables; Supabase service role, Stripe secret/webhook secret, Google credentials y secretos de proveedores IA nunca llegan al bundle.",
+      "Todas las tablas del schema public expuestas por Supabase tienen RLS habilitado y pruebas de aislamiento con al menos dos usuarios.",
+      "Los buckets privados aplican políticas por owner/path y los uploads se validan por MIME, tamaño y firma/magic bytes cuando proceda.",
+      "Las URLs importadas se validan contra SSRF: solo http/https, redirects acotados, bloqueo de IPs privadas/link-local/metadata, DNS rebinding mitigado y límite de tamaño/tiempo.",
+      "El endpoint Cloud Run del worker no es público anónimo: solo acepta invocaciones autenticadas/autorizadas de Cloud Tasks/identidad de servicio.",
+      "El enqueue de Cloud Tasks ocurre server-side tras auth, quota e idempotency; el cliente no puede elegir arbitrary worker URLs, service accounts ni payloads privilegiados.",
+      "Los webhooks verifican firma antes de mutar estado y registran event_id para evitar replay.",
+      "Logs, métricas y errores redactan tokens, cookies, Authorization, emails cuando no sean necesarios, URLs firmadas, transcripciones completas y payloads OCR sensibles."
+    ],
+    "external_service_policy": [
+      "Google Vision, Stripe, Cloud Tasks, Cloud Run, Whisper y el LLM se encapsulan detrás de adaptadores/interfaces testeables y mocks.",
+      "Vercel no ejecuta ffmpeg/Whisper ni descarga medios pesados en el camino interactivo; solo valida, autoriza, crea estado durable y encola trabajo.",
+      "Cloud Run es el único componente que procesa vídeo/audio en la v1; Railway no forma parte del runtime de producción de esta migración.",
+      "La extracción de receta prioriza datos estructurados, texto de página, caption/description y transcript existente antes de usar Whisper.",
+      "Whisper se consume mediante TranscriptionProvider; cambiar de proveedor/modelo no debe alterar el dominio recipe_jobs ni la UI.",
+      "El LLM debe devolver structured output validado contra Recipe schema; una respuesta no válida se reintenta/repara de forma acotada y nunca se persiste como receta completa.",
+      "Un fallo de Vision/Cloud Tasks/Cloud Run/Whisper/LLM no puede corromper inventario, favoritos, comidas ni subscription state.",
+      "Las tareas largas son idempotentes, retryable y observables; no dependen de que el navegador permanezca abierto.",
+      "Las integraciones externas tienen feature flags/configuración para desactivarlas sin perder datos existentes."
+    ]
+  },
+  "known_migration_contracts": {
+    "source_repository": "madgIitch/What-s-in-my-fridge-",
+    "source_commit": "6a50475006c692538e6e51d30a7063f956ad054c",
+    "observed_at": "2026-09-17",
+    "confirmed_frontend": [
+      "Cliente actual en React Native + Expo + TypeScript con React Navigation.",
+      "Rutas/pantallas conectadas: Login, Home, Scan, Recipes, Calendar, Settings, Favorites, RecipeSteps, ReviewDraft, Detail, AddItem, Crop, ConsumeIngredients, ConsumeRecipeIngredients, AddMeal, MealDetail, AddRecipeFromUrl, ShoppingList y Paywall.",
+      "Zustand se usa para estado de auth, inventario, preferencias, suscripción y jobs.",
+      "La última revisión observada añade FCM y estado/notificación de recipe jobs completados."
+    ],
+    "confirmed_local_data": [
+      "WatermelonDB schema v10 contiene food_items, parsed_drafts, recipe_cache, favorite_recipes, meal_entries, ingredients e ingredient_mappings.",
+      "food_items conserva name, normalized_name, expiry_date, category, quantity, notes, unit, added_at y source.",
+      "parsed_drafts conserva OCR raw text, merchant, purchase_date, currency, total, lines_json, unrecognized_lines y confirmed.",
+      "favorite_recipes conserva snapshot de nombre, match, ingredientes, instrucciones, user_id y saved_at.",
+      "meal_entries conserva meal_type, meal_date, recipe_id/custom_name, ingredients_consumed, notes, calories_estimate, user_id y consumed_at.",
+      "recipe_cache e ingredient_mappings funcionan como cachés locales y pueden reconstruirse salvo mappings verificados explícitamente por usuario."
+    ],
+    "confirmed_firebase_paths": [
+      "users/{uid}/inventory/{itemId}",
+      "users/{uid}/meal_entries/{entryId}",
+      "users/{uid}/drafts/{draftId}",
+      "users/{uid}/savedRecipes/{recipeId}",
+      "users/{uid}/recipe_jobs/{jobId}",
+      "users/{uid}/usage/{YYYY-MM}",
+      "users/{uid}/subscription/status",
+      "users/{uid} para cookingPreferences y fcmToken"
+    ],
+    "confirmed_cloud_functions": [
+      "parseReceipt",
+      "getRecipeSuggestions",
+      "normalizeScannedIngredient",
+      "normalizeScannedIngredientsBatch",
+      "parseRecipeFromUrl",
+      "submitRecipeJob",
+      "processRecipeJob",
+      "cleanupRecipeJobs",
+      "migrateInventoryNormalization",
+      "uploadReceipt",
+      "syncInventoryToDevice",
+      "createCheckoutSession",
+      "stripeWebhook",
+      "getSubscriptionStatus",
+      "openCustomerPortal"
+    ],
+    "confirmed_business_rules": [
+      "Límite Free de sugerencias: 5 al mes.",
+      "Límite Free de OCR: 5 al mes.",
+      "Límite Free de imports por URL: 10 al mes.",
+      "Los usuarios Pro omiten estos límites.",
+      "El matcher actual usa catálogo local recipes.json, vocabulario, categorías y matching exact/substring/keyword/fuzzy.",
+      "URL import soporta YouTube, Instagram, TikTok, blog y texto manual; vídeo puede ejecutarse como job asíncrono.",
+      "Los jobs de vídeo actuales usan estados pending, transcribing, extracting, completed y failed; el target amplía esta máquina de estados sin perder compatibilidad funcional.",
+      "Stripe es la implementación de pago observada actualmente aunque documentación antigua aún mencione RevenueCat."
+    ],
+    "confirmed_external_services": [
+      "Google Cloud Vision para OCR cloud.",
+      "Cloud Run ya se usa como servicio de Whisper para transcripción de vídeo.",
+      "Ollama remoto se usa actualmente para extracción de ingredientes y pasos.",
+      "Stripe para checkout, portal, suscripciones y webhooks."
+    ],
+    "repository_risks": [
+      ".gitattributes aplica Git LFS a todos los *.json, por lo que package.json, tsconfig.json, app.json y otros JSON pequeños aparecen como punteros LFS en GitHub.",
+      "La documentación README conserva referencias históricas a RevenueCat que no coinciden con el código Stripe actual.",
+      "El código móvil mezcla caché local y Firestore; la migración debe clasificar qué datasets son autoritativos y cuáles son reconstruibles.",
+      "Los imports por URL realizan scraping/transcripción/LLM y necesitan un modelo de ejecución durable para no depender del tiempo de una request interactiva.",
+      "El scraping/descarga de medios de plataformas sociales puede romperse por cambios de proveedor, restricciones de acceso o TOS; cada sourceType necesita adaptador y fallback explícito.",
+      "Web Share Target no tiene soporte uniforme en todos los navegadores/SO; la funcionalidad no puede depender exclusivamente de aparecer en la hoja de compartir."
+    ],
+    "pending_validation": [
+      "Inventario completo de índices/reglas Firestore actualmente desplegados y diferencias respecto al repositorio.",
+      "Cardinalidades reales por colección y usuarios activos antes del primer ensayo de migración.",
+      "Estado real de Firebase Storage y si existen receipts sin referencia que deban conservarse.",
+      "Productos/precios Stripe activos y metadata histórica usada para enlazar customers con Firebase UID.",
+      "Variables/URLs actuales de Whisper y Ollama por entorno.",
+      "Compatibilidad real de los usuarios importados Firebase Auth -> Supabase Auth en staging, incluidos hashes SCRYPT y email_verified.",
+      "Assets visuales y comportamiento responsive que deben preservarse exactamente en PWA.",
+      "Elegir proveedor/modelo inicial del RecipeExtractionProvider en producción y definir schema versionado de Recipe JSON.",
+      "Medir con clips reales cuándo transcript/caption existente evita Whisper y establecer umbral mínimo de texto útil.",
+      "Dimensionar Cloud Run (CPU/memoria/concurrency y GPU solo si realmente se autoaloja Whisper en esa misma instancia) y política de max instances/coste.",
+      "Definir TTL exacto de GCS temporal y tamaño a partir del cual se usa staging en vez de streaming directo.",
+      "Validar Web Share Target en Android/Chrome, navegadores desktop objetivo e iOS; documentar fallback de pegar URL/archivo."
+    ],
+    "target_platform_decisions_2026_09_17": [
+      "Vercel conserva el plano web/interactivo; Supabase conserva backend de aplicación y estado; Google Cloud conserva procesamiento pesado de media/IA.",
+      "Cloud Tasks sustituye al trigger durable de Firebase para jobs multimedia y entrega trabajo a Cloud Run.",
+      "Cloud Run, no Railway ni Vercel Functions, ejecuta yt-dlp/extractores, ffmpeg, Whisper y la fase de LLM del pipeline de vídeo.",
+      "Una URL de RRSS no se descarga en el navegador ni se sube a GCS por defecto; Cloud Run obtiene texto/media desde el origen cuando procesa el job.",
+      "GCS se reserva para staging temporal de archivos compartidos directamente o medios que deban persistir brevemente entre retries; lifecycle/TTL obligatorio.",
+      "El pipeline intenta datos estructurados/captions/transcripts antes de Whisper para reducir latencia y coste.",
+      "El contrato del LLM cambia de texto parseable a Recipe JSON estructurado validado por JSON Schema/Zod.",
+      "La PWA ofrece Web Share Target donde esté soportado y siempre mantiene pegar URL como fallback universal.",
+      "Railway queda fuera del target 1.0; se reevalúa solo si el procesamiento pesado se sustituye por APIs externas y deja de ser útil Cloud Run."
+    ]
+  },
+  "scope_1_0": {
+    "included": [
+      "PWA instalable y responsive en Vercel.",
+      "Supabase Auth, Postgres, Storage y Realtime como backend principal.",
+      "Inventario offline-first con IndexedDB y sincronización multi-dispositivo.",
+      "Alta, edición, borrado y consumo de items con caducidad, cantidad, unidad, categoría y notas.",
+      "Captura/selección/crop de ticket, OCR cloud, parsing y revisión de draft antes de confirmar inventario.",
+      "Catálogo de recetas, matching contra inventario, missing ingredients y caché por hash.",
+      "Normalización de ingredientes y persistencia de correcciones verificadas por usuario.",
+      "Favoritos, pasos de receta, consumo de ingredientes y lista de compra derivada.",
+      "Importación de recetas desde YouTube, Instagram, TikTok, blogs y texto manual.",
+      "Jobs asíncronos durables para imports largos y aviso de finalización.",
+      "Calendario de comidas, comidas personalizadas y asociación a recetas.",
+      "Stripe Checkout/Portal/webhooks y plan Free/Pro con límites mensuales 5/5/10.",
+      "Migración repetible de Firebase Auth, Firestore y Storage necesarios.",
+      "Manifest, service worker, offline shell y Web Push compatible.",
+      "RLS, políticas de Storage, rate limiting, CSP/headers, observabilidad y pruebas E2E.",
+      "Cutover y retirada controlada de Firebase tras reconciliación.",
+      "Web Share Target para URLs/archivos cuando la plataforma lo soporte, con paste/upload fallback.",
+      "Cloud Tasks como cola durable de recipe imports multimedia.",
+      "Cloud Run media worker con extractores, ffmpeg, TranscriptionProvider/Whisper y RecipeExtractionProvider/LLM.",
+      "Extracción escalonada structured text/captions/transcript -> Whisper solo cuando sea necesario.",
+      "Recipe structured output versionado y validado por JSON Schema/Zod.",
+      "GCS temporal opcional para media binaria con lifecycle/TTL; nunca como storage canónico de recetas."
+    ],
+    "excluded": [
+      "Mantener React Native/Expo como cliente principal después del cutover.",
+      "Publicar una nueva aplicación Android/iOS nativa durante esta migración.",
+      "Reescribir Whisper u Ollama como modelos propios dentro de Supabase.",
+      "Cambiar el algoritmo de recetas con IA generativa como requisito de 1.0.",
+      "Rediseño visual total no necesario para responsive/paridad.",
+      "Funciones sociales, perfiles públicos o recetas compartidas entre usuarios.",
+      "Marketplace, publicidad o pagos distintos del plan Pro actual.",
+      "Sincronización offline de imágenes grandes o vídeos.",
+      "Migrar caches efímeras que puedan regenerarse de forma determinista.",
+      "Conservar objetos huérfanos de Firebase Storage sin referencia o requisito legal/producto.",
+      "Railway como runtime de producción en la arquitectura 1.0.",
+      "Subir a Google Cloud Storage cada vídeo/URL de RRSS de forma obligatoria.",
+      "Ejecutar Whisper/ffmpeg dentro de Vercel Functions como camino principal."
+    ]
+  },
+  "features": [
+    {
+      "id": "sprint-0-pwa-migration-foundation",
+      "name": "Sprint 0 - PWA Migration Foundation",
+      "status": "review_pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.0.1",
+      "dependencies": [],
+      "objective": "Crear una base reproducible para desarrollar la PWA en paralelo al cliente React Native sin romper producción ni depender de Git LFS para archivos de configuración.",
+      "user_stories": [
+        {
+          "id": "HU0.1",
+          "story": "Como desarrollador quiero poder arrancar y desplegar la nueva PWA sin modificar todavía el cliente móvil legado."
+        },
+        {
+          "id": "HU0.2",
+          "story": "Como mantenedor quiero un repositorio reproducible donde los manifests de build sean texto normal y CI pueda validar web, migraciones y legacy de forma explícita."
+        }
+      ],
+      "tasks": [
+        "Crear apps/web con Next.js App Router, TypeScript estricto, Tailwind, Vitest y Playwright.",
+        "Mantener el cliente React Native actual como legacy durante la migración y documentar sus entrypoints.",
+        "Corregir .gitattributes para que JSON de configuración pequeños dejen de estar forzados a LFS; conservar LFS solo para datasets/assets realmente grandes.",
+        "Materializar package.json, tsconfig.json y demás manifests necesarios como archivos de texto Git normales.",
+        "Crear packages/domain para lógica reutilizable/migrable y scripts/migration para herramientas de importación.",
+        "Añadir .env.example separado por variables públicas y privadas.",
+        "Configurar CI para web y validaciones de Supabase sin tocar deployment de producción.",
+        "Crear docs/MIGRATION_ARCHITECTURE.md con mapa legacy -> PWA y estrategia de rollback.",
+        "Documentar ADR de reparto de responsabilidades: Vercel=web/orquestación interactiva, Supabase=estado/backend, Google Cloud=media/IA; Railway fuera de v1.",
+        "Añadir placeholders de infraestructura/config para GCP_PROJECT_ID, Cloud Tasks queue, Cloud Run worker y GCS temp bucket sin exponer secretos al cliente."
+      ],
+      "deliverable": "La rama/base de migración arranca una PWA vacía en local y Vercel Preview, mientras el cliente móvil existente sigue intacto y reproducible.",
+      "acceptance": [
+        "apps/web arranca con `pnpm dev`, compila con `pnpm build` y no importa módulos React Native, Expo, Firebase RN ni WatermelonDB.",
+        "package.json, tsconfig.json, app.json y manifests equivalentes necesarios para CI ya no son punteros LFS; recipes.json grande puede seguir en LFS hasta su importación.",
+        "El diff no elimina pantallas, funciones Firebase ni datos legacy.",
+        "Existe una matriz documentada de cada pantalla/feature actual y su sprint de migración.",
+        "Las variables con SECRET, SERVICE_ROLE, STRIPE_SECRET, VISION, FIREBASE_PRIVATE o MIGRATION nunca usan NEXT_PUBLIC_.",
+        "CI ejecuta typecheck, lint, tests y build de apps/web con código 0.",
+        "Vercel Preview puede desplegar la shell sin acceder a Firebase ni Supabase de producción.",
+        "docs/MIGRATION_ARCHITECTURE.md identifica commit legacy de referencia y procedimiento para comparar comportamiento.",
+        "Existe un ADR aprobado que prohíbe procesamiento pesado de vídeo en Vercel y define Cloud Run como media worker.",
+        "La matriz de entornos identifica qué variables pertenecen a navegador, Vercel, Supabase y Google Cloud sin duplicar secretos innecesariamente."
+      ],
+      "scope": [
+        "apps/web/**",
+        "packages/**",
+        "scripts/migration/**",
+        ".github/workflows/**",
+        ".gitattributes",
+        ".env.example",
+        "docs/**",
+        "spec.json"
+      ],
+      "spec_approved": true,
+      "answers_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "approved_by": "peorr",
+      "approved_at": "2026-09-17T21:51:14.205Z",
+      "manual_spec_ready": true,
+      "manual_spec_ready_reason": "Baseline preparado a partir del repositorio main y del spec de referencia; requiere aprobación antes de implementar."
+    },
+    {
+      "id": "sprint-1-supabase-platform-foundation",
+      "name": "Sprint 1 - Supabase Platform Foundation",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.0.2",
+      "dependencies": [
+        "sprint-0-pwa-migration-foundation"
+      ],
+      "objective": "Levantar Supabase local/staging con una política de seguridad por defecto y clientes Next.js correctamente separados entre navegador y servidor.",
+      "user_stories": [
+        {
+          "id": "HU1.1",
+          "story": "Como desarrollador quiero una instancia Supabase reproducible para modelar datos y probar RLS antes de migrar usuarios reales."
+        },
+        {
+          "id": "HU1.2",
+          "story": "Como usuario quiero que mis datos privados no sean visibles para otra cuenta aunque alguien llame directamente a la API de Supabase."
+        }
+      ],
+      "tasks": [
+        "Inicializar supabase/config.toml y migrations SQL.",
+        "Crear utilidades browser/server para Supabase Auth en Next.js con cookies y PKCE.",
+        "Definir esquema base para profiles, legacy_id_map y migration_runs.",
+        "Habilitar RLS por defecto en tablas expuestas y crear helpers de ownership.",
+        "Crear buckets privados receipts-temp y user-assets con límites de MIME/tamaño.",
+        "Configurar generación de tipos TypeScript desde el esquema.",
+        "Crear test harness con dos usuarios para políticas RLS/Storage.",
+        "Configurar entornos local, preview/staging y production sin reutilizar secretos."
+      ],
+      "deliverable": "Supabase local y staging arrancan desde cero con migraciones versionadas, auth SSR, RLS probado y Storage privado.",
+      "acceptance": [
+        "Una base vacía alcanza el schema esperado ejecutando únicamente migraciones versionadas.",
+        "El cliente de navegador solo utiliza URL y publishable key; el cliente privilegiado solo existe en módulos server-only.",
+        "Una ruta privada de prueba valida sesión server-side y redirige cuando no existe usuario.",
+        "Dos usuarios de test no pueden SELECT/INSERT/UPDATE/DELETE filas del otro en ninguna tabla privada creada en el sprint.",
+        "Un usuario no puede leer ni sobrescribir objetos de otro usuario en Storage.",
+        "La service/secret key no aparece en HTML, bundles, source maps, logs o respuestas.",
+        "Los tipos generados forman parte del build y fallan si el schema cambia sin regenerarlos.",
+        "supabase db lint y test:rls terminan con código 0."
+      ],
+      "scope": [
+        "apps/web/**",
+        "supabase/**",
+        "packages/**",
+        "tests/**",
+        ".env.example",
+        "docs/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:6c99fcbcfc44846b447de7ccb2e4bfd403b2c55c23e80e4a2f6dfcf7b37bb758",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-2-domain-schema-and-migration-mapping",
+      "name": "Sprint 2 - Domain Schema and Migration Mapping",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.0.3",
+      "dependencies": [
+        "sprint-1-supabase-platform-foundation"
+      ],
+      "objective": "Diseñar el modelo PostgreSQL canónico que represente todos los datos autoritativos actuales y permita importar Firebase de forma idempotente.",
+      "user_stories": [
+        {
+          "id": "HU2.1",
+          "story": "Como mantenedor quiero un esquema relacional explícito para saber qué datos se conservan y qué caches se reconstruyen."
+        },
+        {
+          "id": "HU2.2",
+          "story": "Como operador quiero poder asociar cada fila Supabase con su documento Firebase original durante la migración."
+        }
+      ],
+      "tasks": [
+        "Crear tablas profiles, inventory_items, receipt_drafts, user_preferences, favorite_recipes, meal_entries.",
+        "Crear ingredients, ingredient_aliases/mappings verificados, recipes y recipe_ingredients.",
+        "Crear subscriptions, monthly_usage, recipe_jobs, stripe_events y client_mutations.",
+        "Crear legacy_id_map o columnas legacy_id donde proceda con unicidad por source/entity.",
+        "Añadir version, updated_at, deleted_at y constraints necesarias para sync offline.",
+        "Definir seeds para catálogo de recetas y vocabulario a partir de los assets actuales.",
+        "Escribir docs/DATA_MIGRATION_MAP.md con correspondencia Firestore/WatermelonDB -> Postgres.",
+        "Crear fixtures sintéticos que reproduzcan usuarios con inventario, favoritos, drafts, comidas, usage, subscription y jobs."
+      ],
+      "deliverable": "El esquema Supabase cubre la funcionalidad actual y existe un mapa de migración sin ambigüedades para cada dataset autoritativo.",
+      "acceptance": [
+        "Cada tabla privada referencia auth.users(id) o una relación privada cuyo acceso deriva del owner.",
+        "inventory_items admite exactamente los campos de negocio actuales y usa UUID estable generado antes de sincronizar.",
+        "receipt_drafts preserva raw text, merchant, purchase date, currency, total, líneas y estado confirmed sin depender de una imagen permanente.",
+        "favorite_recipes permite preservar el snapshot histórico actual aunque el catálogo cambie.",
+        "meal_entries preserva receta opcional/custom name, fecha, tipo, ingredientes consumidos, notas y calories estimate nullable.",
+        "recipe_cache no se migra como tabla autoritativa; se reconstruye en IndexedDB/servidor.",
+        "ingredient_mappings solo migra entradas verificadas por usuario o datos canónicos del vocabulario; caches no verificadas pueden regenerarse.",
+        "legacy IDs tienen constraints que hacen idempotente reimportar el mismo documento.",
+        "RLS cubre todas las nuevas tablas y los tests con dos usuarios demuestran aislamiento.",
+        "Seeds del catálogo producen cardinalidades/checksum documentados y son reejecutables."
+      ],
+      "scope": [
+        "supabase/migrations/**",
+        "supabase/seed.sql",
+        "packages/domain/**",
+        "scripts/migration/**",
+        "tests/**",
+        "docs/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:f8b4670176872f6b2b861d094e4a5bc2ca0c7e1877d240cc9cb26839e905f2c6",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-3-auth-and-account-migration",
+      "name": "Sprint 3 - Supabase Auth and Account Migration",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.1.0",
+      "dependencies": [
+        "sprint-2-domain-schema-and-migration-mapping"
+      ],
+      "objective": "Reemplazar Firebase Auth por Supabase Auth y preparar una migración de usuarios que preserve emails, verificación y contraseñas cuando el flujo oficial lo permita.",
+      "user_stories": [
+        {
+          "id": "HU3.1",
+          "story": "Como usuario existente quiero entrar en la PWA con mi cuenta actual sin crear una identidad duplicada."
+        },
+        {
+          "id": "HU3.2",
+          "story": "Como usuario nuevo quiero registrarme, verificar correo, recuperar contraseña y cerrar sesión desde la PWA."
+        }
+      ],
+      "tasks": [
+        "Implementar login, signup, email verification, password reset y logout con Supabase Auth SSR.",
+        "Crear profile idempotente ligado a auth.users.",
+        "Implementar export/import de Firebase Auth usando tooling de migración y parámetros SCRYPT en un entorno aislado.",
+        "Persistir legacy Firebase UID -> Supabase auth user id sin usar el email como clave relacional.",
+        "Crear dry-run de usuarios con conteos de enabled/disabled/emailVerified/provider.",
+        "Probar fallback de password reset para usuarios que no puedan preservar credenciales.",
+        "Neutralizar mensajes de recuperación para no revelar existencia de cuentas.",
+        "Documentar invalidación de sesiones Firebase al cutover."
+      ],
+      "deliverable": "La PWA se autentica únicamente con Supabase y existe un procedimiento probado en staging para importar cuentas Firebase sin duplicarlas.",
+      "acceptance": [
+        "Registro, login, verificación, reset y logout funcionan con sesión cookie disponible en Server Components/Actions.",
+        "Las rutas /app/* no renderizan datos privados sin sesión válida verificada server-side.",
+        "Un import de Auth repetido no crea una segunda identidad de aplicación para el mismo legacy Firebase UID.",
+        "El ensayo de migración guarda y usa parámetros de hash Firebase únicamente fuera del repositorio y nunca los imprime.",
+        "Cuando Supabase/tooling admite el hash Firebase, el usuario de staging puede autenticarse con su contraseña previa; si un caso no es compatible se marca explícitamente para reset, no se inventa una contraseña.",
+        "email_verified y estado disabled se mapean con reglas documentadas.",
+        "Cambiar el email de una cuenta no rompe la relación con sus datos porque el vínculo usa auth user id.",
+        "Dos usuarios importados no pueden acceder a perfiles/datos cruzados mediante RLS.",
+        "Los tests cubren sesión expirada, callback inválido, redirect externo, usuario disabled y reintento de importación."
+      ],
+      "scope": [
+        "apps/web/app/(auth)/**",
+        "apps/web/lib/supabase/**",
+        "supabase/**",
+        "scripts/migration/auth/**",
+        "tests/**",
+        "docs/**",
+        ".env.example",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:aa40793ef1f928070f65538daf8a92e38aad1236aedfc14e013add55259ef014",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-4-inventory-offline-first",
+      "name": "Sprint 4 - Inventory Offline-First",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.2.0",
+      "dependencies": [
+        "sprint-3-auth-and-account-migration"
+      ],
+      "objective": "Migrar el núcleo de inventario a una experiencia PWA offline-first con IndexedDB y Supabase como autoridad server-side.",
+      "user_stories": [
+        {
+          "id": "HU4.1",
+          "story": "Como usuario quiero ver, añadir, editar y borrar alimentos aunque pierda conexión y que se sincronicen después."
+        },
+        {
+          "id": "HU4.2",
+          "story": "Como usuario con varios dispositivos quiero que mi inventario converja sin duplicados ni sobrescrituras silenciosas."
+        }
+      ],
+      "tasks": [
+        "Crear repositorio web de inventory_items con Supabase + Dexie.",
+        "Implementar hydration inicial, pull incremental y outbox de mutaciones.",
+        "Portar Home, AddItem y Detail a rutas/componentes web responsive.",
+        "Mantener name, normalizedName, expiryDate, category, quantity, notes, unit, addedAt y source.",
+        "Implementar conflict/version handling y client_mutation_id.",
+        "Implementar tombstones para deletes offline.",
+        "Añadir filtros/orden por caducidad y estados empty/loading/offline/error.",
+        "Añadir reconciliación multi-tab y reintento al online/focus."
+      ],
+      "deliverable": "El inventario funciona online y offline en navegador y converge con Supabase en más de un dispositivo.",
+      "acceptance": [
+        "Una creación offline aparece inmediatamente en UI, queda en outbox y se confirma en Supabase al volver la red sin cambiar su UUID.",
+        "Reintentar la misma mutación con igual client_mutation_id no duplica filas.",
+        "Un update con expected_version obsoleta devuelve SYNC_CONFLICT y no pisa silenciosamente una edición remota.",
+        "Un delete offline genera tombstone, desaparece de UI y se confirma de forma idempotente en servidor.",
+        "Reload offline conserva el último inventario sincronizado y las mutaciones pendientes.",
+        "La PWA nunca usa WatermelonDB ni Firestore para el inventario.",
+        "RLS impide leer/escribir items de otro usuario incluso llamando a Supabase directamente.",
+        "Fechas se guardan en UTC/ISO y se presentan en la zona local sin alterar el día de caducidad esperado.",
+        "Los estados de sync distinguen synced, pending, conflict y error mediante texto, no solo color.",
+        "Tests E2E cubren CRUD online, create/edit/delete offline, reconexión, conflicto, dos pestañas y viewport 320 px."
+      ],
+      "scope": [
+        "apps/web/app/app/**",
+        "apps/web/src/**",
+        "packages/domain/inventory/**",
+        "supabase/**",
+        "tests/**",
+        "docs/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:e9c8e9f284c2209326671fcc043fa7c62d4d46d3bccdb4a613b936b371808244",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-5-receipt-ocr-and-draft-review",
+      "name": "Sprint 5 - Receipt OCR and Draft Review",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.3.0",
+      "dependencies": [
+        "sprint-4-inventory-offline-first"
+      ],
+      "objective": "Portar el flujo de ticket: cámara/galería, crop, OCR, parsing, draft y revisión antes de añadir alimentos.",
+      "user_stories": [
+        {
+          "id": "HU5.1",
+          "story": "Como usuario quiero fotografiar o subir un ticket desde el navegador y revisar los productos detectados antes de guardarlos."
+        },
+        {
+          "id": "HU5.2",
+          "story": "Como usuario Free quiero conocer mi cuota real de OCR sin que el cliente pueda manipularla."
+        }
+      ],
+      "tasks": [
+        "Implementar captura mediante input/camera APIs y fallback de subida de archivo.",
+        "Implementar crop/rotación/compression en cliente sin subir la imagen original innecesariamente grande.",
+        "Crear bucket receipts-temp privado y lifecycle cleanup.",
+        "Portar parser de tickets a packages/domain con fixtures por locale.",
+        "Crear endpoint OCR Node en Vercel que lea el objeto privado y llame a Google Vision.",
+        "Persistir receipt_drafts en Supabase y navegar a revisión.",
+        "Confirmar draft mediante transacción que crea inventory_items y marca confirmed.",
+        "Mover consumo de cuota OCR al servidor en una operación atómica.",
+        "Eliminar o expirar la imagen temporal según política documentada."
+      ],
+      "deliverable": "Un ticket puede capturarse y convertirse en items revisables desde la PWA sin Firebase Storage/Functions y sin exponer Google Vision.",
+      "acceptance": [
+        "Tomar foto y seleccionar archivo funcionan cuando el navegador lo soporta; un navegador sin cámara mantiene la subida de archivo.",
+        "Solo imágenes permitidas y bajo el límite configurado se aceptan; MIME no se confía solo por extensión.",
+        "El objeto se guarda en ruta privada del usuario y otro usuario no puede obtenerlo ni enumerarlo.",
+        "El endpoint OCR valida sesión y ownership del objeto antes de procesar.",
+        "El parser conserva merchant, purchaseDate, currency, total, items y unrecognizedLines con fixtures equivalentes a los casos legacy.",
+        "Una respuesta OCR vacía no crea items falsos ni consume una segunda cuota por retry idempotente del mismo request.",
+        "Confirmar un draft crea exactamente los items aceptados/editados y marca el draft una sola vez; un doble submit no duplica inventario.",
+        "La cuota Free de OCR se aplica server-side con límite mensual 5 y Pro la omite.",
+        "Vision credentials y URLs firmadas no aparecen en bundles/logs.",
+        "E2E cubre upload, crop, OCR mock, review edit, confirm, cuota agotada, error Vision y viewport móvil."
+      ],
+      "scope": [
+        "apps/web/app/app/scan/**",
+        "apps/web/app/api/ocr/**",
+        "packages/domain/receipts/**",
+        "supabase/**",
+        "tests/**",
+        "docs/**",
+        ".env.example",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:22188ea764159e06a71eef2aa54226bcf28ef2a561d0b149d0a6d46dbe1d0a0a",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-6-recipe-catalog-normalization-and-suggestions",
+      "name": "Sprint 6 - Recipe Catalog, Normalization and Suggestions",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.4.0",
+      "dependencies": [
+        "sprint-4-inventory-offline-first",
+        "sprint-2-domain-schema-and-migration-mapping"
+      ],
+      "objective": "Migrar catálogo, vocabulario, normalización y matcher de recetas preservando resultados deterministas y cacheables.",
+      "user_stories": [
+        {
+          "id": "HU6.1",
+          "story": "Como usuario quiero recibir recetas ordenadas por lo que ya tengo y ver claramente ingredientes disponibles y faltantes."
+        },
+        {
+          "id": "HU6.2",
+          "story": "Como mantenedor quiero que el matcher sea reproducible y testeable, no dependiente de Firebase Functions."
+        }
+      ],
+      "tasks": [
+        "Importar recipes.json a recipes/recipe_ingredients con checksum y seed versionado.",
+        "Importar vocabulario/sinónimos/categorías a ingredients e ingredient_aliases.",
+        "Portar normalizeString, category prefilter y matching exact/substring/keyword/fuzzy a packages/domain.",
+        "Crear endpoint/server action getRecipeSuggestions que lea inventario autenticado desde Supabase.",
+        "Mantener matchPercentage, matchedIngredients, missingIngredients, ingredientsWithMeasures e instructions.",
+        "Implementar caché IndexedDB por hash de inventario y versión de catálogo con TTL.",
+        "Persistir mappings verificados por usuario y separar cache automático de dato canónico.",
+        "Crear golden tests comparando el matcher web con fixtures del matcher legacy."
+      ],
+      "deliverable": "La PWA ofrece sugerencias de recetas con el mismo contrato funcional y sin leer Firebase ni cargar todo el catálogo en el navegador.",
+      "acceptance": [
+        "El catálogo se importa idempotentemente y un rerun con el mismo checksum no duplica recetas o ingredientes.",
+        "El cliente no descarga recipes.json completo para calcular sugerencias.",
+        "Los resultados incluyen los mismos campos de UI que el contrato móvil actual.",
+        "El orden de resultados es determinista para los mismos inventory inputs y catalog version.",
+        "Los golden tests fijan exact, substring, keyword, fuzzy, plural/singular, acentos y ausencia de categoría.",
+        "Un mapping manual verificado por usuario prevalece sobre una sugerencia automática sin modificar el vocabulario global.",
+        "La cache key incluye inventory hash + catalog/matcher version; un cambio de inventario invalida el resultado anterior.",
+        "La cuota Free de sugerencias se consume server-side una vez por operación nueva y no por servir un cache hit válido.",
+        "Límite mensual Free sigue siendo 5; Pro no queda limitado.",
+        "RLS impide que el endpoint use inventario ajeno aunque el request incluya otro userId."
+      ],
+      "scope": [
+        "apps/web/app/app/recipes/**",
+        "apps/web/app/api/recipes/**",
+        "packages/domain/recipes/**",
+        "supabase/**",
+        "scripts/migration/catalog/**",
+        "tests/**",
+        "docs/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:f938d19a7565c17203d89068b578b254b73b68309ae0891e982ce8c211e98c81",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-7-url-recipe-import-jobs",
+      "name": "Sprint 7 - Social Share Recipe Import, Cloud Tasks and Cloud Run Media Pipeline",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.5.0",
+      "dependencies": [
+        "sprint-6-recipe-catalog-normalization-and-suggestions",
+        "sprint-3-auth-and-account-migration"
+      ],
+      "objective": "Migrar la importación desde YouTube, Instagram, TikTok, blogs, texto manual y archivos compartidos a un pipeline durable: la PWA/Vercel solo recibe/valida/encola; Supabase conserva el estado; Cloud Tasks entrega; Cloud Run procesa texto/media/Whisper/LLM.",
+      "user_stories": [
+        {
+          "id": "HU7.1",
+          "story": "Como usuario quiero compartir o pegar un enlace de Instagram/TikTok/YouTube y seguir usando la app mientras se crea la receta."
+        },
+        {
+          "id": "HU7.2",
+          "story": "Como usuario quiero que la app use caption/transcript existente antes de transcribir el audio para que el resultado llegue antes y con menor coste."
+        },
+        {
+          "id": "HU7.3",
+          "story": "Como usuario quiero recuperar el resultado aunque cierre la pestaña, pierda Realtime o vuelva horas después."
+        },
+        {
+          "id": "HU7.4",
+          "story": "Como usuario quiero compartir un archivo de vídeo cuando no exista una URL utilizable y obtener el mismo Recipe result."
+        }
+      ],
+      "tasks": [
+        "Implementar entrada única createRecipeImportJob para paste URL, Web Share Target y upload manual; todas convergen al mismo dominio/idempotency contract.",
+        "Añadir manifest share_target y endpoint seguro que extraiga únicamente URL/texto/archivo esperado, manteniendo paste URL como fallback universal.",
+        "Portar detectUrlType y crear adapters server-side por sourceType: YouTube, Instagram, TikTok, blog y manual.",
+        "Crear recipe_jobs con estados queued/fetching/transcribing/extracting/validating/completed/failed/cancelled, attempts, lease/worker metadata, sourceType, sourceUrl, result y error_code saneado.",
+        "Reservar cuota URL import e idempotency en una transacción antes de encolar trabajo; un submit repetido no crea consumo ni jobs duplicados.",
+        "Desde Vercel, crear una Cloud Task por job con payload mínimo jobId e invocación autenticada al Cloud Run worker privado.",
+        "Desplegar Cloud Run media worker Docker con extractores, ffmpeg y dependencias necesarias; la imagen no contiene secretos baked-in.",
+        "Implementar extraction ladder obligatoria: JSON-LD/HTML/description/caption/transcript disponible -> evaluar suficiencia -> Whisper solo si falta texto útil.",
+        "Para vídeo/audio, descargar/stream media dentro de Cloud Run; no hacer hop Browser->Vercel->GCS para URLs normales.",
+        "Añadir GCS temp spool opcional para archivos binarios directos o retries costosos, con object prefix por job, cifrado gestionado, cleanup idempotente y lifecycle/TTL corto.",
+        "Crear interfaz TranscriptionProvider; Whisper es la implementación inicial y puede reemplazarse sin cambiar recipe_jobs ni la UI.",
+        "Crear RecipeExtractionProvider y Recipe schema versionado; pedir structured output al LLM y validar server-side con Zod/JSON Schema.",
+        "Persistir rawText/transcript metadata de forma minimizada según política, Recipe JSON validado y provenance/source metadata; nunca marcar completed antes de validar.",
+        "Implementar retries acotados: Cloud Tasks puede redeliver; el worker debe ser idempotente y reconocer job ya completado/activo.",
+        "Usar Supabase Realtime como hint y query/polling de recuperación para pestañas reabiertas o eventos perdidos.",
+        "Implementar validación SSRF, redirect/DNS/IP guards, allow/deny policy por sourceType, límites de tamaño/duración y timeouts.",
+        "Añadir feature flags para desactivar por fuente, Whisper, extracción LLM o imports de archivo sin afectar recetas existentes.",
+        "Crear limpieza de jobs/artefactos temporales y reconciliación de queued/running atascados; Vercel Cron solo housekeeping, no executor principal.",
+        "Mantener fallback manual cuando no se pueda extraer contenido o la plataforma social bloquee el acceso."
+      ],
+      "deliverable": "Un usuario puede compartir/pegar una URL social o un archivo, recibir un job inmediatamente, cerrar la PWA y obtener después una receta estructurada; Cloud Run hace todo el procesamiento pesado, Whisper solo se usa cuando no existe texto suficiente y el resultado final cumple el Recipe schema.",
+      "acceptance": [
+        "YouTube, Instagram, TikTok, blog, manual y file upload convergen en createRecipeImportJob y conservan sourceType/provenance.",
+        "En plataformas compatibles, la PWA instalada puede aparecer como share target para una URL/archivo; en plataformas no compatibles pegar URL sigue cubriendo el flujo completo.",
+        "La request interactiva responde después de persistir/enqueue, sin esperar descarga, ffmpeg, Whisper ni LLM.",
+        "Vercel no descarga/transcodifica medios ni ejecuta Whisper/ffmpeg en el flujo normal.",
+        "Cloud Tasks entrega jobId a un Cloud Run endpoint que rechaza llamadas no autorizadas.",
+        "Un mismo idempotency key no consume dos cuotas, no crea dos jobs lógicos y redelivery de Cloud Tasks no duplica una receta completada.",
+        "Para una URL con transcript/caption/texto suficiente, las métricas prueban que Whisper no se invoca.",
+        "Para una URL sin texto suficiente, Cloud Run obtiene audio, ffmpeg produce formato esperado y TranscriptionProvider genera la transcripción antes del LLM.",
+        "Una URL normal de RRSS no requiere subir el vídeo a GCS; GCS solo aparece en paths explícitos de temp spool/file upload y los objetos expiran por lifecycle/cleanup.",
+        "El LLM devuelve Recipe structured output; Zod/JSON Schema valida title, ingredients y steps antes de completed.",
+        "Una salida LLM inválida no se persiste como receta válida: se intenta repair/retry acotado y después failed con error code seguro.",
+        "Los estados queued/fetching/transcribing/extracting/validating/completed/failed/cancelled son recuperables desde Supabase al reabrir la PWA.",
+        "Perder Realtime no pierde resultado: reload/query recupera el estado autoritativo del job.",
+        "Timeout/error de download, Whisper o LLM deja un job retryable/failed sin corromper recetas, inventario ni cuotas ya reconciliadas.",
+        "SSRF tests bloquean localhost, RFC1918, link-local, metadata endpoints, redirects privados y hosts que resuelven a destinos no permitidos.",
+        "El resultado conserva como mínimo schemaVersion, title, ingredients[{name,quantity,unit}], steps[{order,text}], source{type,url}, rawText/transcriptRef cuando la política lo permita.",
+        "Límite mensual Free de URL import sigue siendo 10 y se aplica server-side; Pro lo omite.",
+        "Tests cubren share target, paste fallback, direct file, caption path sin Whisper, Whisper fallback, structured output inválido, retry/redelivery, doble submit, worker concurrente, pestaña cerrada, SSRF y GCS cleanup."
+      ],
+      "scope": [
+        "apps/web/app/app/recipes/import/**",
+        "apps/web/app/api/recipe-jobs/**",
+        "apps/web/app/api/share-target/**",
+        "apps/web/public/manifest.webmanifest",
+        "apps/web/src/server/recipe-import/**",
+        "packages/domain/recipe-jobs/**",
+        "packages/domain/recipes/**",
+        "services/media-worker/**",
+        "infrastructure/gcp/cloud-run/**",
+        "infrastructure/gcp/cloud-tasks/**",
+        "infrastructure/gcp/storage/**",
+        "supabase/**",
+        "tests/**",
+        "docs/**",
+        ".env.example",
+        "vercel.json",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:3e0bbf988dcbb23dafefc98274e664d497931633100d7e707b43294c4cc94da1",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-8-favorites-cooking-and-shopping",
+      "name": "Sprint 8 - Favorites, Cooking and Shopping List",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P1",
+      "milestone": "0.6.0",
+      "dependencies": [
+        "sprint-6-recipe-catalog-normalization-and-suggestions",
+        "sprint-4-inventory-offline-first"
+      ],
+      "objective": "Recuperar el loop receta -> favorito -> pasos -> consumo -> lista de compra con datos Supabase/IndexedDB.",
+      "user_stories": [
+        {
+          "id": "HU8.1",
+          "story": "Como usuario quiero guardar recetas y volver a ellas sin depender del cache temporal de sugerencias."
+        },
+        {
+          "id": "HU8.2",
+          "story": "Como usuario quiero cocinar una receta, descontar ingredientes y generar una lista con lo que me falta."
+        }
+      ],
+      "tasks": [
+        "Portar Favorites y RecipeSteps a rutas PWA.",
+        "Sincronizar favorite_recipes con IndexedDB y Supabase.",
+        "Recalcular match de favoritos contra inventario actual sin alterar el snapshot base.",
+        "Implementar consumo de ingredientes mediante transacción server-side y outbox compatible.",
+        "Portar ConsumeIngredients/ConsumeRecipeIngredients.",
+        "Generar ShoppingList como proyección derivada de recetas/faltantes; no duplicar datos sin necesidad.",
+        "Crear deep links internos entre recetas, favoritos, compra e inventario.",
+        "Cubrir offline read y mutaciones diferidas donde sean seguras."
+      ],
+      "deliverable": "Favoritos, pasos, consumo y lista de compra alcanzan paridad funcional con el cliente móvil.",
+      "acceptance": [
+        "Guardar/quitar favorito es idempotente por user_id + recipe_id.",
+        "Un favorito sigue disponible tras reload/offline si fue sincronizado previamente.",
+        "El match mostrado puede cambiar con el inventario sin perder ingredientes/instrucciones del snapshot guardado.",
+        "Consumir ingredientes nunca deja cantidades negativas; una transacción valida versiones/cantidades antes de aplicar.",
+        "Un retry de consumo con el mismo mutation id no descuenta dos veces.",
+        "La lista de compra se deriva de missing ingredients y/o selección explícita y no expone datos de otro usuario.",
+        "Si la PWA está offline, las operaciones que no puedan validarse con seguridad se marcan pendientes y no se presentan como confirmadas.",
+        "E2E cubre favorito, quitar favorito, cocinar, conflicto de cantidad, lista de compra y navegación mobile."
+      ],
+      "scope": [
+        "apps/web/app/app/favorites/**",
+        "apps/web/app/app/recipes/**",
+        "apps/web/app/app/shopping-list/**",
+        "packages/domain/**",
+        "supabase/**",
+        "tests/**",
+        "docs/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:5ab6f29ec073a8149d54b9a2bc9064cf1f112e4dc37940d3832f4636030e4926",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-9-meal-calendar",
+      "name": "Sprint 9 - Meal Calendar",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P1",
+      "milestone": "0.7.0",
+      "dependencies": [
+        "sprint-8-favorites-cooking-and-shopping"
+      ],
+      "objective": "Migrar el calendario de comidas y meal entries con sincronización offline y referencias estables.",
+      "user_stories": [
+        {
+          "id": "HU9.1",
+          "story": "Como usuario quiero planificar desayuno, comida, cena o snack en un calendario desde cualquier dispositivo."
+        },
+        {
+          "id": "HU9.2",
+          "story": "Como usuario quiero crear una comida con receta o nombre personalizado y conservar notas/consumos."
+        }
+      ],
+      "tasks": [
+        "Portar Calendar, AddMeal y MealDetail.",
+        "Implementar repository Dexie/Supabase para meal_entries.",
+        "Preservar mealType, mealDate, recipeId, customName, ingredientsConsumed, notes, caloriesEstimate y consumedAt.",
+        "Añadir create/update/delete offline con outbox/versioning.",
+        "Definir comportamiento si una receta favorita referenciada se elimina.",
+        "Mantener fechas por día local sin errores de timezone.",
+        "Conectar acción de consumo con inventario mediante mutación idempotente."
+      ],
+      "deliverable": "El calendario de comidas alcanza paridad móvil, persiste en Supabase y funciona con el modelo offline-first.",
+      "acceptance": [
+        "Crear/editar/borrar meal entry online y offline converge sin duplicados.",
+        "meal_date representa el día elegido de forma estable al cambiar DST/zona del navegador.",
+        "recipe_id puede quedar nullable y una receta eliminada no borra la comida histórica.",
+        "ingredients_consumed conserva referencias o snapshot suficiente para auditar qué se descontó.",
+        "Dos dispositivos editando la misma comida usan expected_version y producen conflicto explícito en vez de overwrite silencioso.",
+        "RLS impide consultar entradas ajenas.",
+        "E2E cubre vista mensual, alta custom, alta desde receta, detalle, delete, offline y reconexión."
+      ],
+      "scope": [
+        "apps/web/app/app/calendar/**",
+        "packages/domain/meals/**",
+        "supabase/**",
+        "tests/**",
+        "docs/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:854cbf771c205f87f7de0301b8a1dea711c11ced57527f8f743f9fd37f73e6f6",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-10-stripe-pro-and-usage",
+      "name": "Sprint 10 - Stripe Pro and Usage Enforcement",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.8.0",
+      "dependencies": [
+        "sprint-5-receipt-ocr-and-draft-review",
+        "sprint-6-recipe-catalog-normalization-and-suggestions",
+        "sprint-7-url-recipe-import-jobs",
+        "sprint-3-auth-and-account-migration"
+      ],
+      "objective": "Migrar monetización Stripe y límites Free/Pro de Firestore/Firebase Functions a Vercel + Supabase sin perder customers ni entitlements.",
+      "user_stories": [
+        {
+          "id": "HU10.1",
+          "story": "Como usuario quiero contratar o gestionar Pro desde la PWA y ver mi estado real tras volver de Stripe."
+        },
+        {
+          "id": "HU10.2",
+          "story": "Como operador quiero que Stripe sea la autoridad económica y que los límites no puedan manipularse desde el cliente."
+        }
+      ],
+      "tasks": [
+        "Portar createCheckoutSession, openCustomerPortal y getSubscriptionStatus a Route Handlers server-only.",
+        "Crear stripeWebhook con verificación de firma y stripe_events idempotentes.",
+        "Persistir subscriptions con stripe_customer_id, subscription_id, status, period_end, cancel_at_period_end y manual override si se conserva.",
+        "Migrar customers usando legacy Firebase UID mapping y actualizar metadata futura a Supabase user id.",
+        "Crear función/RPC consume_usage(feature, period) atómica.",
+        "Mantener límites Free 5 recipe suggestions, 5 OCR, 10 URL imports por mes.",
+        "Actualizar Paywall y estados de retorno success/cancel.",
+        "Crear reconciliación Stripe <-> subscriptions para detectar webhooks perdidos."
+      ],
+      "deliverable": "Checkout, Portal, estado Pro y cuotas funcionan en la PWA con Stripe + Supabase como fuentes de verdad.",
+      "acceptance": [
+        "El browser solo conoce Stripe publishable data necesaria; STRIPE_SECRET_KEY y webhook secret son server-only.",
+        "El webhook rechaza firmas inválidas antes de tocar la base.",
+        "stripe_events.event_id único hace idempotente recibir el mismo evento más de una vez.",
+        "Un customer legacy puede resolverse por mapping de Firebase UID durante transición y toda nueva sesión guarda metadata de Supabase user id.",
+        "active/trialing habilitan Pro; canceled/past_due siguen la política documentada y no dependen de un flag cliente.",
+        "manualProOverride, si se mantiene, solo puede modificarse por operación administrativa server-side y queda auditado.",
+        "consume_usage bloquea exactamente al alcanzar 5/5/10 para Free, usa periodo YYYY-MM definido server-side y es seguro bajo requests concurrentes.",
+        "Pro bypassa cuotas sin incrementar contadores de forma que luego penalice al usuario al renovar/cambiar estado de forma inesperada.",
+        "El Paywall muestra estado loading/error/active/cancelled y nunca asume Pro solo por regresar de Stripe.",
+        "Tests cubren checkout auth, webhook replay, customer legacy, concurrencia de cuota, portal y cambio de estado."
+      ],
+      "scope": [
+        "apps/web/app/api/stripe/**",
+        "apps/web/app/app/pro/**",
+        "apps/web/src/server/billing/**",
+        "packages/domain/billing/**",
+        "supabase/**",
+        "scripts/migration/stripe/**",
+        "tests/**",
+        "docs/**",
+        ".env.example",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:3b8e870c290ca6ee9872aadfbfffe1b8af6af3862c78eb5491799a42e02a49a2",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-11-pwa-install-offline-shell-and-push",
+      "name": "Sprint 11 - PWA Install, Offline Shell and Web Push",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P1",
+      "milestone": "0.9.0",
+      "dependencies": [
+        "sprint-7-url-recipe-import-jobs",
+        "sprint-4-inventory-offline-first"
+      ],
+      "objective": "Hacer que la aplicación se comporte como una PWA real y sustituir FCM por Web Push para los eventos que ya requieren aviso fuera de la app.",
+      "user_stories": [
+        {
+          "id": "HU11.1",
+          "story": "Como usuario quiero instalar la app desde el navegador y abrirla con una experiencia similar a una app."
+        },
+        {
+          "id": "HU11.2",
+          "story": "Como usuario quiero recibir un aviso cuando una receta importada termine aunque haya cerrado la PWA."
+        }
+      ],
+      "tasks": [
+        "Crear manifest, iconos, shortcuts y metadata installable.",
+        "Crear service worker con versionado de cache y offline fallback.",
+        "Cachear únicamente shell/assets públicos; datos privados viven en IndexedDB bajo sesión.",
+        "Añadir detección/UX de install prompt y guía iOS cuando proceda.",
+        "Crear push_subscriptions en Supabase y opt-in explícito.",
+        "Implementar sender Web Push server-side con VAPID.",
+        "Disparar RECIPE_JOB_COMPLETED de forma idempotente al completar job.",
+        "Implementar notificationclick con allowlist de rutas internas.",
+        "Añadir limpieza de subscriptions 404/410 y múltiples dispositivos.",
+        "Integrar en el manifest definitivo el share_target ya validado en Sprint 7 sin hacerlo requisito para navegadores no compatibles.",
+        "Hacer que RECIPE_JOB_COMPLETED se derive del commit autoritativo de Supabase/worker y no de un evento Realtime efímero."
+      ],
+      "deliverable": "La PWA es instalable, conserva un shell offline y puede avisar de recipe jobs completados sin Firebase Cloud Messaging.",
+      "acceptance": [
+        "manifest declara nombre, start_url, display standalone, theme/background e iconos 192/512 maskable y normales.",
+        "Service worker nunca cachea cookies, respuestas de /api privadas ni páginas SSR autenticadas como datos compartibles.",
+        "Sin red, un usuario previamente autenticado puede abrir shell y datos offline ya materializados; acciones pendientes muestran estado, no éxito falso.",
+        "La solicitud de permiso Push solo ocurre tras gesto del usuario.",
+        "Cada suscripción pertenece al usuario de sesión; userId cliente se ignora.",
+        "Una misma finalización de job produce como máximo una notificación por suscripción usando una clave idempotente.",
+        "404/410 revoca solo la suscripción afectada.",
+        "notificationclick solo abre rutas /app allowlisted y rechaza URLs externas/protocol-relative.",
+        "En navegadores sin Push/Install la app sigue completamente usable y muestra estado neutral.",
+        "E2E cubre instalación/prompt cuando emulable, offline fallback, push mock, click y cache policy.",
+        "Share Target y Web Push son mejoras progresivas: si cualquiera no está soportado, paste URL y polling/query mantienen funcionalidad completa.",
+        "Una notificación de job completado solo se emite después de que Recipe JSON haya validado y el job esté committed como completed."
+      ],
+      "scope": [
+        "apps/web/public/**",
+        "apps/web/app/**",
+        "apps/web/src/server/notifications/**",
+        "packages/domain/notifications/**",
+        "supabase/**",
+        "tests/**",
+        "docs/**",
+        ".env.example",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:16d2b0276988ad60b3a3ba1d8934fa986c4aa7dfd662eb3051309963bb3e2aaf",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-12-firebase-data-migration-and-reconciliation",
+      "name": "Sprint 12 - Firebase Data Migration and Reconciliation",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.9.1",
+      "dependencies": [
+        "sprint-9-meal-calendar",
+        "sprint-10-stripe-pro-and-usage",
+        "sprint-11-pwa-install-offline-shell-and-push"
+      ],
+      "objective": "Construir y ensayar la migración completa de datos autoritativos desde Firestore/Storage hacia Supabase antes del corte real.",
+      "user_stories": [
+        {
+          "id": "HU12.1",
+          "story": "Como operador quiero migrar todos los datos necesarios de un usuario y demostrar que no se perdió ni duplicó nada."
+        },
+        {
+          "id": "HU12.2",
+          "story": "Como mantenedor quiero poder repetir la migración después de corregir un mapping sin limpiar manualmente la base."
+        }
+      ],
+      "tasks": [
+        "Implementar export/import por colección Firestore con batch/cursor y checkpoint.",
+        "Importar inventory, drafts, savedRecipes, meal_entries, cookingPreferences, recipe_jobs, usage y subscription.",
+        "Usar legacy_id_map y auth mapping para ownership.",
+        "Migrar únicamente objetos Storage referenciados que deban conservarse; reportar huérfanos por separado.",
+        "Crear quarantine para documentos inválidos o imposibles de mapear.",
+        "Crear reports JSON/CSV saneados con counts, checksums y errores por usuario/colección.",
+        "Ejecutar dry-run sobre snapshot staging y luego import real en Supabase staging.",
+        "Crear queries de reconciliación source vs target y pruebas de rerun idempotente.",
+        "Documentar orden exacto Auth -> profiles -> domain data -> billing -> assets."
+      ],
+      "deliverable": "Existe un comando reproducible que migra un snapshot Firebase a Supabase y produce un informe de reconciliación con cero diferencias no explicadas.",
+      "acceptance": [
+        "El runner exige environment explícito y rechaza accidentalmente URLs/proyectos de producción salvo flag de cutover separado.",
+        "Cada documento importado conserva legacy path/id o mapping suficiente para rastrearlo.",
+        "Repetir el import completo no cambia cardinalidades salvo registros fuente modificados.",
+        "Los items, favoritos, comidas, drafts, usage y subscription se reconcilian por usuario con counts y claves.",
+        "Los documentos inválidos se contabilizan y quedan en quarantine con motivo; no se omiten silenciosamente.",
+        "recipe_cache y caches no autoritativas no bloquean reconciliación.",
+        "Storage huérfano se reporta y no se migra por defecto.",
+        "Los reports no incluyen password hashes, tokens, URLs firmadas, raw secrets ni payloads completos de OCR salvo modo local explícito.",
+        "Una segunda ejecución después de modificar un documento source actualiza la misma fila target por legacy id.",
+        "Tests con fixtures cubren duplicados, usuario inexistente, referencia rota, documento parcial y reanudación tras fallo."
+      ],
+      "scope": [
+        "scripts/migration/**",
+        "supabase/**",
+        "tests/migration/**",
+        "docs/migration/**",
+        ".env.example",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:a09955ffbb692de83b8a934b16600ee1e36586eba12d268d1fc2e3d02d2c2042",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-13-ui-parity-responsive-and-accessibility",
+      "name": "Sprint 13 - UI Parity, Responsive and Accessibility",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P1",
+      "milestone": "0.9.2",
+      "dependencies": [
+        "sprint-12-firebase-data-migration-and-reconciliation"
+      ],
+      "objective": "Cerrar la paridad visual/funcional de todas las pantallas móviles en una navegación PWA coherente para 320 px, tablet y desktop.",
+      "user_stories": [
+        {
+          "id": "HU13.1",
+          "story": "Como usuario móvil quiero reconocer los mismos flujos sin scroll horizontal ni controles difíciles de tocar."
+        },
+        {
+          "id": "HU13.2",
+          "story": "Como usuario de escritorio quiero aprovechar el ancho extra sin convertir la app en una interfaz distinta."
+        }
+      ],
+      "tasks": [
+        "Auditar Home, Scan, Recipes, Favorites, Calendar, Settings, RecipeSteps, ReviewDraft, Detail, AddItem, Crop, Consume, AddMeal, MealDetail, Import, ShoppingList y Paywall.",
+        "Definir rutas PWA y navegación inferior/móvil equivalentes.",
+        "Portar theme/tokens y assets de Neverito sin arrastrar APIs React Native.",
+        "Revisar teclado, foco, labels, dialogs y live regions.",
+        "Añadir skeleton/empty/error/offline/sync conflict states coherentes.",
+        "Optimizar responsive 320/375/430/768/1024/1440.",
+        "Añadir axe y pruebas Playwright de navegación crítica.",
+        "Verificar prefers-reduced-motion y touch targets."
+      ],
+      "deliverable": "Todas las superficies actuales tienen equivalente PWA usable en móvil y escritorio con accesibilidad consistente.",
+      "acceptance": [
+        "No queda ninguna pantalla legacy incluida en scope sin ruta o sustituto documentado.",
+        "No existe overflow horizontal involuntario a 320, 375, 430, 768, 1024 y 1440 px.",
+        "Acciones principales tienen target de al menos 44x44 CSS px o área equivalente.",
+        "Formularios son usables con teclado y foco visible.",
+        "Diálogos de confirmación/crop/paywall gestionan foco y Escape cuando corresponde.",
+        "Loading, offline, error, pending sync y conflict se distinguen por texto/semántica además de color.",
+        "Las rutas privadas preservan deep links después de login mediante returnTo allowlisted.",
+        "Las pantallas críticas no tienen infracciones axe critical/serious en los estados cubiertos.",
+        "La navegación PWA no depende de gestos nativos inexistentes en navegador.",
+        "Playwright cubre auth -> inventory -> scan mock -> review -> recipes -> favorite -> calendar -> paywall."
+      ],
+      "scope": [
+        "apps/web/**",
+        "packages/ui/**",
+        "tests/e2e/**",
+        "docs/design/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:61e42affbe7f71f0200a12bf07c29a6aa8dbb7a59b691b61585bca865d21abf6",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-14-security-observability-and-performance",
+      "name": "Sprint 14 - Security, Observability and Performance",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.9.5",
+      "dependencies": [
+        "sprint-13-ui-parity-responsive-and-accessibility"
+      ],
+      "objective": "Endurecer la PWA para producción, medir fallos y asegurar que el backend no introduce regresiones de seguridad o latencia.",
+      "user_stories": [
+        {
+          "id": "HU14.1",
+          "story": "Como usuario quiero que mi inventario, recetas guardadas y pagos estén aislados de otras cuentas."
+        },
+        {
+          "id": "HU14.2",
+          "story": "Como operador quiero detectar fallos en OCR, jobs, Supabase o Stripe sin inspeccionar datos privados."
+        }
+      ],
+      "tasks": [
+        "Auditar RLS y grants de todas las tablas/buckets.",
+        "Añadir rate limits por IP/usuario para auth, OCR, suggestions, URL import y billing.",
+        "Aplicar CSP, HSTS, X-Content-Type-Options, Referrer-Policy y controles same-origin/CSRF necesarios.",
+        "Redactar logs y normalizar error codes.",
+        "Añadir observabilidad de Vercel/Supabase y métricas de jobs/latencia/errores sin PII innecesaria.",
+        "Benchmark Home/inventory/recipes/calendar y endpoints server-side.",
+        "Añadir índices Postgres guiados por EXPLAIN.",
+        "Ejecutar dependency/secrets scan.",
+        "Documentar runbooks de Vision, Whisper/Ollama, Stripe, Supabase y Vercel.",
+        "Añadir métricas por stage del pipeline: queue latency, fetch, transcript-hit rate, Whisper fallback rate, transcribe duration, LLM duration, validation failures y end-to-end completion.",
+        "Añadir dashboards/alertas de Cloud Tasks retries, Cloud Run 4xx/5xx/timeouts/concurrency y GCS temp object age sin registrar contenido sensible.",
+        "Definir budget/guardrails de Cloud Run max instances, CPU/memoria/concurrency y coste por import; GPU solo si benchmarking demuestra necesidad."
+      ],
+      "deliverable": "La release candidate cumple aislamiento, límites, headers, observabilidad y presupuestos de rendimiento definidos.",
+      "acceptance": [
+        "Todos los objetos public schema expuestos tienen RLS o una justificación explícita para ser públicos.",
+        "Test de dos usuarios cubre horizontal authorization para cada recurso privado.",
+        "Rate limits no confían en userId aportado por el cliente y responden con código estable/Retry-After.",
+        "Logs de requests canario no contienen cookies, Authorization, service keys, Stripe secrets, Vision creds o URLs firmadas.",
+        "Un fallo de OCR/job/Stripe produce error category y request/job id sin raw payload sensible.",
+        "Las rutas principales cumplen presupuestos de p95 documentados en un dataset sintético reproducible.",
+        "No existen queries N+1 evidentes en Home/Recipes/Favorites/Calendar y los scans/sorts costosos quedan indexados o justificados.",
+        "CSP y headers no rompen Supabase Auth, Stripe Checkout, PWA ni Web Push.",
+        "Auditoría de dependencias no deja vulnerabilidades críticas sin excepción documentada/caducada.",
+        "Runbooks permiten desactivar OCR/imports/push sin bloquear inventario ni acceso a datos existentes.",
+        "Se puede medir qué porcentaje de imports evita Whisper gracias a caption/transcript y su efecto en latencia/coste.",
+        "Existe alerta/reconciliación para jobs queued/running fuera del SLA y para retries agotados sin receta completed.",
+        "Los límites de escalado de Cloud Run evitan una explosión de coste ante burst/abuso sin bloquear permanentemente la cola."
+      ],
+      "scope": [
+        "apps/web/**",
+        "supabase/**",
+        "packages/**",
+        "tests/**",
+        ".github/workflows/**",
+        "docs/operations/**",
+        ".env.example",
+        "vercel.json",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:80d1af26ca4898bb5970229ead067469aaeeeccec60c00926e2a09cc7f57b6ac",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-15-release-candidate-and-cutover",
+      "name": "Sprint 15 - Release Candidate and Cutover",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.9.9",
+      "dependencies": [
+        "sprint-14-security-observability-and-performance"
+      ],
+      "objective": "Validar una migración completa con datos reales saneados y ejecutar el cambio de Firebase/React Native a PWA/Supabase con rollback probado.",
+      "user_stories": [
+        {
+          "id": "HU15.1",
+          "story": "Como usuario existente quiero encontrar mis datos al entrar por primera vez en la PWA."
+        },
+        {
+          "id": "HU15.2",
+          "story": "Como operador quiero poder abortar o revertir el corte si Auth, datos, Stripe o jobs no reconcilian."
+        }
+      ],
+      "tasks": [
+        "Congelar commit/digests candidatos y migraciones.",
+        "Ejecutar ensayo completo de Auth + Firestore + Storage + Stripe mapping en staging.",
+        "Ejecutar matriz E2E con usuarios migrados y nuevos.",
+        "Preparar ventana de write freeze/cutover y mensaje de mantenimiento.",
+        "Ejecutar export/import final idempotente y reconciliación.",
+        "Cambiar dominio/redirects/callbacks a Vercel.",
+        "Desactivar nuevas escrituras Firebase y workers/functions conflictivos sin borrar todavía el proyecto.",
+        "Ejecutar smoke productivo: auth, inventory, OCR, recipes, favorites, URL job, calendar, Stripe y offline.",
+        "Probar rollback de frontend/config usando el snapshot/mapping previo.",
+        "Generar informe de cutover con counts y diferencias.",
+        "Ejecutar smoke de producción end-to-end para paste URL y share target: Vercel -> Supabase -> Cloud Tasks -> Cloud Run -> Recipe schema -> Supabase -> notification/UI.",
+        "Verificar lifecycle/cleanup de GCS temporal y que ningún import por URL normal deja media persistente después del SLA."
+      ],
+      "deliverable": "La PWA/Supabase entra en producción con usuarios y datos reconciliados; Firebase queda en modo de rollback/archivo y ya no es dependencia operativa.",
+      "acceptance": [
+        "El candidate commit pasa todos los quality gates antes de cutover.",
+        "El ensayo staging migra usuarios y todos los datasets incluidos con cero diferencias no explicadas.",
+        "Durante el cutover no se aceptan escrituras simultáneas en Firebase y Supabase para la misma autoridad sin una estrategia dual-write explícita.",
+        "El import final puede rerun sin duplicar datos si falla a mitad.",
+        "Cada usuario muestreado conserva inventario, favoritos, meals, preferencias, quota/subscription y jobs relevantes según el mapping.",
+        "Los usuarios con hash migrable autentican con credencial previa; los casos de fallback reciben flujo de reset documentado.",
+        "Stripe webhook y Customer Portal operan con el nuevo user mapping antes de abrir tráfico normal.",
+        "La PWA no realiza requests a Firestore/Firebase Functions/FCM en producción.",
+        "El rollback de deployment no requiere borrar ni reimportar datos Supabase y está documentado.",
+        "El informe de cutover registra source commit, target commit, migration run ids, counts, quarantined rows y aprobador sin secretos."
+      ],
+      "scope": [
+        "apps/web/**",
+        "supabase/**",
+        "scripts/migration/**",
+        "tests/**",
+        "docs/migration/**",
+        "docs/operations/**",
+        ".github/workflows/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:179892fe8a496affb56a7180c7d205d2eb1710ab6c212d76f800bc8d9f861fe9",
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "sprint-16-production-1-0",
+      "name": "Sprint 16 - PWA Production 1.0",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "1.0.0",
+      "dependencies": [
+        "sprint-15-release-candidate-and-cutover"
+      ],
+      "objective": "Cerrar operación, backups, recuperación y retirada de Firebase para declarar la PWA 1.0 como producto principal.",
+      "user_stories": [
+        {
+          "id": "HU16.1",
+          "story": "Como usuario quiero usar What's In My Fridge?? desde cualquier navegador compatible con datos persistentes y pagos estables."
+        },
+        {
+          "id": "HU16.2",
+          "story": "Como operador quiero restaurar el servicio y los datos sin depender del antiguo stack Firebase."
+        }
+      ],
+      "tasks": [
+        "Configurar dominio canónico, HTTPS y redirects finales.",
+        "Configurar backups/PITR de Supabase según plan y documentar restore.",
+        "Verificar variables/secretos de production y rotación.",
+        "Fijar versiones del matcher, parser de receipts y contratos de jobs.",
+        "Crear checklist release 1.0 y changelog.",
+        "Mantener Firebase solo durante el periodo de rollback definido y después retirar Functions/FCM/Storage no necesarios.",
+        "Archivar o mover el cliente mobile legacy y documentación histórica sin borrar trazabilidad.",
+        "Verificar restore y smoke después de backup en entorno aislado."
+      ],
+      "deliverable": "What's In My Fridge?? 1.0 funciona como PWA en Vercel con Supabase como backend único de producción y Firebase deja de ser dependencia activa.",
+      "acceptance": [
+        "El dominio production sirve exclusivamente el release aprobado por HTTPS.",
+        "Un restore de backup en entorno aislado recupera schema y cardinalidades críticas y pasa queries de invariantes.",
+        "Secret scan de repo, bundles, logs y artefactos no encuentra claves Firebase privadas, Supabase secret, Stripe secret, Vision creds ni VAPID private key.",
+        "Auth, inventory, OCR, suggestions, favorites, import jobs, meals, Stripe, offline y push pasan smoke productivo saneado.",
+        "No quedan cron/jobs/webhooks enviando escrituras a Firestore.",
+        "La retirada de Firebase ocurre solo después de conservar export/backups y procedimiento de recuperación acordados.",
+        "El cliente legacy queda claramente marcado como archived/deprecated y no se confunde con la PWA en CI.",
+        "Changelog 1.0 y runbook de producción no contienen PII ni secretos.",
+        "Todos los quality gates y el checklist go/no-go terminan con código 0/aprobado."
+      ],
+      "scope": [
+        "apps/web/**",
+        "supabase/**",
+        "packages/**",
+        "scripts/**",
+        "tests/**",
+        ".github/workflows/**",
+        "docs/**",
+        ".env.example",
+        "vercel.json",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "answers_hash": "sha256:60488ab45fcb487dd06a930d060dabdaae7a5ed1be717e4d03985d4c013c8a8f",
+      "approved_by": null,
+      "approved_at": null
+    }
+  ],
+  "spec_revision": {
+    "version": "2.0",
+    "revised_at": "2026-09-17",
+    "reason": "Architecture review: keep Google Cloud as specialized media/AI plane; use Cloud Tasks -> Cloud Run; captions/transcripts before Whisper; structured Recipe JSON; Web Share Target + paste fallback.",
+    "supersedes": "spec-whats-in-my-fridge-pwa.json"
+  }
+}

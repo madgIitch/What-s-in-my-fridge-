@@ -1,5 +1,5 @@
-# Archivos JSON grandes (como recipes.json)  
-*.json filter=lfs diff=lfs merge=lfs -text  
+# Los manifests y archivos de configuracion JSON deben permanecer como texto.
+*.json text eol=lf
   
 # Imágenes  
 *.png filter=lfs diff=lfs merge=lfs -text  
