@@ -232,7 +232,7 @@
     {
       "id": "sprint-0-pwa-migration-foundation",
       "name": "Sprint 0 - PWA Migration Foundation",
-      "status": "review_pending",
+      "status": "done",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.0.1",
