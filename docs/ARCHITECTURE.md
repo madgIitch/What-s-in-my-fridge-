@@ -58,3 +58,26 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
   - `.env.example`
   - `docs/**`
   - `spec.json`
+
+<!-- harness:sprint-1-supabase-platform-foundation -->
+## sprint-1-supabase-platform-foundation · Sprint 1 - Supabase Platform Foundation
+
+
+
+### Scope aprobado
+
+  - `apps/web/**`
+  - `supabase/**`
+  - `packages/**`
+  - `tests/**`
+  - `.env.example`
+  - `docs/**`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** UUIDs alineados con auth.users; profiles 1:1, legacy_id_map con identidad de origen única y migration_runs auditables sin secretos.
+- **external_contracts:** Supabase CLI/migrations son la fuente reproducible; SSR usa cookies y PKCE mediante @supabase/ssr.
+- **edge_cases:** conflictos de legacy IDs, paths de Storage ajenos y sesiones caducadas quedan cubiertos por constraints/policies.
+- **ui_states:** ruta privada mínima con estado autenticado y redirección estable a /login si falta sesión.
+

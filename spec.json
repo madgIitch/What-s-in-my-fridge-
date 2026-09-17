@@ -293,7 +293,7 @@
     {
       "id": "sprint-1-supabase-platform-foundation",
       "name": "Sprint 1 - Supabase Platform Foundation",
-      "status": "pending",
+      "status": "spec_ready",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.0.2",
@@ -319,32 +319,38 @@
         "Crear buckets privados receipts-temp y user-assets con límites de MIME/tamaño.",
         "Configurar generación de tipos TypeScript desde el esquema.",
         "Crear test harness con dos usuarios para políticas RLS/Storage.",
-        "Configurar entornos local, preview/staging y production sin reutilizar secretos."
+    "Configurar entornos local, preview/staging y production sin reutilizar secretos.",
+    "CI/CD aprobado por el usuario: validar migraciones y tipos en PR y desplegar a staging tras main con gates verdes."
       ],
       "deliverable": "Supabase local y staging arrancan desde cero con migraciones versionadas, auth SSR, RLS probado y Storage privado.",
       "acceptance": [
         "Una base vacía alcanza el schema esperado ejecutando únicamente migraciones versionadas.",
         "El cliente de navegador solo utiliza URL y publishable key; el cliente privilegiado solo existe en módulos server-only.",
-        "Una ruta privada de prueba valida sesión server-side y redirige cuando no existe usuario.",
+        "Una ruta privada de prueba valida sesión server-side y redirige a `/login` cuando no existe usuario.",
         "Dos usuarios de test no pueden SELECT/INSERT/UPDATE/DELETE filas del otro en ninguna tabla privada creada en el sprint.",
-        "Un usuario no puede leer ni sobrescribir objetos de otro usuario en Storage.",
+        "Un usuario no puede leer ni sobrescribir objetos de otro usuario en Storage; los paths comienzan por su UUID.",
         "La service/secret key no aparece en HTML, bundles, source maps, logs o respuestas.",
-        "Los tipos generados forman parte del build y fallan si el schema cambia sin regenerarlos.",
-        "supabase db lint y test:rls terminan con código 0."
+        "Los tipos generados forman parte del build y `pnpm typecheck` falla si sus consumidores divergen del schema.",
+        "`supabase db lint` y el test RLS/Storage terminan con código 0 contra Supabase local.",
+        "Local, preview/staging y production usan proyectos/secretos separados y la documentación prohíbe reutilizar service roles."
       ],
       "scope": [
         "apps/web/**",
         "supabase/**",
         "packages/**",
         "tests/**",
+        ".github/workflows/**",
         ".env.example",
         "docs/**",
         "spec.json"
       ],
-      "spec_approved": false,
-      "answers_hash": "sha256:6c99fcbcfc44846b447de7ccb2e4bfd403b2c55c23e80e4a2f6dfcf7b37bb758",
-      "approved_by": null,
-      "approved_at": null
+      "spec_approved": true,
+      "answers_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "approved_by": "peorr",
+      "approved_at": "2026-09-17T22:37:39.006Z",
+      "manual_spec_ready": true,
+      "manual_spec_ready_at": "2026-09-17T22:37:38.890Z",
+      "manual_spec_ready_reason": "Dev override: Fase 0 marcada como suficientemente especificada pese a suposiciones pendientes."
     },
     {
       "id": "sprint-2-domain-schema-and-migration-mapping",

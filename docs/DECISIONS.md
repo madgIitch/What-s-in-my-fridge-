@@ -27,3 +27,16 @@ Contexto: se aprobó el spec `sprint-0-pwa-migration-foundation` (Sprint 0 - PWA
 Decisión: implementar según el spec aprobado.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+<!-- harness:sprint-1-supabase-platform-foundation -->
+## 2026-09-17 · sprint-1-supabase-platform-foundation aprobado
+
+Contexto: se aprobó el spec `sprint-1-supabase-platform-foundation` (Sprint 1 - Supabase Platform Foundation).
+
+Decisiones registradas:
+
+- **auth_secrets:** browser usa URL y publishable key; service role solo en módulo server-only y nunca es necesaria para renderizar la shell.
+- **rollback_compat:** cambios aditivos; no se modifica Firebase ni el cliente móvil y las migraciones pueden resetearse en local.
+- **tests:** SQL tests prueban CRUD horizontal con dos usuarios y aislamiento de Storage; TypeScript valida separación y tipos generados.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.

@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   web:
     runs-on: ubuntu-latest
@@ -26,14 +29,82 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check:boundaries
       - run: pnpm check:env
+      - run: pnpm check:supabase
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
 
-  supabase-contract-placeholder:
+  database:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
-      - name: Confirm migrations are versioned when introduced
-        run: test ! -d supabase/migrations || find supabase/migrations -type f -name '*.sql' -print -quit | grep -q .
+        with:
+          lfs: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Start isolated local database
+        run: pnpm exec supabase start --workdir ../.. > /dev/null
+      - name: Rebuild exclusively from versioned migrations
+        run: pnpm exec supabase db reset --local --no-seed --workdir ../..
+      - name: Lint schema (warnings fail CI)
+        run: pnpm exec supabase db lint --local --level warning --fail-on warning --workdir ../..
+      - run: pnpm test:rls
+      - name: Check generated types match schema
+        run: |
+          pnpm types:supabase
+          git diff --exit-code -- src/types/database.generated.ts
+      - run: pnpm typecheck
+      - name: Stop local database
+        if: always()
+        run: pnpm exec supabase stop --workdir ../.. > /dev/null
+
+  deploy-staging:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [web, database]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: staging
+    concurrency:
+      group: supabase-staging-migrations
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: apps/web
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: pnpm install --frozen-lockfile
+      - name: Check staging credentials
+        run: |
+          test -n "$SUPABASE_ACCESS_TOKEN" || { echo 'Missing staging SUPABASE_ACCESS_TOKEN'; exit 1; }
+          test -n "$SUPABASE_DB_PASSWORD" || { echo 'Missing staging SUPABASE_DB_PASSWORD'; exit 1; }
+      - name: Link only the approved staging project
+        run: pnpm exec supabase link --project-ref bwscshjtwmsfscbjbndq --workdir ../..
+      - name: Preview pending migrations
+        run: pnpm exec supabase db push --dry-run --workdir ../..
+      - name: Apply migrations (no seeds)
+        run: pnpm exec supabase db push --yes --workdir ../..
+      - name: Verify remote schema
+        run: pnpm exec supabase db lint --linked --level warning --fail-on warning --workdir ../..

@@ -1,0 +1,2 @@
+-- Sprint 1 intentionally ships no application seed data.
+-- Tests create isolated users inside transactions.
