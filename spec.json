@@ -293,7 +293,7 @@
     {
       "id": "sprint-1-supabase-platform-foundation",
       "name": "Sprint 1 - Supabase Platform Foundation",
-      "status": "spec_ready",
+      "status": "done",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.0.2",
@@ -319,8 +319,8 @@
         "Crear buckets privados receipts-temp y user-assets con límites de MIME/tamaño.",
         "Configurar generación de tipos TypeScript desde el esquema.",
         "Crear test harness con dos usuarios para políticas RLS/Storage.",
-    "Configurar entornos local, preview/staging y production sin reutilizar secretos.",
-    "CI/CD aprobado por el usuario: validar migraciones y tipos en PR y desplegar a staging tras main con gates verdes."
+        "Configurar entornos local, preview/staging y production sin reutilizar secretos.",
+        "CI/CD aprobado por el usuario: validar migraciones y tipos en PR y desplegar a staging tras main con gates verdes."
       ],
       "deliverable": "Supabase local y staging arrancan desde cero con migraciones versionadas, auth SSR, RLS probado y Storage privado.",
       "acceptance": [
