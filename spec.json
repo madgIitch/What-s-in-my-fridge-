@@ -487,7 +487,7 @@
     {
       "id": "sprint-4-inventory-offline-first",
       "name": "Sprint 4 - Inventory Offline-First",
-      "status": "review_pending",
+      "status": "done",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.2.0",
