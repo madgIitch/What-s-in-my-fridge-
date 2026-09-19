@@ -12,20 +12,20 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
 
-select lives_ok($$insert into public.inventory_items (user_id, name, expiry_date, quantity, unit, added_at) values ('10000000-0000-0000-0000-000000000001', 'Milk', now(), 1, 'l', now())$$, 'owner inserts inventory');
+select lives_ok($$insert into public.inventory_items (user_id, name, expiry_date, quantity, unit, added_at) values ('10000000-0000-0000-0000-000000000001', 'Milk', current_date, 1, 'l', now())$$, 'owner inserts inventory');
 select lives_ok($$insert into public.receipt_drafts (user_id, raw_text, captured_at) values ('10000000-0000-0000-0000-000000000001', 'Milk 1.00', now())$$, 'owner inserts receipt draft');
 select lives_ok($$insert into public.favorite_recipes (user_id, recipe_id, name, match_percentage, instructions, saved_at) values ('10000000-0000-0000-0000-000000000001', 'recipe-1', 'Soup', 90, 'Cook', now())$$, 'owner inserts favorite');
 select lives_ok($$insert into public.meal_entries (user_id, meal_type, meal_date, custom_name, consumed_at) values ('10000000-0000-0000-0000-000000000001', 'lunch', current_date, 'Soup', now())$$, 'owner inserts meal');
 select lives_ok($$insert into public.ingredient_mappings (user_id, scanned_name, normalized_name, confidence, method, verified_by_user) values ('10000000-0000-0000-0000-000000000001', 'Tomate', 'tomato', 1, 'user', true)$$, 'owner inserts verified mapping');
 
-select throws_ok($$insert into public.inventory_items (user_id, name, expiry_date, quantity, unit, added_at) values ('10000000-0000-0000-0000-000000000002', 'Milk', now(), 1, 'l', now())$$, '42501', null, 'cannot insert inventory for another user');
+select throws_ok($$insert into public.inventory_items (user_id, name, expiry_date, quantity, unit, added_at) values ('10000000-0000-0000-0000-000000000002', 'Milk', current_date, 1, 'l', now())$$, '42501', null, 'cannot insert inventory for another user');
 select throws_ok($$insert into public.receipt_drafts (user_id, raw_text, captured_at) values ('10000000-0000-0000-0000-000000000002', 'Milk', now())$$, '42501', null, 'cannot insert draft for another user');
 select throws_ok($$insert into public.favorite_recipes (user_id, recipe_id, name, match_percentage, instructions, saved_at) values ('10000000-0000-0000-0000-000000000002', 'recipe-2', 'Pie', 80, 'Bake', now())$$, '42501', null, 'cannot insert favorite for another user');
 select throws_ok($$insert into public.meal_entries (user_id, meal_type, meal_date, custom_name, consumed_at) values ('10000000-0000-0000-0000-000000000002', 'dinner', current_date, 'Pie', now())$$, '42501', null, 'cannot insert meal for another user');
 select throws_ok($$insert into public.ingredient_mappings (user_id, scanned_name, normalized_name, confidence, method, verified_by_user) values ('10000000-0000-0000-0000-000000000002', 'Sal', 'salt', 1, 'user', true)$$, '42501', null, 'cannot insert mapping for another user');
 
 reset role;
-insert into public.inventory_items (user_id, name, expiry_date, quantity, unit, added_at) values ('10000000-0000-0000-0000-000000000002', 'Eggs', now(), 6, 'unit', now());
+insert into public.inventory_items (user_id, name, expiry_date, quantity, unit, added_at) values ('10000000-0000-0000-0000-000000000002', 'Eggs', current_date, 6, 'unit', now());
 insert into public.receipt_drafts (user_id, raw_text, captured_at) values ('10000000-0000-0000-0000-000000000002', 'Eggs', now());
 insert into public.favorite_recipes (user_id, recipe_id, name, match_percentage, instructions, saved_at) values ('10000000-0000-0000-0000-000000000002', 'recipe-2', 'Pie', 80, 'Bake', now());
 insert into public.meal_entries (user_id, meal_type, meal_date, custom_name, consumed_at) values ('10000000-0000-0000-0000-000000000002', 'dinner', current_date, 'Pie', now());
@@ -54,7 +54,7 @@ with removed as (delete from public.ingredient_mappings where user_id = '1000000
 
 select throws_ok($$insert into public.meal_entries (user_id, meal_type, meal_date, consumed_at) values ('10000000-0000-0000-0000-000000000001', 'lunch', current_date, now())$$, '23514', null, 'meal requires recipe or custom name');
 select throws_ok($$insert into public.ingredient_mappings (user_id, scanned_name, normalized_name, confidence, method) values ('10000000-0000-0000-0000-000000000001', 'Milk', 'milk', .5, 'fuzzy')$$, '23514', null, 'unverified noncanonical mapping rejected');
-select throws_ok($$insert into public.inventory_items (user_id, source, legacy_id, name, expiry_date, quantity, unit, added_at) values ('10000000-0000-0000-0000-000000000001', 'FIREBASE', 'items/1', 'A', now(), 1, 'unit', now()), ('10000000-0000-0000-0000-000000000001', 'FIREBASE', 'items/1', 'B', now(), 1, 'unit', now())$$, '23505', null, 'legacy identity is unique');
+select throws_ok($$insert into public.inventory_items (user_id, source, legacy_id, name, expiry_date, quantity, unit, added_at) values ('10000000-0000-0000-0000-000000000001', 'FIREBASE', 'items/1', 'A', current_date, 1, 'unit', now()), ('10000000-0000-0000-0000-000000000001', 'FIREBASE', 'items/1', 'B', current_date, 1, 'unit', now())$$, '23505', null, 'legacy identity is unique');
 select hasnt_table('public', 'recipe_cache', 'recipe cache is not authoritative');
 select is((select count(*) from public.ingredients where seed_version = 'catalog-v1'), 5::bigint, 'seed cardinality is stable');
 select is((select md5(string_agg(slug || ':' || name || ':' || category || ':' || synonyms::text, '|' order by slug)) from public.ingredients where seed_version = 'catalog-v1'), '17c09ec4416555986ff0537703576daa', 'seed checksum is stable');

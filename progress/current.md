@@ -1,7 +1,7 @@
 # Sesión actual
 
-Feature `sprint-3-auth-and-account-migration` implementada y en `review_pending`.
+Feature `sprint-4-inventory-offline-first` implementada y en `review_pending`.
 
-Siguiente acción: cerrar con `node .harness/spec.mjs done sprint-3-auth-and-account-migration` tras la aceptación del smoke humano.
+Siguiente acción: revisar el smoke de inventario y cerrar con `node .harness/spec.mjs done sprint-4-inventory-offline-first`.
 
-Gates ejecutados: typecheck, lint, Vitest, build, Supabase DB lint y pgTAP de plataforma/dominio/auth. Smoke visual de login aceptado y corregido en viewport móvil.
+Gates ejecutados: typecheck, lint, Vitest (14), build, Playwright shell, reset Supabase y pgTAP (57). `db lint` queda pendiente porque Docker Desktop no está disponible.

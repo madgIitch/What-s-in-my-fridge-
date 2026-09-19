@@ -31,6 +31,57 @@ export type InventoryItem = OwnedEntity & Readonly<{
 }>;
 export type InventoryItemInsert = NewOwnedEntity & Omit<InventoryItem, keyof OwnedEntity>;
 
+export type InventoryMutationOperation = "create" | "update" | "delete";
+export type InventorySyncState = "synced" | "pending" | "conflict" | "error";
+export type InventoryMutationCode =
+  | "OK"
+  | "SYNC_CONFLICT"
+  | "AUTH_REQUIRED"
+  | "FORBIDDEN"
+  | "VALIDATION_ERROR";
+
+export type InventoryMutationPayload = Readonly<{
+  name?: string;
+  normalizedName?: string | null;
+  expiryDate?: string;
+  category?: string | null;
+  quantity?: number;
+  notes?: string | null;
+  unit?: string;
+  addedAt?: string;
+}>;
+
+export type InventoryMutation = Readonly<{
+  clientMutationId: EntityId;
+  userId: EntityId;
+  operation: InventoryMutationOperation;
+  itemId: EntityId;
+  payload: InventoryMutationPayload;
+  expectedVersion: number | null;
+  state: Exclude<InventorySyncState, "synced">;
+  attempts: number;
+  createdAt: string;
+  updatedAt: string;
+  lastError: InventoryMutationCode | "NETWORK_ERROR" | null;
+}>;
+
+export type InventoryMutationResult = Readonly<{
+  client_mutation_id: EntityId;
+  status: "applied" | "duplicate" | "conflict" | "rejected";
+  code: InventoryMutationCode;
+  item: Record<string, unknown> | null;
+}>;
+
+/** A civil date is stored and displayed verbatim; it must never pass through Date. */
+export function isCivilDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const candidate = new Date(Date.UTC(year, month - 1, day));
+  return candidate.getUTCFullYear() === year
+    && candidate.getUTCMonth() === month - 1
+    && candidate.getUTCDate() === day;
+}
+
 export type ReceiptLine = Readonly<{ name: string; quantity: number; price?: number; expiryDate?: string; category?: string }>;
 export type ReceiptDraft = OwnedEntity & Readonly<{
   rawText: string; capturedAt: string; merchant: string | null;

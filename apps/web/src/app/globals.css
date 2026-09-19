@@ -45,3 +45,23 @@ button { color:inherit; }
 @keyframes auth-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @media (max-width:680px){.topbar{height:66px;padding-inline:20px}.workspace{width:min(100% - 28px,1120px)}.intro{padding-top:40px}.freshness{grid-template-columns:1fr;border-radius:24px}.freshness-copy{min-height:280px}.freshness-visual{min-height:230px}.section-heading{align-items:start}.text-action{font-size:0}.text-action span{font-size:24px}.pantry-row{grid-template-columns:48px 1fr auto 12px;gap:10px}.produce{width:42px;height:42px}.auth-shell{padding:20px 20px 28px}.auth-brand-note{display:none}.auth-workspace{margin:58px 0 44px}.auth-heading{margin-bottom:28px}.auth-heading h1{font-size:48px}.auth-footer{align-items:flex-start;flex-direction:column;gap:12px}.auth-aside{font-size:24px}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+.inventory-shell{min-height:100svh;background:var(--paper)}
+.inventory-nav{min-height:64px;padding:12px max(18px,calc((100vw - 1040px)/2));display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.inventory-nav button,.inventory-list-heading button,.item-actions button,.conflict-panel button{padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--cream);font-weight:700;cursor:pointer}
+.inventory-page{width:min(calc(100% - 32px),1040px);margin:0 auto;padding:42px 0 80px;display:grid;grid-template-columns:minmax(250px,340px) minmax(0,1fr);gap:clamp(28px,6vw,76px)}
+.inventory-header{grid-column:1/-1;display:flex;align-items:end;justify-content:space-between;gap:20px;border-bottom:1px solid var(--line);padding-bottom:24px}
+.inventory-header h1{margin:0;font:580 clamp(44px,7vw,72px)/.95 var(--font-display),serif;letter-spacing:-.05em}
+.connection-state{margin:0;padding:8px 12px;border-radius:999px;background:#deebca;font-size:13px;font-weight:800}
+.inventory-form{align-self:start;padding:24px;border-radius:20px;background:var(--cream);display:grid;grid-template-columns:1fr 1fr;gap:16px;box-shadow:0 12px 35px rgba(23,53,43,.08)}
+.inventory-form h2{grid-column:1/-1;margin:0 0 4px;font:600 28px var(--font-display),serif}
+.inventory-form label{min-width:0;display:grid;gap:6px;font-size:12px;font-weight:800}.inventory-form label:first-of-type,.inventory-form label:nth-of-type(5),.inventory-form label:nth-of-type(6){grid-column:1/-1}
+.inventory-form input{width:100%;min-width:0;height:44px;padding:0 11px;border:1px solid rgba(23,53,43,.25);border-radius:9px;background:white;color:var(--ink);font-size:16px}
+.inventory-form button{grid-column:1/-1;min-height:48px;border:0;border-radius:10px;background:var(--green);color:white;font-weight:800;cursor:pointer}
+.inventory-list{min-width:0}.inventory-list-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}.inventory-list-heading h2{margin:0;font:600 32px var(--font-display),serif}.inventory-list ul{margin:14px 0 0;padding:0;list-style:none}
+.inventory-item{min-width:0;padding:18px 0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;border-bottom:1px solid var(--line)}
+.inventory-item-copy{min-width:0;display:grid;gap:4px}.inventory-item-copy strong,.inventory-item-copy span{overflow-wrap:anywhere}.inventory-item-copy span{color:#587067;font-size:14px}
+.sync-label{align-self:start;padding:5px 8px;border-radius:999px;font-size:12px;font-weight:800}.sync-synced{background:#deebca}.sync-pending{background:#f3ddb0}.sync-conflict,.sync-error{background:#f2c5b7}
+.item-actions{grid-column:1/-1;display:flex;gap:8px}.conflict-panel{grid-column:1/-1;padding:14px;border-left:4px solid #9b3e29;background:#fff3ed}.conflict-panel p{margin-top:0;overflow-wrap:anywhere}.conflict-panel button{margin:4px 8px 4px 0}
+@media(max-width:700px){.inventory-page{width:min(calc(100% - 24px),1040px);padding-top:28px;grid-template-columns:minmax(0,1fr);gap:32px}.inventory-header{grid-column:auto;align-items:flex-start;flex-direction:column}.inventory-form{padding:18px}.inventory-item{grid-template-columns:minmax(0,1fr)}.sync-label{justify-self:start}.inventory-nav{padding-inline:14px}}
+@media(max-width:340px){.inventory-form{grid-template-columns:minmax(0,1fr)}.inventory-form label{grid-column:1!important}.inventory-header h1{font-size:42px}.inventory-nav .brand{font-size:21px}}

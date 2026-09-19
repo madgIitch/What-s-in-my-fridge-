@@ -34,6 +34,18 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_mutations: {
+        Row: { id: string; user_id: string; client_mutation_id: string; operation: string; item_id: string; expected_version: number | null; payload: Json; status: string; code: string; result_item: Json | null; created_at: string; updated_at: string }
+        Insert: { id?: string; user_id: string; client_mutation_id: string; operation: string; item_id: string; expected_version?: number | null; payload?: Json; status: string; code: string; result_item?: Json | null; created_at?: string; updated_at?: string }
+        Update: { id?: string; user_id?: string; client_mutation_id?: string; operation?: string; item_id?: string; expected_version?: number | null; payload?: Json; status?: string; code?: string; result_item?: Json | null; created_at?: string; updated_at?: string }
+        Relationships: []
+      }
+      inventory_items: {
+        Row: { id: string; user_id: string; source: string; legacy_id: string | null; name: string; normalized_name: string | null; expiry_date: string; category: string | null; quantity: number; notes: string | null; unit: string; added_at: string; deleted_at: string | null; version: number; created_at: string; updated_at: string }
+        Insert: { id?: string; user_id: string; source?: string; legacy_id?: string | null; name: string; normalized_name?: string | null; expiry_date: string; category?: string | null; quantity: number; notes?: string | null; unit: string; added_at: string; deleted_at?: string | null; version?: number; created_at?: string; updated_at?: string }
+        Update: { id?: string; user_id?: string; source?: string; legacy_id?: string | null; name?: string; normalized_name?: string | null; expiry_date?: string; category?: string | null; quantity?: number; notes?: string | null; unit?: string; added_at?: string; deleted_at?: string | null; version?: number; created_at?: string; updated_at?: string }
+        Relationships: []
+      }
       legacy_id_map: {
         Row: {
           created_at: string
@@ -123,6 +135,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_inventory_mutation: {
+        Args: { p_client_mutation_id: string; p_operation: string; p_item_id: string; p_expected_version?: number | null; p_payload?: Json }
+        Returns: Json
+      }
       owns_row: { Args: { row_user_id: string }; Returns: boolean }
     }
     Enums: {
@@ -821,4 +837,3 @@ export const Constants = {
     },
   },
 } as const
-
