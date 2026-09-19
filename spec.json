@@ -418,7 +418,7 @@
     {
       "id": "sprint-3-auth-and-account-migration",
       "name": "Sprint 3 - Supabase Auth and Account Migration",
-      "status": "pending",
+      "status": "spec_ready",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.1.0",
@@ -448,19 +448,25 @@
       ],
       "deliverable": "La PWA se autentica únicamente con Supabase y existe un procedimiento probado en staging para importar cuentas Firebase sin duplicarlas.",
       "acceptance": [
-        "Registro, login, verificación, reset y logout funcionan con sesión cookie disponible en Server Components/Actions.",
-        "Las rutas /app/* no renderizan datos privados sin sesión válida verificada server-side.",
-        "Un import de Auth repetido no crea una segunda identidad de aplicación para el mismo legacy Firebase UID.",
-        "El ensayo de migración guarda y usa parámetros de hash Firebase únicamente fuera del repositorio y nunca los imprime.",
-        "Cuando Supabase/tooling admite el hash Firebase, el usuario de staging puede autenticarse con su contraseña previa; si un caso no es compatible se marca explícitamente para reset, no se inventa una contraseña.",
-        "email_verified y estado disabled se mapean con reglas documentadas.",
-        "Cambiar el email de una cuenta no rompe la relación con sus datos porque el vínculo usa auth user id.",
-        "Dos usuarios importados no pueden acceder a perfiles/datos cruzados mediante RLS.",
-        "Los tests cubren sesión expirada, callback inválido, redirect externo, usuario disabled y reintento de importación."
+        "Signup, login, verificación, solicitud/confirmación de reset y logout usan Supabase Auth con PKCE y cookies SSR.",
+        "Server Components/Actions obtienen la identidad mediante `getUser()`; ninguna ruta privada confía solo en cookies decodificadas o estado cliente.",
+        "`/app/*` redirige a login sin sesión válida y conserva únicamente un `returnTo` relativo y allowlisted.",
+        "Callbacks con código ausente/inválido y redirects externos terminan en un estado de error seguro, sin open redirect ni detalles sensibles.",
+        "La creación/actualización de `profiles` es idempotente por `auth.users.id`; cambiar email no rompe ownership.",
+        "El import de Firebase Auth identifica cuentas por Firebase UID y un rerun actualiza o reconoce la misma identidad sin duplicarla.",
+        "El dry-run informa conteos por enabled/disabled, emailVerified y provider sin escribir datos ni mostrar hashes, salts, tokens o parámetros secretos.",
+        "Los parámetros SCRYPT y credenciales administrativas solo se leen desde entorno/archivos ignorados y se redactan de logs y errores.",
+        "Si el hash puede importarse con tooling oficial se conserva la contraseña; si no, la cuenta queda marcada para reset sin inventar credenciales.",
+        "Email verification y disabled se mapean según reglas documentadas; una cuenta disabled no obtiene sesión de aplicación.",
+        "Recuperación y signup devuelven mensajes neutrales que no confirman si un email existe.",
+        "Tests cubren sesión expirada, callback inválido, redirect externo, aislamiento de dos usuarios, usuario disabled y rerun del import."
       ],
       "scope": [
-        "apps/web/app/(auth)/**",
-        "apps/web/lib/supabase/**",
+        "apps/web/src/app/(auth)/**",
+        "apps/web/src/app/auth/**",
+        "apps/web/src/app/login/**",
+        "apps/web/src/lib/supabase/**",
+        "apps/web/src/proxy.ts",
         "supabase/**",
         "scripts/migration/auth/**",
         "tests/**",
@@ -468,10 +474,13 @@
         ".env.example",
         "spec.json"
       ],
-      "spec_approved": false,
-      "answers_hash": "sha256:aa40793ef1f928070f65538daf8a92e38aad1236aedfc14e013add55259ef014",
-      "approved_by": null,
-      "approved_at": null
+      "spec_approved": true,
+      "answers_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "approved_by": "peorr",
+      "approved_at": "2026-09-19T10:09:29.140Z",
+      "manual_spec_ready": true,
+      "manual_spec_ready_at": "2026-09-19T10:09:29.015Z",
+      "manual_spec_ready_reason": "Dev override: Fase 0 marcada como suficientemente especificada pese a suposiciones pendientes."
     },
     {
       "id": "sprint-4-inventory-offline-first",

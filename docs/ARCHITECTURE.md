@@ -103,3 +103,29 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
 - **edge_cases:** Se preservan snapshots históricos, receta opcional frente a custom name, valores nullable, tombstones y reimportación del mismo documento sin duplicados.
 - **ui_states:** Este sprint no crea UI; el modelo conserva confirmed, deleted_at y timestamps suficientes para que sprints posteriores representen borrador, sincronización y eliminación.
 
+<!-- harness:sprint-3-auth-and-account-migration -->
+## sprint-3-auth-and-account-migration · Sprint 3 - Supabase Auth and Account Migration
+
+
+
+### Scope aprobado
+
+  - `apps/web/src/app/(auth)/**`
+  - `apps/web/src/app/auth/**`
+  - `apps/web/src/app/login/**`
+  - `apps/web/src/lib/supabase/**`
+  - `apps/web/src/proxy.ts`
+  - `supabase/**`
+  - `scripts/migration/auth/**`
+  - `tests/**`
+  - `docs/**`
+  - `.env.example`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** `auth.users` es la identidad; `profiles.user_id` y `legacy_id_map` enlazan datos y Firebase UID sin usar email como clave.
+- **external_contracts:** Supabase Auth SSR usa PKCE/cookies; el import consume el formato oficial de Firebase Auth detrás de un adaptador y dry-run.
+- **edge_cases:** El import es idempotente por Firebase UID, preserva verificación/disabled y deriva a reset cuando la contraseña no puede conservarse.
+- **ui_states:** Login, signup, verificación pendiente, solicitud/confirmación de reset, callback fallido, logout y cuenta deshabilitada tienen estados accesibles y neutrales.
+
