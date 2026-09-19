@@ -9,8 +9,8 @@ values
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
 
-select lives_ok($$insert into public.profiles(user_id, display_name) values ('00000000-0000-0000-0000-000000000001', 'One')$$, 'user can insert own profile');
-select throws_ok($$insert into public.profiles(user_id, display_name) values ('00000000-0000-0000-0000-000000000002', 'Forbidden')$$, '42501', null, 'user cannot insert another profile');
+select lives_ok($$update public.profiles set display_name = 'One' where user_id = '00000000-0000-0000-0000-000000000001'$$, 'user can update own generated profile');
+select throws_ok($$insert into public.profiles(user_id, display_name) values ('00000000-0000-0000-0000-000000000002', 'Forbidden') on conflict (user_id) do update set display_name = excluded.display_name$$, '42501', null, 'user cannot upsert another profile');
 select lives_ok($$insert into public.legacy_id_map(user_id, entity_type, legacy_id, target_id) values ('00000000-0000-0000-0000-000000000001', 'inventory', 'legacy-one', '10000000-0000-0000-0000-000000000001')$$, 'user can insert own legacy mapping');
 select throws_ok($$insert into public.legacy_id_map(user_id, entity_type, legacy_id, target_id) values ('00000000-0000-0000-0000-000000000002', 'inventory', 'forbidden', '10000000-0000-0000-0000-000000000002')$$, '42501', null, 'user cannot insert another legacy mapping');
 select lives_ok($$insert into public.migration_runs(created_by, source_commit) values ('00000000-0000-0000-0000-000000000001', '6a50475006c692538e6e51d30a7063f956ad054c')$$, 'user can insert own migration run');
@@ -19,7 +19,7 @@ select lives_ok($$insert into storage.objects(bucket_id, name, owner_id, metadat
 select throws_ok($$insert into storage.objects(bucket_id, name, owner_id, metadata) values ('receipts-temp', '00000000-0000-0000-0000-000000000002/forbidden.jpg', '00000000-0000-0000-0000-000000000001', '{"mimetype":"image/jpeg"}')$$, '42501', null, 'user cannot create object in another folder');
 
 reset role;
-insert into public.profiles(user_id, display_name) values ('00000000-0000-0000-0000-000000000002', 'Two');
+update public.profiles set display_name = 'Two' where user_id = '00000000-0000-0000-0000-000000000002';
 insert into public.legacy_id_map(user_id, entity_type, legacy_id, target_id) values ('00000000-0000-0000-0000-000000000002', 'inventory', 'legacy-two', '10000000-0000-0000-0000-000000000002');
 insert into public.migration_runs(created_by, source_commit) values ('00000000-0000-0000-0000-000000000002', '6a50475006c692538e6e51d30a7063f956ad054c');
 insert into storage.objects(bucket_id, name, owner_id, metadata) values ('receipts-temp', '00000000-0000-0000-0000-000000000002/ticket.jpg', '00000000-0000-0000-0000-000000000002', '{"mimetype":"image/jpeg"}');
