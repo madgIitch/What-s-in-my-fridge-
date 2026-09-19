@@ -355,7 +355,7 @@
     {
       "id": "sprint-2-domain-schema-and-migration-mapping",
       "name": "Sprint 2 - Domain Schema and Migration Mapping",
-      "status": "spec_ready",
+      "status": "done",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.0.3",
