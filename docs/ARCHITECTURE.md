@@ -81,3 +81,25 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
 - **edge_cases:** conflictos de legacy IDs, paths de Storage ajenos y sesiones caducadas quedan cubiertos por constraints/policies.
 - **ui_states:** ruta privada mínima con estado autenticado y redirección estable a /login si falta sesión.
 
+<!-- harness:sprint-2-domain-schema-and-migration-mapping -->
+## sprint-2-domain-schema-and-migration-mapping · Sprint 2 - Domain Schema and Migration Mapping
+
+
+
+### Scope aprobado
+
+  - `supabase/migrations/**`
+  - `supabase/seed.sql`
+  - `packages/domain/**`
+  - `scripts/migration/**`
+  - `tests/**`
+  - `docs/**`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** Tablas autoritativas normalizadas para inventario, borradores OCR, favoritos, comidas, mappings verificados y catálogo; UUID de cliente estable, ownership explícito y trazabilidad legacy única.
+- **external_contracts:** PostgreSQL/Supabase migrations y tipos de dominio son el contrato canónico; Firebase/WatermelonDB solo aportan IDs y campos legacy para el mapping.
+- **edge_cases:** Se preservan snapshots históricos, receta opcional frente a custom name, valores nullable, tombstones y reimportación del mismo documento sin duplicados.
+- **ui_states:** Este sprint no crea UI; el modelo conserva confirmed, deleted_at y timestamps suficientes para que sprints posteriores representen borrador, sincronización y eliminación.
+

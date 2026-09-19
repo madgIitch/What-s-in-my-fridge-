@@ -355,7 +355,7 @@
     {
       "id": "sprint-2-domain-schema-and-migration-mapping",
       "name": "Sprint 2 - Domain Schema and Migration Mapping",
-      "status": "pending",
+      "status": "spec_ready",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.0.3",
@@ -385,16 +385,18 @@
       ],
       "deliverable": "El esquema Supabase cubre la funcionalidad actual y existe un mapa de migración sin ambigüedades para cada dataset autoritativo.",
       "acceptance": [
-        "Cada tabla privada referencia auth.users(id) o una relación privada cuyo acceso deriva del owner.",
-        "inventory_items admite exactamente los campos de negocio actuales y usa UUID estable generado antes de sincronizar.",
-        "receipt_drafts preserva raw text, merchant, purchase date, currency, total, líneas y estado confirmed sin depender de una imagen permanente.",
-        "favorite_recipes permite preservar el snapshot histórico actual aunque el catálogo cambie.",
-        "meal_entries preserva receta opcional/custom name, fecha, tipo, ingredientes consumidos, notas y calories estimate nullable.",
-        "recipe_cache no se migra como tabla autoritativa; se reconstruye en IndexedDB/servidor.",
-        "ingredient_mappings solo migra entradas verificadas por usuario o datos canónicos del vocabulario; caches no verificadas pueden regenerarse.",
-        "legacy IDs tienen constraints que hacen idempotente reimportar el mismo documento.",
-        "RLS cubre todas las nuevas tablas y los tests con dos usuarios demuestran aislamiento.",
-        "Seeds del catálogo producen cardinalidades/checksum documentados y son reejecutables."
+        "Cada tabla privada referencia `auth.users(id)` directamente o una relación privada cuyo acceso deriva inequívocamente del owner, y tiene RLS habilitado.",
+        "`inventory_items` conserva name, normalized_name, expiry_date, category, quantity, notes, unit, added_at y source; su UUID puede generarse antes de sincronizar y permanece estable.",
+        "`receipt_drafts` conserva raw text, merchant, purchase date, currency, total, líneas, unrecognized lines y confirmed sin depender de una imagen permanente.",
+        "`favorite_recipes` conserva un snapshot histórico de nombre, match, ingredientes e instrucciones aunque cambie el catálogo.",
+        "`meal_entries` conserva meal type/date, recipe opcional o custom name, ingredientes consumidos, notes, calories estimate nullable y consumed_at.",
+        "`recipe_cache` no existe como tabla autoritativa migrada y queda documentada como caché reconstruible.",
+        "`ingredient_mappings` solo persiste mappings canónicos o verificados por usuario; entradas no verificadas no son autoridad y pueden regenerarse.",
+        "Cada entidad importable conserva source y legacy_id con una constraint única suficiente para que reimportar el mismo documento actualice o identifique la misma fila sin duplicarla.",
+        "Las eliminaciones sincronizables usan `deleted_at` y no eliminan silenciosamente la trazabilidad legacy durante la migración.",
+        "Tests pgTAP con dos usuarios demuestran aislamiento SELECT/INSERT/UPDATE/DELETE para todas las tablas privadas nuevas y validan constraints críticas.",
+        "Los tipos de dominio representan filas, inserts y payloads legacy sin dependencias de React, Next.js, Firebase o Supabase client.",
+        "Los seeds del catálogo son reejecutables, no duplican filas y producen cardinalidad y checksum documentados y comprobables."
       ],
       "scope": [
         "supabase/migrations/**",
@@ -405,10 +407,13 @@
         "docs/**",
         "spec.json"
       ],
-      "spec_approved": false,
-      "answers_hash": "sha256:f8b4670176872f6b2b861d094e4a5bc2ca0c7e1877d240cc9cb26839e905f2c6",
-      "approved_by": null,
-      "approved_at": null
+      "spec_approved": true,
+      "answers_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "approved_by": "peorr",
+      "approved_at": "2026-09-19T09:41:33.902Z",
+      "manual_spec_ready": true,
+      "manual_spec_ready_at": "2026-09-19T09:41:33.775Z",
+      "manual_spec_ready_reason": "Dev override: Fase 0 marcada como suficientemente especificada pese a suposiciones pendientes."
     },
     {
       "id": "sprint-3-auth-and-account-migration",
