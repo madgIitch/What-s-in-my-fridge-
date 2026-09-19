@@ -418,7 +418,7 @@
     {
       "id": "sprint-3-auth-and-account-migration",
       "name": "Sprint 3 - Supabase Auth and Account Migration",
-      "status": "spec_ready",
+      "status": "done",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.1.0",
@@ -465,6 +465,8 @@
         "apps/web/src/app/(auth)/**",
         "apps/web/src/app/auth/**",
         "apps/web/src/app/login/**",
+        "apps/web/src/app/page.tsx",
+        "apps/web/src/app/globals.css",
         "apps/web/src/lib/supabase/**",
         "apps/web/src/proxy.ts",
         "supabase/**",
