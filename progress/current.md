@@ -1,7 +1,7 @@
 # Sesión actual
 
-Feature `sprint-0-pwa-migration-foundation` implementada y en `review_pending`.
+Feature `sprint-2-domain-schema-and-migration-mapping` implementada y en `review_pending`.
 
-Siguiente acción: smoke test humano de la shell PWA y, si se acepta, ejecutar `node .harness/spec.mjs done sprint-0-pwa-migration-foundation`.
+Siguiente acción: smoke humano del modelo/mapping y, si se acepta, ejecutar `node .harness/spec.mjs done sprint-2-domain-schema-and-migration-mapping`.
 
-Nota: el árbol ya contenía borrados staged y copias untracked del cliente legacy antes de esta implementación. No se revirtieron ni se incorporaron; el gate global `diff-scope` seguirá viendo esos cambios preexistentes hasta que el usuario los resuelva.
+Gates ejecutados: typecheck, lint, Vitest, Supabase DB lint, 24 pgTAP de plataforma y 31 pgTAP de dominio. El seed se reejecutó sin cambiar cardinalidad (5) ni checksum (`17c09ec4416555986ff0537703576daa`).
