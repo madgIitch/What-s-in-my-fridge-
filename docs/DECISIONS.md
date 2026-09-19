@@ -66,3 +66,16 @@ Decisiones registradas:
 - **tests:** Unit/integration cubren redirects allowlisted y errores; pgTAP cubre perfiles; fixtures sintéticos cubren dry-run, rerun y fallback sin secretos reales.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+<!-- harness:sprint-4-inventory-offline-first -->
+## 2026-09-19 · sprint-4-inventory-offline-first aprobado
+
+Contexto: se aprobó el spec `sprint-4-inventory-offline-first` (Sprint 4 - Inventory Offline-First).
+
+Decisiones registradas:
+
+- **auth_secrets:** La sesión Supabase y RLS basada en auth.uid() aíslan todos los datos. El RPC deriva user_id exclusivamente de auth.uid() y no acepta ownership suministrado por el cliente. La publishable/anon key puede ser pública y la service role permanece exclusivamente server-only. pgTAP verifica que un usuario no puede observar ni mutar inventory_items o client_mutations ajenos.
+- **rollback_compat:** Los cambios SQL e IndexedDB son aditivos y Firebase, WatermelonDB y Expo permanecen intactos. Los stores y campos nuevos se versionan para que una PWA anterior pueda ignorarlos sin eliminar caché, outbox ni tombstones. El logout desvincula los datos locales de la UI y del worker; otro usuario no puede verlos ni procesarlos. La purga local y la compactación de tombstones quedan fuera de este sprint y requieren políticas posteriores aprobadas.
+- **tests:** Playwright usa Supabase local, dos usuarios, dos páginas o contextos y control determinista de conectividad. Los tests unitarios cubren transacciones y compactación Dexie, coordinación entre pestañas, cursor incremental y fechas civiles. pgTAP cubre RLS, deduplicación, compare-and-swap, incremento de versión y tombstones. El E2E verifica UI, IndexedDB y filas canónicas, incluida recarga offline y viewport de 320 px.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.

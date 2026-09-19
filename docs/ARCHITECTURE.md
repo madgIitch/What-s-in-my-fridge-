@@ -130,3 +130,30 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
 - **external_contracts:** Supabase Auth SSR usa PKCE/cookies; el import consume el formato oficial de Firebase Auth detrás de un adaptador y dry-run.
 - **edge_cases:** El import es idempotente por Firebase UID, preserva verificación/disabled y deriva a reset cuando la contraseña no puede conservarse.
 - **ui_states:** Login, signup, verificación pendiente, solicitud/confirmación de reset, callback fallido, logout y cuenta deshabilitada tienen estados accesibles y neutrales.
+
+<!-- harness:sprint-4-inventory-offline-first -->
+## sprint-4-inventory-offline-first · Sprint 4 - Inventory Offline-First
+
+
+
+### Scope aprobado
+
+  - `apps/web/src/app/**`
+  - `apps/web/src/components/**`
+  - `apps/web/src/lib/inventory/**`
+  - `apps/web/src/lib/supabase/**`
+  - `apps/web/src/types/database.generated.ts`
+  - `apps/web/public/**`
+  - `packages/domain/**`
+  - `supabase/migrations/**`
+  - `tests/**`
+  - `docs/**`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** La outbox local queda particionada por user_id y registra client_mutation_id UUID, operation, item_id, payload validado, expected_version, estado, intentos y timestamps. public.client_mutations aplica UNIQUE(user_id, client_mutation_id) y conserva el resultado canónico para deduplicación. El pull incremental usa el cursor estable (updated_at, id), incluye tombstones y no los purga en este sprint.
+- **external_contracts:** El RPC autenticado apply_inventory_mutation recibe client_mutation_id uuid, operation create|update|delete, item_id uuid, expected_version bigint|null y payload jsonb. En una única transacción valida, deduplica, realiza compare-and-swap y escribe. Devuelve {client_mutation_id,status,code,item}, con status applied|duplicate|conflict|rejected, códigos estables y la fila canónica o remota con su versión. Create exige expected_version null; update y delete exigen una versión positiva. Un duplicate reproduce el resultado almacenado de la primera aplicación.
+- **edge_cases:** expiry_date es una fecha civil YYYY-MM-DD sin conversión de zona. Web Locks, con lease persistente de respaldo, elige un único consumidor entre pestañas; BroadcastChannel propaga avisos y el pull es la fuente final de convergencia. Se conserva el orden causal por item. Create y updates pendientes se compactan; create seguido de delete antes de cualquier envío elimina ambos localmente. Si el create pudo alcanzar el servidor, se encola un delete nuevo para el mismo item_id, con su propio client_mutation_id.
+- **ui_states:** Loading, vacío, offline sin caché, pending, synced, conflict y error tienen texto accesible y controles utilizables por teclado. Un conflicto conserva la edición local, presenta el snapshot remoto y ofrece Descartar mis cambios o Reintentar con la versión actual. La segunda acción crea una mutación nueva basada explícitamente en la versión remota; no existe last-write-wins automático.
+
