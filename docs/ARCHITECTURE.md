@@ -113,6 +113,8 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
   - `apps/web/src/app/(auth)/**`
   - `apps/web/src/app/auth/**`
   - `apps/web/src/app/login/**`
+  - `apps/web/src/app/page.tsx`
+  - `apps/web/src/app/globals.css`
   - `apps/web/src/lib/supabase/**`
   - `apps/web/src/proxy.ts`
   - `supabase/**`
@@ -128,4 +130,3 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
 - **external_contracts:** Supabase Auth SSR usa PKCE/cookies; el import consume el formato oficial de Firebase Auth detrás de un adaptador y dry-run.
 - **edge_cases:** El import es idempotente por Firebase UID, preserva verificación/disabled y deriva a reset cuando la contraseña no puede conservarse.
 - **ui_states:** Login, signup, verificación pendiente, solicitud/confirmación de reset, callback fallido, logout y cuenta deshabilitada tienen estados accesibles y neutrales.
-

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const pantry = [
   { name: "Tomates", detail: "6 unidades", state: "Frescos", tone: "good" },
   { name: "Leche", detail: "1 botella", state: "2 días", tone: "soon" },
@@ -22,7 +24,7 @@ export default function Home() {
           <FridgeMark />
           <span>neverita</span>
         </a>
-        <button className="avatar" type="button" aria-label="Abrir perfil">P</button>
+        <Link className="avatar" href="/login" aria-label="Iniciar sesión">↗</Link>
       </header>
 
       <section className="workspace" id="top">
