@@ -554,7 +554,7 @@
     {
       "id": "sprint-5-receipt-ocr-and-draft-review",
       "name": "Sprint 5 - Receipt OCR and Draft Review",
-      "status": "review_pending",
+      "status": "done",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.3.0",
