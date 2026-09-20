@@ -96,3 +96,16 @@ Decisiones registradas:
 - **tests:** Se concretan fixtures sintéticos versionados y pruebas unitarias, de integración, pgTAP/Storage y Playwright. La cobertura incluye RLS entre usuarios, MIME real, cuotas concurrentes, replay, confirmación exactamente una vez, rollback transaccional, redacción, ausencia de secretos y verificación de UI, Storage y filas canónicas.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+<!-- harness:sprint-6-recipe-catalog-normalization-and-suggestions -->
+## 2026-09-20 · sprint-6-recipe-catalog-normalization-and-suggestions aprobado
+
+Contexto: se aprobó el spec `sprint-6-recipe-catalog-normalization-and-suggestions` (Sprint 6 - Recipe Catalog, Normalization and Suggestions).
+
+Decisiones registradas:
+
+- **auth_secrets:** Sesión/RLS derivan ownership y los logs no contienen datos privados.
+- **rollback_compat:** La migración es aditiva, versionada, idempotente y reversible por deployment.
+- **tests:** Hay matriz unit, golden, import, pgTAP, integración y Playwright.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.

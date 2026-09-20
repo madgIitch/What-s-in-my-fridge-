@@ -187,3 +187,33 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
 - **edge_cases:** Se cubren corrupción y dimensiones inválidas, orientación EXIF, eliminación de metadata, cancelación del crop, locales, fechas e importes ambiguos, moneda sin evidencia y líneas parcialmente reconocidas. Los campos inciertos permanecen nulos y editables en vez de ser inventados.
 - **ui_states:** Se especifican los estados visibles desde selección hasta confirmación, las acciones habilitadas o bloqueadas, las rutas de recuperación y el tratamiento de OCR vacío y cuota agotada. También se definen live regions, gestión de foco y la prohibición de mostrar éxito antes del commit canónico.
 
+<!-- harness:sprint-6-recipe-catalog-normalization-and-suggestions -->
+## sprint-6-recipe-catalog-normalization-and-suggestions · Sprint 6 - Recipe Catalog, Normalization and Suggestions
+
+
+
+### Scope aprobado
+
+  - `apps/web/src/app/(auth)/app/recipes/**`
+  - `apps/web/src/app/api/recipes/**`
+  - `apps/web/src/components/recipes/**`
+  - `apps/web/src/lib/recipes/**`
+  - `apps/web/src/lib/inventory/**`
+  - `apps/web/src/lib/supabase/**`
+  - `apps/web/src/types/database.generated.ts`
+  - `packages/domain/src/recipes/**`
+  - `scripts/migration/catalog/**`
+  - `supabase/migrations/**`
+  - `supabase/tests/**`
+  - `tests/fixtures/recipes/**`
+  - `tests/e2e/recipe-suggestions*.spec.ts`
+  - `docs/**`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** Catálogo versionado, ingredientes normalizados, cache y cuota tienen claves e invariantes reproducibles.
+- **external_contracts:** Ruta, payload, respuesta, versiones, hash y TTL quedan definidos.
+- **edge_cases:** Se fijan normalización, estrategia, categorías ausentes, vacíos y desempates.
+- **ui_states:** La ruta de recetas cubre todos los estados funcionales y accesibles.
+
