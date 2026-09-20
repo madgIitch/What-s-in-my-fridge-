@@ -34,6 +34,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      user_entitlements: {
+        Row: { user_id: string; plan: string; status: string; updated_at: string }
+        Insert: { user_id: string; plan?: string; status?: string; updated_at?: string }
+        Update: { user_id?: string; plan?: string; status?: string; updated_at?: string }
+        Relationships: []
+      }
+      ocr_monthly_usage: {
+        Row: { user_id: string; period_start: string; reserved: number; consumed: number }
+        Insert: { user_id: string; period_start: string; reserved?: number; consumed?: number }
+        Update: { user_id?: string; period_start?: string; reserved?: number; consumed?: number }
+        Relationships: []
+      }
+      receipt_drafts: {
+        Row: { id:string;user_id:string;source:string;legacy_id:string|null;raw_text:string;captured_at:string;merchant:string|null;purchase_date:string|null;currency:string|null;total:number|null;lines:Json;unrecognized_lines:Json;confirmed:boolean;deleted_at:string|null;version:number;created_at:string;updated_at:string;status:string;image_path:string|null;ocr_request_id:string|null;image_hash:string|null;ocr_locale:string|null;parser_version:string|null;ocr_result:Json|null;original_lines:Json;edited_lines:Json;error_code:string|null;quota_period:string|null;quota_consumed:boolean;confirmed_item_ids:string[];confirmed_at:string|null }
+        Insert: { id?:string;user_id:string;source?:string;legacy_id?:string|null;raw_text?:string;captured_at?:string;merchant?:string|null;purchase_date?:string|null;currency?:string|null;total?:number|null;lines?:Json;unrecognized_lines?:Json;confirmed?:boolean;deleted_at?:string|null;version?:number;created_at?:string;updated_at?:string;status?:string;image_path?:string|null;ocr_request_id?:string|null;image_hash?:string|null;ocr_locale?:string|null;parser_version?:string|null;ocr_result?:Json|null;original_lines?:Json;edited_lines?:Json;error_code?:string|null;quota_period?:string|null;quota_consumed?:boolean;confirmed_at?:string|null }
+        Update: { id?:string;user_id?:string;source?:string;legacy_id?:string|null;raw_text?:string;captured_at?:string;merchant?:string|null;purchase_date?:string|null;currency?:string|null;total?:number|null;lines?:Json;unrecognized_lines?:Json;confirmed?:boolean;deleted_at?:string|null;version?:number;created_at?:string;updated_at?:string;status?:string;image_path?:string|null;ocr_request_id?:string|null;image_hash?:string|null;ocr_locale?:string|null;parser_version?:string|null;ocr_result?:Json|null;original_lines?:Json;edited_lines?:Json;error_code?:string|null;quota_period?:string|null;quota_consumed?:boolean;confirmed_at?:string|null }
+        Relationships: []
+      }
       client_mutations: {
         Row: { id: string; user_id: string; client_mutation_id: string; operation: string; item_id: string; expected_version: number | null; payload: Json; status: string; code: string; result_item: Json | null; created_at: string; updated_at: string }
         Insert: { id?: string; user_id: string; client_mutation_id: string; operation: string; item_id: string; expected_version?: number | null; payload?: Json; status: string; code: string; result_item?: Json | null; created_at?: string; updated_at?: string }
@@ -135,6 +153,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      reserve_receipt_ocr: { Args:{p_draft_id:string;p_request_id:string;p_image_hash:string;p_locale:string};Returns:Json }
+      attach_receipt_image: { Args:{p_draft_id:string;p_image_path:string};Returns:undefined }
+      mark_receipt_vision_invoked: { Args:{p_draft_id:string};Returns:undefined }
+      release_receipt_ocr: { Args:{p_draft_id:string};Returns:undefined }
+      complete_receipt_ocr: { Args:{p_draft_id:string;p_raw_text:string;p_parser_version:string;p_result:Json};Returns:undefined }
+      fail_receipt_ocr: { Args:{p_draft_id:string;p_error_code:string};Returns:undefined }
+      confirm_receipt_draft: { Args:{p_draft_id:string;p_lines:Json};Returns:Json }
       apply_inventory_mutation: {
         Args: { p_client_mutation_id: string; p_operation: string; p_item_id: string; p_expected_version?: number | null; p_payload?: Json }
         Returns: Json

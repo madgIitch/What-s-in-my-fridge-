@@ -1,0 +1,14 @@
+begin;
+select plan(8);
+insert into auth.users(id,email) values('50000000-0000-0000-0000-000000000001','ocr-a@example.test'),('50000000-0000-0000-0000-000000000002','ocr-b@example.test');
+set local role authenticated; set local request.jwt.claim.sub='50000000-0000-0000-0000-000000000001';
+select is((public.reserve_receipt_ocr('51000000-0000-4000-a000-000000000001','52000000-0000-4000-a000-000000000001','hash','es-ES')->>'action'),'process','first request reserves');
+select is((public.reserve_receipt_ocr('51000000-0000-4000-a000-000000000001','52000000-0000-4000-a000-000000000001','other','es-ES')->>'code'),'IDEMPOTENCY_MISMATCH','mismatch is rejected');
+select lives_ok($$select public.attach_receipt_image('51000000-0000-4000-a000-000000000001','50000000-0000-0000-0000-000000000001/51000000-0000-4000-a000-000000000001/original.jpg')$$,'owner attaches derived object');
+select lives_ok($$select public.mark_receipt_vision_invoked('51000000-0000-4000-a000-000000000001')$$,'invocation consumes reservation');
+select is((select consumed from public.ocr_monthly_usage where user_id='50000000-0000-0000-0000-000000000001'),1,'one unit consumed');
+select lives_ok($$select public.complete_receipt_ocr('51000000-0000-4000-a000-000000000001','SHOP\nMILK 1.00','receipt-v1','{"merchant":"SHOP","purchaseDate":null,"currency":null,"total":null,"items":[{"lineId":"line-2","rawText":"MILK 1.00","name":"Milk","quantity":"1","unit":"unit","unitPrice":null,"totalPrice":"1.00","confidence":0.8,"accepted":true}],"unrecognizedLines":[]}'::jsonb)$$,'draft becomes reviewable');
+select is((public.confirm_receipt_draft('51000000-0000-4000-a000-000000000001','[{"lineId":"line-2","rawText":"MILK 1.00","name":"Milk","quantity":"1","unit":"unit","unitPrice":null,"totalPrice":"1.00","confidence":0.8,"accepted":true}]'::jsonb)->'itemIds')::text,(public.confirm_receipt_draft('51000000-0000-4000-a000-000000000001','[]'::jsonb)->'itemIds')::text,'confirmation replay is canonical');
+set local request.jwt.claim.sub='50000000-0000-0000-0000-000000000002';
+select is((select count(*) from public.receipt_drafts),0::bigint,'other user cannot list draft');
+select * from finish(); rollback;

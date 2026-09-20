@@ -1,0 +1,11 @@
+[
+  {"name":"spanish-comma","locale":"es-ES","text":"MERCADO SOL\n13/09/2026\n2 x TOMATE 3,50 €\nTOTAL 3,50 €"},
+  {"name":"dot-decimal","locale":"en-US","text":"DEMO STORE\n09/13/2026\nMILK 2.49 USD\nTOTAL 2.49 USD"},
+  {"name":"discount","locale":"es-ES","text":"TIENDA\nPAN 1,20 €\nDESCUENTO 0,20\nTOTAL 1,00 €"},
+  {"name":"quantity-unit-price","locale":"es-ES","text":"MERCADO\n3 x MANZANA 4,50 €"},
+  {"name":"ambiguous-date","locale":"es-ES","text":"TIENDA\n03/04/2026\nAGUA 1,00 €"},
+  {"name":"implicit-currency","locale":"es-ES","text":"TIENDA\nARROZ 2,10\nTOTAL 2,10"},
+  {"name":"partial-line","locale":"es-ES","text":"TIENDA\nPRODUCTO SIN PRECIO"},
+  {"name":"no-usable-lines","locale":"es-ES","text":"GRACIAS POR SU VISITA\nCAJA 2"},
+  {"name":"empty","locale":"es-ES","text":"  \n"}
+]
