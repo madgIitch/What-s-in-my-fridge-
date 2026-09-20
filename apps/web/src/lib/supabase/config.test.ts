@@ -8,6 +8,7 @@ describe("public Supabase config", () => {
   it("fails explicitly when browser-safe configuration is absent", () => {
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
     expect(() => getPublicSupabaseConfig()).toThrow(/NEXT_PUBLIC_SUPABASE_URL/);
   });
 
@@ -15,5 +16,12 @@ describe("public Supabase config", () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "http://127.0.0.1:54321";
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "public-test-key";
     expect(getPublicSupabaseConfig()).toEqual({ url: "http://127.0.0.1:54321", publishableKey: "public-test-key" });
+  });
+
+  it("prefers the current publishable key name", () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "legacy-key";
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "publishable-key";
+    expect(getPublicSupabaseConfig().publishableKey).toBe("publishable-key");
   });
 });

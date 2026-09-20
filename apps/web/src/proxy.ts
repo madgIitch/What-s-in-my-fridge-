@@ -5,7 +5,7 @@ import type { Database } from "@/types/database.generated";
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const isPrivate = request.nextUrl.pathname.startsWith("/app") || request.nextUrl.pathname.startsWith("/private-check");
   if (!url || !publishableKey) {
     if (!isPrivate) return response;
