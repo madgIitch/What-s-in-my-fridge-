@@ -8,12 +8,8 @@ export type Json =
 
 export type Database = {
   graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
+    Tables: Record<string, never>
+    Views: Record<string, never>
     Functions: {
       graphql: {
         Args: {
@@ -25,15 +21,18 @@ export type Database = {
         Returns: Json
       }
     }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
   }
   public: {
     Tables: {
+      catalog_versions: { Row:{id:string;checksum:string;source_version:string;matcher_version:string;active:boolean;recipe_count:number;ingredient_count:number;imported_at:string};Insert:{id?:string;checksum:string;source_version:string;matcher_version?:string;active?:boolean;recipe_count:number;ingredient_count:number;imported_at?:string};Update:{id?:string;checksum?:string;source_version?:string;matcher_version?:string;active?:boolean;recipe_count?:number;ingredient_count?:number;imported_at?:string};Relationships:[] }
+      recipes: { Row:{id:string;catalog_version_id:string;external_id:string;name:string;instructions:string;metadata:Json};Insert:{id?:string;catalog_version_id:string;external_id:string;name:string;instructions?:string;metadata?:Json};Update:{id?:string;catalog_version_id?:string;external_id?:string;name?:string;instructions?:string;metadata?:Json};Relationships:[] }
+      recipe_ingredients: { Row:{id:string;recipe_id:string;ingredient_id:string|null;position:number;name:string;normalized_name:string;measure:string|null;category:string|null};Insert:{id?:string;recipe_id:string;ingredient_id?:string|null;position:number;name:string;normalized_name:string;measure?:string|null;category?:string|null};Update:{id?:string;recipe_id?:string;ingredient_id?:string|null;position?:number;name?:string;normalized_name?:string;measure?:string|null;category?:string|null};Relationships:[] }
+      ingredients: { Row:{id:string;slug:string;name:string;normalized_name:string|null;category:string;synonyms:Json;subcategory:string|null;category_spanish:string|null;seed_version:string;catalog_version_id:string|null;created_at:string;updated_at:string};Insert:{id?:string;slug:string;name:string;normalized_name?:string|null;category:string;synonyms?:Json;subcategory?:string|null;category_spanish?:string|null;seed_version:string;catalog_version_id?:string|null;created_at?:string;updated_at?:string};Update:{id?:string;slug?:string;name?:string;normalized_name?:string|null;category?:string;synonyms?:Json;subcategory?:string|null;category_spanish?:string|null;seed_version?:string;catalog_version_id?:string|null;created_at?:string;updated_at?:string};Relationships:[] }
+      ingredient_aliases: { Row:{id:string;ingredient_id:string;alias:string;normalized_alias:string;catalog_version_id:string};Insert:{id?:string;ingredient_id:string;alias:string;normalized_alias:string;catalog_version_id:string};Update:{id?:string;ingredient_id?:string;alias?:string;normalized_alias?:string;catalog_version_id?:string};Relationships:[] }
+      recipe_suggestion_cache: { Row:{user_id:string;cache_key:string;inventory_hash:string;catalog_version_id:string;matcher_version:string;result:Json|null;status:string;created_at:string;expires_at:string};Insert:{user_id:string;cache_key:string;inventory_hash:string;catalog_version_id:string;matcher_version:string;result?:Json|null;status?:string;created_at?:string;expires_at:string};Update:{user_id?:string;cache_key?:string;inventory_hash?:string;catalog_version_id?:string;matcher_version?:string;result?:Json|null;status?:string;created_at?:string;expires_at?:string};Relationships:[] }
+      recipe_monthly_usage: { Row:{user_id:string;period_start:string;consumed:number};Insert:{user_id:string;period_start:string;consumed?:number};Update:{user_id?:string;period_start?:string;consumed?:number};Relationships:[] }
       user_entitlements: {
         Row: { user_id: string; plan: string; status: string; updated_at: string }
         Insert: { user_id: string; plan?: string; status?: string; updated_at?: string }
@@ -153,6 +152,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      begin_recipe_suggestion: { Args:{p_cache_key:string;p_inventory_hash:string};Returns:Json }
+      complete_recipe_suggestion: { Args:{p_cache_key:string;p_result:Json};Returns:undefined }
+      fail_recipe_suggestion: { Args:{p_cache_key:string};Returns:undefined }
+      activate_recipe_catalog: { Args:{p_checksum:string;p_source_version:string;p_matcher_version:string;p_vocabulary:Json;p_recipes:Json};Returns:Json }
       reserve_receipt_ocr: { Args:{p_draft_id:string;p_request_id:string;p_image_hash:string;p_locale:string};Returns:Json }
       attach_receipt_image: { Args:{p_draft_id:string;p_image_path:string};Returns:undefined }
       mark_receipt_vision_invoked: { Args:{p_draft_id:string};Returns:undefined }
