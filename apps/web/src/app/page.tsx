@@ -66,7 +66,7 @@ export default function Home() {
       <nav className="bottom-nav" aria-label="Navegación principal">
         <a className="active" href="#top"><span aria-hidden="true">⌂</span>Inicio</a>
         <a href="#inventory"><span aria-hidden="true">◫</span>Inventario</a>
-        <button type="button" className="scan" aria-label="Escanear ticket"><span aria-hidden="true">⌗</span></button>
+        <Link className="scan" href="/app/scan" aria-label="Escanear ticket"><span aria-hidden="true">⌗</span></Link>
         <a href="#recipes"><span aria-hidden="true">♨</span>Recetas</a>
         <a href="#calendar"><span aria-hidden="true">□</span>Plan</a>
       </nav>
