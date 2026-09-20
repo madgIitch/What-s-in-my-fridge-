@@ -8,8 +8,12 @@ export type Json =
 
 export type Database = {
   graphql_public: {
-    Tables: Record<string, never>
-    Views: Record<string, never>
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
       graphql: {
         Args: {
@@ -21,46 +25,348 @@ export type Database = {
         Returns: Json
       }
     }
-    Enums: Record<string, never>
-    CompositeTypes: Record<string, never>
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
-      catalog_versions: { Row:{id:string;checksum:string;source_version:string;matcher_version:string;active:boolean;recipe_count:number;ingredient_count:number;imported_at:string};Insert:{id?:string;checksum:string;source_version:string;matcher_version?:string;active?:boolean;recipe_count:number;ingredient_count:number;imported_at?:string};Update:{id?:string;checksum?:string;source_version?:string;matcher_version?:string;active?:boolean;recipe_count?:number;ingredient_count?:number;imported_at?:string};Relationships:[] }
-      recipes: { Row:{id:string;catalog_version_id:string;external_id:string;name:string;instructions:string;metadata:Json};Insert:{id?:string;catalog_version_id:string;external_id:string;name:string;instructions?:string;metadata?:Json};Update:{id?:string;catalog_version_id?:string;external_id?:string;name?:string;instructions?:string;metadata?:Json};Relationships:[] }
-      recipe_ingredients: { Row:{id:string;recipe_id:string;ingredient_id:string|null;position:number;name:string;normalized_name:string;measure:string|null;category:string|null};Insert:{id?:string;recipe_id:string;ingredient_id?:string|null;position:number;name:string;normalized_name:string;measure?:string|null;category?:string|null};Update:{id?:string;recipe_id?:string;ingredient_id?:string|null;position?:number;name?:string;normalized_name?:string;measure?:string|null;category?:string|null};Relationships:[] }
-      ingredients: { Row:{id:string;slug:string;name:string;normalized_name:string|null;category:string;synonyms:Json;subcategory:string|null;category_spanish:string|null;seed_version:string;catalog_version_id:string|null;created_at:string;updated_at:string};Insert:{id?:string;slug:string;name:string;normalized_name?:string|null;category:string;synonyms?:Json;subcategory?:string|null;category_spanish?:string|null;seed_version:string;catalog_version_id?:string|null;created_at?:string;updated_at?:string};Update:{id?:string;slug?:string;name?:string;normalized_name?:string|null;category?:string;synonyms?:Json;subcategory?:string|null;category_spanish?:string|null;seed_version?:string;catalog_version_id?:string|null;created_at?:string;updated_at?:string};Relationships:[] }
-      ingredient_aliases: { Row:{id:string;ingredient_id:string;alias:string;normalized_alias:string;catalog_version_id:string};Insert:{id?:string;ingredient_id:string;alias:string;normalized_alias:string;catalog_version_id:string};Update:{id?:string;ingredient_id?:string;alias?:string;normalized_alias?:string;catalog_version_id?:string};Relationships:[] }
-      recipe_suggestion_cache: { Row:{user_id:string;cache_key:string;inventory_hash:string;catalog_version_id:string;matcher_version:string;result:Json|null;status:string;created_at:string;expires_at:string};Insert:{user_id:string;cache_key:string;inventory_hash:string;catalog_version_id:string;matcher_version:string;result?:Json|null;status?:string;created_at?:string;expires_at:string};Update:{user_id?:string;cache_key?:string;inventory_hash?:string;catalog_version_id?:string;matcher_version?:string;result?:Json|null;status?:string;created_at?:string;expires_at?:string};Relationships:[] }
-      recipe_monthly_usage: { Row:{user_id:string;period_start:string;consumed:number};Insert:{user_id:string;period_start:string;consumed?:number};Update:{user_id?:string;period_start?:string;consumed?:number};Relationships:[] }
-      user_entitlements: {
-        Row: { user_id: string; plan: string; status: string; updated_at: string }
-        Insert: { user_id: string; plan?: string; status?: string; updated_at?: string }
-        Update: { user_id?: string; plan?: string; status?: string; updated_at?: string }
-        Relationships: []
-      }
-      ocr_monthly_usage: {
-        Row: { user_id: string; period_start: string; reserved: number; consumed: number }
-        Insert: { user_id: string; period_start: string; reserved?: number; consumed?: number }
-        Update: { user_id?: string; period_start?: string; reserved?: number; consumed?: number }
-        Relationships: []
-      }
-      receipt_drafts: {
-        Row: { id:string;user_id:string;source:string;legacy_id:string|null;raw_text:string;captured_at:string;merchant:string|null;purchase_date:string|null;currency:string|null;total:number|null;lines:Json;unrecognized_lines:Json;confirmed:boolean;deleted_at:string|null;version:number;created_at:string;updated_at:string;status:string;image_path:string|null;ocr_request_id:string|null;image_hash:string|null;ocr_locale:string|null;parser_version:string|null;ocr_result:Json|null;original_lines:Json;edited_lines:Json;error_code:string|null;quota_period:string|null;quota_consumed:boolean;confirmed_item_ids:string[];confirmed_at:string|null }
-        Insert: { id?:string;user_id:string;source?:string;legacy_id?:string|null;raw_text?:string;captured_at?:string;merchant?:string|null;purchase_date?:string|null;currency?:string|null;total?:number|null;lines?:Json;unrecognized_lines?:Json;confirmed?:boolean;deleted_at?:string|null;version?:number;created_at?:string;updated_at?:string;status?:string;image_path?:string|null;ocr_request_id?:string|null;image_hash?:string|null;ocr_locale?:string|null;parser_version?:string|null;ocr_result?:Json|null;original_lines?:Json;edited_lines?:Json;error_code?:string|null;quota_period?:string|null;quota_consumed?:boolean;confirmed_at?:string|null }
-        Update: { id?:string;user_id?:string;source?:string;legacy_id?:string|null;raw_text?:string;captured_at?:string;merchant?:string|null;purchase_date?:string|null;currency?:string|null;total?:number|null;lines?:Json;unrecognized_lines?:Json;confirmed?:boolean;deleted_at?:string|null;version?:number;created_at?:string;updated_at?:string;status?:string;image_path?:string|null;ocr_request_id?:string|null;image_hash?:string|null;ocr_locale?:string|null;parser_version?:string|null;ocr_result?:Json|null;original_lines?:Json;edited_lines?:Json;error_code?:string|null;quota_period?:string|null;quota_consumed?:boolean;confirmed_at?:string|null }
+      catalog_versions: {
+        Row: {
+          active: boolean
+          checksum: string
+          id: string
+          imported_at: string
+          ingredient_count: number
+          matcher_version: string
+          recipe_count: number
+          source_version: string
+        }
+        Insert: {
+          active?: boolean
+          checksum: string
+          id?: string
+          imported_at?: string
+          ingredient_count: number
+          matcher_version?: string
+          recipe_count: number
+          source_version: string
+        }
+        Update: {
+          active?: boolean
+          checksum?: string
+          id?: string
+          imported_at?: string
+          ingredient_count?: number
+          matcher_version?: string
+          recipe_count?: number
+          source_version?: string
+        }
         Relationships: []
       }
       client_mutations: {
-        Row: { id: string; user_id: string; client_mutation_id: string; operation: string; item_id: string; expected_version: number | null; payload: Json; status: string; code: string; result_item: Json | null; created_at: string; updated_at: string }
-        Insert: { id?: string; user_id: string; client_mutation_id: string; operation: string; item_id: string; expected_version?: number | null; payload?: Json; status: string; code: string; result_item?: Json | null; created_at?: string; updated_at?: string }
-        Update: { id?: string; user_id?: string; client_mutation_id?: string; operation?: string; item_id?: string; expected_version?: number | null; payload?: Json; status?: string; code?: string; result_item?: Json | null; created_at?: string; updated_at?: string }
+        Row: {
+          client_mutation_id: string
+          code: string
+          created_at: string
+          expected_version: number | null
+          id: string
+          item_id: string
+          operation: string
+          payload: Json
+          result_item: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_mutation_id: string
+          code: string
+          created_at?: string
+          expected_version?: number | null
+          id?: string
+          item_id: string
+          operation: string
+          payload?: Json
+          result_item?: Json | null
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_mutation_id?: string
+          code?: string
+          created_at?: string
+          expected_version?: number | null
+          id?: string
+          item_id?: string
+          operation?: string
+          payload?: Json
+          result_item?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
         Relationships: []
       }
+      favorite_recipes: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          ingredients_with_measures: Json
+          instructions: string
+          legacy_id: string | null
+          match_percentage: number
+          matched_ingredients: Json
+          missing_ingredients: Json
+          name: string
+          recipe_id: string
+          saved_at: string
+          source: string
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          ingredients_with_measures?: Json
+          instructions: string
+          legacy_id?: string | null
+          match_percentage: number
+          matched_ingredients?: Json
+          missing_ingredients?: Json
+          name: string
+          recipe_id: string
+          saved_at: string
+          source?: string
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          ingredients_with_measures?: Json
+          instructions?: string
+          legacy_id?: string | null
+          match_percentage?: number
+          matched_ingredients?: Json
+          missing_ingredients?: Json
+          name?: string
+          recipe_id?: string
+          saved_at?: string
+          source?: string
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      ingredient_aliases: {
+        Row: {
+          alias: string
+          catalog_version_id: string
+          id: string
+          ingredient_id: string
+          normalized_alias: string
+        }
+        Insert: {
+          alias: string
+          catalog_version_id: string
+          id?: string
+          ingredient_id: string
+          normalized_alias: string
+        }
+        Update: {
+          alias?: string
+          catalog_version_id?: string
+          id?: string
+          ingredient_id?: string
+          normalized_alias?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredient_aliases_catalog_version_id_fkey"
+            columns: ["catalog_version_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ingredient_aliases_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ingredient_mappings: {
+        Row: {
+          canonical: boolean
+          confidence: number
+          created_at: string
+          deleted_at: string | null
+          id: string
+          legacy_id: string | null
+          method: string
+          normalized_name: string
+          scanned_name: string
+          source: string
+          updated_at: string
+          user_id: string
+          verified_by_user: boolean
+          version: number
+        }
+        Insert: {
+          canonical?: boolean
+          confidence: number
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          legacy_id?: string | null
+          method: string
+          normalized_name: string
+          scanned_name: string
+          source?: string
+          updated_at?: string
+          user_id: string
+          verified_by_user?: boolean
+          version?: number
+        }
+        Update: {
+          canonical?: boolean
+          confidence?: number
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          legacy_id?: string | null
+          method?: string
+          normalized_name?: string
+          scanned_name?: string
+          source?: string
+          updated_at?: string
+          user_id?: string
+          verified_by_user?: boolean
+          version?: number
+        }
+        Relationships: []
+      }
+      ingredients: {
+        Row: {
+          catalog_version_id: string | null
+          category: string
+          category_spanish: string | null
+          created_at: string
+          id: string
+          name: string
+          normalized_name: string | null
+          seed_version: string
+          slug: string
+          subcategory: string | null
+          synonyms: Json
+          updated_at: string
+        }
+        Insert: {
+          catalog_version_id?: string | null
+          category: string
+          category_spanish?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          normalized_name?: string | null
+          seed_version: string
+          slug: string
+          subcategory?: string | null
+          synonyms?: Json
+          updated_at?: string
+        }
+        Update: {
+          catalog_version_id?: string | null
+          category?: string
+          category_spanish?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          normalized_name?: string | null
+          seed_version?: string
+          slug?: string
+          subcategory?: string | null
+          synonyms?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredients_catalog_version_id_fkey"
+            columns: ["catalog_version_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_items: {
-        Row: { id: string; user_id: string; source: string; legacy_id: string | null; name: string; normalized_name: string | null; expiry_date: string; category: string | null; quantity: number; notes: string | null; unit: string; added_at: string; deleted_at: string | null; version: number; created_at: string; updated_at: string }
-        Insert: { id?: string; user_id: string; source?: string; legacy_id?: string | null; name: string; normalized_name?: string | null; expiry_date: string; category?: string | null; quantity: number; notes?: string | null; unit: string; added_at: string; deleted_at?: string | null; version?: number; created_at?: string; updated_at?: string }
-        Update: { id?: string; user_id?: string; source?: string; legacy_id?: string | null; name?: string; normalized_name?: string | null; expiry_date?: string; category?: string | null; quantity?: number; notes?: string | null; unit?: string; added_at?: string; deleted_at?: string | null; version?: number; created_at?: string; updated_at?: string }
+        Row: {
+          added_at: string
+          category: string | null
+          created_at: string
+          deleted_at: string | null
+          expiry_date: string
+          id: string
+          legacy_id: string | null
+          name: string
+          normalized_name: string | null
+          notes: string | null
+          quantity: number
+          source: string
+          unit: string
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          added_at: string
+          category?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          expiry_date: string
+          id?: string
+          legacy_id?: string | null
+          name: string
+          normalized_name?: string | null
+          notes?: string | null
+          quantity: number
+          source?: string
+          unit: string
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          added_at?: string
+          category?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          expiry_date?: string
+          id?: string
+          legacy_id?: string | null
+          name?: string
+          normalized_name?: string | null
+          notes?: string | null
+          quantity?: number
+          source?: string
+          unit?: string
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
         Relationships: []
       }
       legacy_id_map: {
@@ -90,6 +396,63 @@ export type Database = {
           source?: string
           target_id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      meal_entries: {
+        Row: {
+          calories_estimate: number | null
+          consumed_at: string
+          created_at: string
+          custom_name: string | null
+          deleted_at: string | null
+          id: string
+          ingredients_consumed: Json
+          legacy_id: string | null
+          meal_date: string
+          meal_type: string
+          notes: string | null
+          recipe_id: string | null
+          source: string
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          calories_estimate?: number | null
+          consumed_at: string
+          created_at?: string
+          custom_name?: string | null
+          deleted_at?: string | null
+          id?: string
+          ingredients_consumed?: Json
+          legacy_id?: string | null
+          meal_date: string
+          meal_type: string
+          notes?: string | null
+          recipe_id?: string | null
+          source?: string
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          calories_estimate?: number | null
+          consumed_at?: string
+          created_at?: string
+          custom_name?: string | null
+          deleted_at?: string | null
+          id?: string
+          ingredients_consumed?: Json
+          legacy_id?: string | null
+          meal_date?: string
+          meal_type?: string
+          notes?: string | null
+          recipe_id?: string | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+          version?: number
         }
         Relationships: []
       }
@@ -123,6 +486,27 @@ export type Database = {
         }
         Relationships: []
       }
+      ocr_monthly_usage: {
+        Row: {
+          consumed: number
+          period_start: string
+          reserved: number
+          user_id: string
+        }
+        Insert: {
+          consumed?: number
+          period_start: string
+          reserved?: number
+          user_id: string
+        }
+        Update: {
+          consumed?: number
+          period_start?: string
+          reserved?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -147,27 +531,351 @@ export type Database = {
         }
         Relationships: []
       }
+      receipt_drafts: {
+        Row: {
+          captured_at: string
+          confirmed: boolean
+          confirmed_at: string | null
+          confirmed_item_ids: string[]
+          created_at: string
+          currency: string | null
+          deleted_at: string | null
+          edited_lines: Json
+          error_code: string | null
+          id: string
+          image_hash: string | null
+          image_path: string | null
+          legacy_id: string | null
+          lines: Json
+          merchant: string | null
+          ocr_locale: string | null
+          ocr_request_id: string | null
+          ocr_result: Json | null
+          original_lines: Json
+          parser_version: string | null
+          purchase_date: string | null
+          quota_consumed: boolean
+          quota_period: string | null
+          raw_text: string
+          source: string
+          status: string
+          total: number | null
+          unrecognized_lines: Json
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          captured_at?: string
+          confirmed?: boolean
+          confirmed_at?: string | null
+          confirmed_item_ids?: string[]
+          created_at?: string
+          currency?: string | null
+          deleted_at?: string | null
+          edited_lines?: Json
+          error_code?: string | null
+          id?: string
+          image_hash?: string | null
+          image_path?: string | null
+          legacy_id?: string | null
+          lines?: Json
+          merchant?: string | null
+          ocr_locale?: string | null
+          ocr_request_id?: string | null
+          ocr_result?: Json | null
+          original_lines?: Json
+          parser_version?: string | null
+          purchase_date?: string | null
+          quota_consumed?: boolean
+          quota_period?: string | null
+          raw_text?: string
+          source?: string
+          status?: string
+          total?: number | null
+          unrecognized_lines?: Json
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          captured_at?: string
+          confirmed?: boolean
+          confirmed_at?: string | null
+          confirmed_item_ids?: string[]
+          created_at?: string
+          currency?: string | null
+          deleted_at?: string | null
+          edited_lines?: Json
+          error_code?: string | null
+          id?: string
+          image_hash?: string | null
+          image_path?: string | null
+          legacy_id?: string | null
+          lines?: Json
+          merchant?: string | null
+          ocr_locale?: string | null
+          ocr_request_id?: string | null
+          ocr_result?: Json | null
+          original_lines?: Json
+          parser_version?: string | null
+          purchase_date?: string | null
+          quota_consumed?: boolean
+          quota_period?: string | null
+          raw_text?: string
+          source?: string
+          status?: string
+          total?: number | null
+          unrecognized_lines?: Json
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      recipe_ingredients: {
+        Row: {
+          category: string | null
+          id: string
+          ingredient_id: string | null
+          measure: string | null
+          name: string
+          normalized_name: string
+          position: number
+          recipe_id: string
+        }
+        Insert: {
+          category?: string | null
+          id?: string
+          ingredient_id?: string | null
+          measure?: string | null
+          name: string
+          normalized_name: string
+          position: number
+          recipe_id: string
+        }
+        Update: {
+          category?: string | null
+          id?: string
+          ingredient_id?: string | null
+          measure?: string | null
+          name?: string
+          normalized_name?: string
+          position?: number
+          recipe_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_ingredients_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_ingredients_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_monthly_usage: {
+        Row: {
+          consumed: number
+          period_start: string
+          user_id: string
+        }
+        Insert: {
+          consumed?: number
+          period_start: string
+          user_id: string
+        }
+        Update: {
+          consumed?: number
+          period_start?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      recipe_suggestion_cache: {
+        Row: {
+          cache_key: string
+          catalog_version_id: string
+          created_at: string
+          expires_at: string
+          inventory_hash: string
+          matcher_version: string
+          result: Json | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          cache_key: string
+          catalog_version_id: string
+          created_at?: string
+          expires_at: string
+          inventory_hash: string
+          matcher_version: string
+          result?: Json | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          cache_key?: string
+          catalog_version_id?: string
+          created_at?: string
+          expires_at?: string
+          inventory_hash?: string
+          matcher_version?: string
+          result?: Json | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_suggestion_cache_catalog_version_id_fkey"
+            columns: ["catalog_version_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipes: {
+        Row: {
+          catalog_version_id: string
+          external_id: string
+          id: string
+          instructions: string
+          metadata: Json
+          name: string
+        }
+        Insert: {
+          catalog_version_id: string
+          external_id: string
+          id?: string
+          instructions?: string
+          metadata?: Json
+          name: string
+        }
+        Update: {
+          catalog_version_id?: string
+          external_id?: string
+          id?: string
+          instructions?: string
+          metadata?: Json
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipes_catalog_version_id_fkey"
+            columns: ["catalog_version_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_entitlements: {
+        Row: {
+          plan: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      begin_recipe_suggestion: { Args:{p_cache_key:string;p_inventory_hash:string};Returns:Json }
-      complete_recipe_suggestion: { Args:{p_cache_key:string;p_result:Json};Returns:undefined }
-      fail_recipe_suggestion: { Args:{p_cache_key:string};Returns:undefined }
-      activate_recipe_catalog: { Args:{p_checksum:string;p_source_version:string;p_matcher_version:string;p_vocabulary:Json;p_recipes:Json};Returns:Json }
-      reserve_receipt_ocr: { Args:{p_draft_id:string;p_request_id:string;p_image_hash:string;p_locale:string};Returns:Json }
-      attach_receipt_image: { Args:{p_draft_id:string;p_image_path:string};Returns:undefined }
-      mark_receipt_vision_invoked: { Args:{p_draft_id:string};Returns:undefined }
-      release_receipt_ocr: { Args:{p_draft_id:string};Returns:undefined }
-      complete_receipt_ocr: { Args:{p_draft_id:string;p_raw_text:string;p_parser_version:string;p_result:Json};Returns:undefined }
-      fail_receipt_ocr: { Args:{p_draft_id:string;p_error_code:string};Returns:undefined }
-      confirm_receipt_draft: { Args:{p_draft_id:string;p_lines:Json};Returns:Json }
-      apply_inventory_mutation: {
-        Args: { p_client_mutation_id: string; p_operation: string; p_item_id: string; p_expected_version?: number | null; p_payload?: Json }
+      activate_recipe_catalog: {
+        Args: {
+          p_checksum: string
+          p_matcher_version: string
+          p_recipes: Json
+          p_source_version: string
+          p_vocabulary: Json
+        }
         Returns: Json
       }
+      apply_inventory_mutation: {
+        Args: {
+          p_client_mutation_id: string
+          p_expected_version?: number
+          p_item_id: string
+          p_operation: string
+          p_payload?: Json
+        }
+        Returns: Json
+      }
+      attach_receipt_image: {
+        Args: { p_draft_id: string; p_image_path: string }
+        Returns: undefined
+      }
+      begin_recipe_suggestion: {
+        Args: { p_cache_key: string; p_inventory_hash: string }
+        Returns: Json
+      }
+      complete_receipt_ocr: {
+        Args: {
+          p_draft_id: string
+          p_parser_version: string
+          p_raw_text: string
+          p_result: Json
+        }
+        Returns: undefined
+      }
+      complete_recipe_suggestion: {
+        Args: { p_cache_key: string; p_result: Json }
+        Returns: undefined
+      }
+      confirm_receipt_draft: {
+        Args: { p_draft_id: string; p_lines: Json }
+        Returns: Json
+      }
+      fail_receipt_ocr: {
+        Args: { p_draft_id: string; p_error_code: string }
+        Returns: undefined
+      }
+      fail_recipe_suggestion: {
+        Args: { p_cache_key: string }
+        Returns: undefined
+      }
+      link_firebase_auth_identity: {
+        Args: { firebase_uid: string; target_user_id: string }
+        Returns: undefined
+      }
+      mark_receipt_vision_invoked: {
+        Args: { p_draft_id: string }
+        Returns: undefined
+      }
       owns_row: { Args: { row_user_id: string }; Returns: boolean }
+      release_receipt_ocr: { Args: { p_draft_id: string }; Returns: undefined }
+      reserve_receipt_ocr: {
+        Args: {
+          p_draft_id: string
+          p_image_hash: string
+          p_locale: string
+          p_request_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
