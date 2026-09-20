@@ -157,3 +157,33 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
 - **edge_cases:** expiry_date es una fecha civil YYYY-MM-DD sin conversión de zona. Web Locks, con lease persistente de respaldo, elige un único consumidor entre pestañas; BroadcastChannel propaga avisos y el pull es la fuente final de convergencia. Se conserva el orden causal por item. Create y updates pendientes se compactan; create seguido de delete antes de cualquier envío elimina ambos localmente. Si el create pudo alcanzar el servidor, se encola un delete nuevo para el mismo item_id, con su propio client_mutation_id.
 - **ui_states:** Loading, vacío, offline sin caché, pending, synced, conflict y error tienen texto accesible y controles utilizables por teclado. Un conflicto conserva la edición local, presenta el snapshot remoto y ofrece Descartar mis cambios o Reintentar con la versión actual. La segunda acción crea una mutación nueva basada explícitamente en la versión remota; no existe last-write-wins automático.
 
+<!-- harness:sprint-5-receipt-ocr-and-draft-review -->
+## sprint-5-receipt-ocr-and-draft-review · Sprint 5 - Receipt OCR and Draft Review
+
+
+
+### Scope aprobado
+
+  - `apps/web/src/app/**/receipt*/**`
+  - `apps/web/src/app/api/ocr/**`
+  - `apps/web/src/components/receipt/**`
+  - `apps/web/src/lib/receipt/**`
+  - `apps/web/src/lib/vision/**`
+  - `apps/web/src/lib/supabase/**`
+  - `apps/web/src/types/database.generated.ts`
+  - `packages/domain/src/receipt/**`
+  - `supabase/migrations/**`
+  - `supabase/tests/**`
+  - `tests/fixtures/receipts/**`
+  - `tests/e2e/receipt-ocr*.spec.ts`
+  - `apps/web/.env.example`
+  - `docs/**`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** Se define una extensión aditiva de receipt_drafts con estados persistidos, referencia privada de imagen, identificador idempotente, versión del parser, snapshots OCR, líneas originales y editadas, errores, periodo de cuota y confirmación. La confirmación usa una RPC transaccional con bloqueo, IDs deterministas y constraints únicas para devolver un resultado canónico sin duplicados ni efectos parciales.
+- **external_contracts:** Se fija una autoridad server-side única para entitlement Free/Pro y un adaptador Vision versionado con entrada validada, request_id, timeout de 15 segundos, un único retry interno transitorio, límite de respuesta, salida normalizada y mock determinista sin red.
+- **edge_cases:** Se cubren corrupción y dimensiones inválidas, orientación EXIF, eliminación de metadata, cancelación del crop, locales, fechas e importes ambiguos, moneda sin evidencia y líneas parcialmente reconocidas. Los campos inciertos permanecen nulos y editables en vez de ser inventados.
+- **ui_states:** Se especifican los estados visibles desde selección hasta confirmación, las acciones habilitadas o bloqueadas, las rutas de recuperación y el tratamiento de OCR vacío y cuota agotada. También se definen live regions, gestión de foco y la prohibición de mostrar éxito antes del commit canónico.
+
