@@ -641,7 +641,7 @@
     {
       "id": "sprint-6-recipe-catalog-normalization-and-suggestions",
       "name": "Sprint 6 - Recipe Catalog, Normalization and Suggestions",
-      "status": "spec_ready",
+      "status": "review_pending",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.4.0",
