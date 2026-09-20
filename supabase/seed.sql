@@ -5,7 +5,7 @@ values
   ('milk', 'milk', 'dairy', '["leche"]', 'catalog-v1'),
   ('salt', 'salt', 'spice', '["sal","salz"]', 'catalog-v1'),
   ('tomato', 'tomato', 'vegetable', '["tomate"]', 'catalog-v1')
-on conflict (slug) do update set
+on conflict (slug) where catalog_version_id is null do update set
   name = excluded.name,
   category = excluded.category,
   synonyms = excluded.synonyms,
