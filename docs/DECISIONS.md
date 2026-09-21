@@ -11,6 +11,10 @@ una decisión de arquitectura relevante durante implementación.
 
 <!-- Nuevas entradas debajo -->
 
+## 2026-09-21 · Idempotencia y cuota de imports en la misma transacción
+
+`recipe_import_jobs` es el registro canónico y `create_recipe_import_job` serializa por usuario e idempotency key antes de consumir la cuota mensual. Cloud Tasks transporta únicamente el UUID y el worker adquiere un lease mediante RPC service-only; completar vuelve a validar el contrato `recipe-v1` dentro de PostgreSQL. Así, dobles submits y redeliveries no duplican cuota ni resultado, mientras que un fallo de cola queda persistido y reconciliable. El texto/transcript completo no forma parte del resultado durable: solo se conserva provenance y la ruta de extracción.
+
 ## 2026-09-20 · Catálogo versionado y reserva atómica de sugerencias
 
 El catálogo de recetas se importa como una versión inmutable identificada por el SHA-256 de una representación JSON canónica; una RPC de importación valida y escribe vocabulario, aliases, recetas e ingredientes y solo activa la versión al final de la misma transacción. Las versiones anteriores se conservan para rollback. Las sugerencias se calculan exclusivamente en servidor con `matcher-v1`; una segunda RPC serializa por usuario y cache key, devuelve hits antes de cuota y crea el claim de una operación nueva junto al consumo mensual. Así, inventario vacío, rechazos, hits y carreras no incrementan el uso, mientras que una operación nueva Free incrementa exactamente una vez. Los mappings verificados siguen siendo privados por usuario y nunca modifican aliases globales.

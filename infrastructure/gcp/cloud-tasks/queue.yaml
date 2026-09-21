@@ -1,0 +1,3 @@
+name: projects/what-s-in-my-fridge-a2a07/locations/europe-west1/queues/recipe-imports
+rateLimits: { maxDispatchesPerSecond: 5, maxConcurrentDispatches: 10 }
+retryConfig: { maxAttempts: 5, maxRetryDuration: 3600s, minBackoff: 10s, maxBackoff: 300s, maxDoublings: 4 }

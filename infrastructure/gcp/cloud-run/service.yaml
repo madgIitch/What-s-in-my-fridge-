@@ -1,0 +1,26 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: neverita-media-worker
+  labels: { cloud.googleapis.com/location: europe-west1 }
+spec:
+  template:
+    metadata: { annotations: { autoscaling.knative.dev/maxScale: "10", run.googleapis.com/cpu-throttling: "false" } }
+    spec:
+      serviceAccountName: neverita-media-worker@what-s-in-my-fridge-a2a07.iam.gserviceaccount.com
+      containerConcurrency: 2
+      timeoutSeconds: 900
+      containers:
+        - image: europe-west1-docker.pkg.dev/what-s-in-my-fridge-a2a07/neverita/media-worker:latest
+          resources: { limits: { cpu: "2", memory: 4Gi } }
+          env:
+            - { name: WHISPER_SERVICE_URL, value: "https://whisper-service-placeholder.run.app" }
+            - { name: OLLAMA_SERVICE_URL, value: "https://ollama-service-placeholder.run.app" }
+            - { name: TASKS_SERVICE_ACCOUNT_EMAIL, value: "neverita-tasks@what-s-in-my-fridge-a2a07.iam.gserviceaccount.com" }
+            - { name: WORKER_OIDC_AUDIENCE, value: "https://neverita-media-worker-placeholder.run.app" }
+            - { name: GCS_TEMP_BUCKET, value: "neverita-recipe-import-temp" }
+            - { name: SUPABASE_URL, value: "https://your-project.supabase.co" }
+            - { name: RECIPE_IMPORT_WHISPER_ENABLED, value: "true" }
+            - { name: RECIPE_IMPORT_EXTRACTION_ENABLED, value: "true" }
+            - { name: SUPABASE_SERVICE_ROLE_KEY, valueFrom: { secretKeyRef: { name: supabase-service-role-key, key: latest } } }
+  traffic: [{ percent: 100, latestRevision: true }]

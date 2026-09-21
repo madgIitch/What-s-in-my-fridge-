@@ -1,5 +1,7 @@
 export const MATCHER_VERSION = "matcher-v1" as const;
 export const FUZZY_THRESHOLD = 0.65;
+export type { ImportedRecipe, ImportedRecipeIngredient } from "./imported";
+export { importedRecipeJsonSchema, validateImportedRecipe } from "./imported";
 
 export type MatchStrategy = "verified" | "exact" | "alias" | "substring" | "keyword" | "fuzzy";
 

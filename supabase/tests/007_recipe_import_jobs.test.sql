@@ -1,0 +1,18 @@
+begin; select plan(12);
+select has_table('public','recipe_import_jobs','jobs table exists');
+select has_table('public','recipe_import_usage','usage table exists');
+select policies_are('public','recipe_import_jobs',array['recipe_import_jobs_read_own'],'jobs only expose own rows');
+select function_privs_are('public','claim_recipe_import_job',array['uuid','text'],'service_role',array['EXECUTE'],'worker claim is service-only');
+insert into auth.users(id,email) values('00000000-0000-4000-8000-000000000701','import-a@example.test');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000701',true);
+set local role authenticated;
+select is((public.create_recipe_import_job('idem-key-00000001','manual',null,'Tomate y sal. Mezclar.',null,'{"sourceType":"manual"}')->>'action'),'created','creates job');
+select is((public.create_recipe_import_job('idem-key-00000001','manual',null,'Tomate y sal. Mezclar.',null,'{"sourceType":"manual"}')->>'action'),'existing','idempotent replay');
+select is((public.create_recipe_import_job('idem-key-00000002','file',null,null,'recipe-imports/other-user/video.mp4','{"sourceType":"file"}')->>'code'),'INVALID_UPLOAD_OBJECT','foreign upload prefix rejected');
+select is((select consumed from public.recipe_import_usage where user_id='00000000-0000-4000-8000-000000000701'),1,'replay consumes once');
+select is((select count(*)::integer from public.recipe_import_jobs where user_id='00000000-0000-4000-8000-000000000701'),1,'replay creates one job');
+select isnt_empty('select id from public.recipe_import_jobs','owner can read own job');
+reset role;
+select throws_ok($$insert into public.recipe_import_jobs(user_id,idempotency_key,source_type,manual_text,provenance,state,result) values('00000000-0000-4000-8000-000000000701','invalid-result-key','manual','x','{}','completed','{"schemaVersion":"recipe-v1"}')$$,'23514',null,'invalid result rejected');
+select is((select count(*)::integer from public.recipe_import_jobs where state='completed'),0,'invalid result never completed');
+select finish(); rollback;

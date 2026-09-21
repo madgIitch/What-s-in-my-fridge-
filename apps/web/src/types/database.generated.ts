@@ -633,6 +633,90 @@ export type Database = {
         }
         Relationships: []
       }
+      recipe_import_jobs: {
+        Row: {
+          attempts: number
+          completed_at: string | null
+          created_at: string
+          enqueued_at: string | null
+          error_code: string | null
+          id: string
+          idempotency_key: string
+          lease_expires_at: string | null
+          manual_text: string | null
+          provenance: Json
+          result: Json | null
+          retryable: boolean
+          source_type: string
+          source_url: string | null
+          state: string
+          updated_at: string
+          upload_object: string | null
+          user_id: string
+          worker_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          enqueued_at?: string | null
+          error_code?: string | null
+          id?: string
+          idempotency_key: string
+          lease_expires_at?: string | null
+          manual_text?: string | null
+          provenance?: Json
+          result?: Json | null
+          retryable?: boolean
+          source_type: string
+          source_url?: string | null
+          state?: string
+          updated_at?: string
+          upload_object?: string | null
+          user_id: string
+          worker_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          enqueued_at?: string | null
+          error_code?: string | null
+          id?: string
+          idempotency_key?: string
+          lease_expires_at?: string | null
+          manual_text?: string | null
+          provenance?: Json
+          result?: Json | null
+          retryable?: boolean
+          source_type?: string
+          source_url?: string | null
+          state?: string
+          updated_at?: string
+          upload_object?: string | null
+          user_id?: string
+          worker_id?: string | null
+        }
+        Relationships: []
+      }
+      recipe_import_usage: {
+        Row: {
+          consumed: number
+          period_start: string
+          user_id: string
+        }
+        Insert: {
+          consumed?: number
+          period_start: string
+          user_id: string
+        }
+        Update: {
+          consumed?: number
+          period_start?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       recipe_ingredients: {
         Row: {
           category: string | null
@@ -832,6 +916,10 @@ export type Database = {
         Args: { p_cache_key: string; p_inventory_hash: string }
         Returns: Json
       }
+      claim_recipe_import_job: {
+        Args: { p_job_id: string; p_worker_id: string }
+        Returns: Json
+      }
       complete_receipt_ocr: {
         Args: {
           p_draft_id: string
@@ -841,6 +929,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      complete_recipe_import_job: {
+        Args: {
+          p_job_id: string
+          p_provenance: Json
+          p_result: Json
+          p_worker_id: string
+        }
+        Returns: boolean
+      }
       complete_recipe_suggestion: {
         Args: { p_cache_key: string; p_result: Json }
         Returns: undefined
@@ -849,9 +946,29 @@ export type Database = {
         Args: { p_draft_id: string; p_lines: Json }
         Returns: Json
       }
+      create_recipe_import_job: {
+        Args: {
+          p_idempotency_key: string
+          p_manual_text: string
+          p_provenance: Json
+          p_source_type: string
+          p_source_url: string
+          p_upload_object: string
+        }
+        Returns: Json
+      }
       fail_receipt_ocr: {
         Args: { p_draft_id: string; p_error_code: string }
         Returns: undefined
+      }
+      fail_recipe_import_job: {
+        Args: {
+          p_error_code: string
+          p_job_id: string
+          p_retryable: boolean
+          p_worker_id: string
+        }
+        Returns: boolean
       }
       fail_recipe_suggestion: {
         Args: { p_cache_key: string }
@@ -865,6 +982,10 @@ export type Database = {
         Args: { p_draft_id: string }
         Returns: undefined
       }
+      mark_recipe_job_enqueue_failed: {
+        Args: { p_job_id: string }
+        Returns: undefined
+      }
       owns_row: { Args: { row_user_id: string }; Returns: boolean }
       release_receipt_ocr: { Args: { p_draft_id: string }; Returns: undefined }
       reserve_receipt_ocr: {
@@ -875,6 +996,10 @@ export type Database = {
           p_request_id: string
         }
         Returns: Json
+      }
+      set_recipe_import_stage: {
+        Args: { p_job_id: string; p_stage: string; p_worker_id: string }
+        Returns: boolean
       }
     }
     Enums: {
@@ -1573,4 +1698,3 @@ export const Constants = {
     },
   },
 } as const
-
