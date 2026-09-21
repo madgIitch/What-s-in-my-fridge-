@@ -53,6 +53,36 @@ language sql immutable set search_path='' as $$
    (x ? 'quantity' and x->'quantity'<>'null'::jsonb and (((x->>'quantity')::numeric)<=0 or nullif(btrim(x->>'unit'),'') is null))
  )
 $$;
+
+-- Sprint 8 cooking mutations did not include a display name in each consumed
+-- line. Preserve that contract while storing the stricter Sprint 9 shape.
+create or replace function public.normalize_legacy_meal_consumed() returns trigger
+language plpgsql set search_path='' as $$
+begin
+ if jsonb_typeof(new.ingredients_consumed) = 'array' then
+  select coalesce(
+   jsonb_agg(
+    case
+     when nullif(btrim(item.value->>'name'), '') is not null then item.value
+     else item.value || jsonb_build_object(
+      'name', coalesce(nullif(btrim(item.value->>'ingredient_key'), ''), 'Ingrediente')
+     )
+    end
+    order by item.ordinality
+   ),
+   '[]'::jsonb
+  )
+  into new.ingredients_consumed
+  from jsonb_array_elements(new.ingredients_consumed) with ordinality as item(value, ordinality);
+ end if;
+ return new;
+end $$;
+
+drop trigger if exists normalize_legacy_meal_consumed on public.meal_entries;
+create trigger normalize_legacy_meal_consumed
+before insert or update of ingredients_consumed on public.meal_entries
+for each row execute function public.normalize_legacy_meal_consumed();
+
 alter table public.meal_entries add constraint meal_entries_consumed_v1_check check (public.valid_meal_consumed(ingredients_consumed));
 
 create table public.meal_mutations (
