@@ -1,6 +1,15 @@
 import type { RecipeExtractionProvider, SourceType, TranscriptionProvider } from "./contracts.js";
+import { WorkerError } from "./worker-error.js";
 
-async function providerFetch(url: string, body: unknown) {
+type ProviderName = "OLLAMA" | "WHISPER";
+
+export function providerTimeout(provider: ProviderName) {
+  const fallback = provider === "OLLAMA" ? 300_000 : 120_000;
+  const configured = Number(process.env[`${provider}_PROVIDER_TIMEOUT_MS`] ?? fallback);
+  return Number.isFinite(configured) && configured >= 1_000 && configured <= 600_000 ? configured : fallback;
+}
+
+async function providerFetch(provider: ProviderName, url: string, body: unknown) {
   let response: Response;
   try {
     response = await fetch(url, {
@@ -10,12 +19,16 @@ async function providerFetch(url: string, body: unknown) {
         ...(process.env.INTERNAL_SERVICE_TOKEN ? { Authorization: `Bearer ${process.env.INTERNAL_SERVICE_TOKEN}` } : {}),
       },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(120_000),
+      signal: AbortSignal.timeout(providerTimeout(provider)),
     });
-  } catch {
-    throw new Error("PROVIDER_UNAVAILABLE");
+  } catch (error) {
+    const timeout = error instanceof Error && error.name === "TimeoutError";
+    throw new WorkerError(`${provider}_${timeout ? "TIMEOUT" : "UNAVAILABLE"}`);
   }
-  if (!response.ok) throw new Error("PROVIDER_UNAVAILABLE");
+  if (!response.ok) {
+    const transient = response.status === 429 || response.status >= 500;
+    throw new WorkerError(`${provider}_${transient ? "UNAVAILABLE" : "REJECTED"}`);
+  }
   return response.json() as Promise<Record<string, unknown>>;
 }
 
@@ -26,7 +39,7 @@ function endpoint(base: string, path: string) {
 export class WhisperProvider implements TranscriptionProvider {
   constructor(private endpoint: string) {}
   async transcribe(audioPath: string) {
-    const result = await providerFetch(this.endpoint, { audioPath, format: "wav", sampleRate: 16000, channels: 1 });
+    const result = await providerFetch("WHISPER", this.endpoint, { audioPath, format: "wav", sampleRate: 16000, channels: 1 });
     if (typeof result.text !== "string") throw new Error("TRANSCRIPTION_INVALID");
     return { text: result.text, provider: "whisper-service" };
   }
@@ -44,13 +57,13 @@ export class OllamaRecipeProvider implements RecipeExtractionProvider {
       `Contexto: ${JSON.stringify(context)}`,
       `Texto:\n${text}`,
     ].join("\n\n");
-    const result = await providerFetch(endpoint(this.baseUrl, "/api/generate"), {
+    const result = await providerFetch("OLLAMA", endpoint(this.baseUrl, "/api/generate"), {
       model: process.env.OLLAMA_RECIPE_MODEL ?? "qwen2.5:3b",
       prompt,
       format: "json",
       stream: false,
     });
-    if (typeof result.response !== "string") throw new Error("PROVIDER_UNAVAILABLE");
+    if (typeof result.response !== "string") throw new WorkerError("OLLAMA_INVALID_RESPONSE");
     try {
       const parsed = JSON.parse(result.response) as Record<string, unknown>;
       return parsed.recipe ?? parsed;

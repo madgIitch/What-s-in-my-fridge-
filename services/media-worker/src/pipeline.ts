@@ -6,6 +6,7 @@ import type { Job, RecipeExtractionProvider, TranscriptionProvider } from "./con
 import { sufficientText, validateRecipe } from "./contracts.js";
 import { safeFetch } from "./ssrf.js";
 import type { JobRepository } from "./repository.js";
+import { classifyYtDlpFailure, WorkerError } from "./worker-error.js";
 
 const metrics = { whisperInvocations: 0, whisperSkipped: 0 };
 export function pipelineMetrics() { return { ...metrics }; }
@@ -99,10 +100,17 @@ async function writeResponse(path: string, response: Response) { const bytes = n
 async function ffmpeg(input: string, output: string) { await command("ffmpeg", ["-nostdin", "-y", "-i", input, "-vn", "-ac", "1", "-ar", "16000", "-f", "wav", output], 120_000); }
 async function command(program: string, args: string[], timeout: number, capture = false) {
   return new Promise<string>((resolve, reject) => {
-    const child = spawn(program, args, { stdio: capture ? ["ignore", "pipe", "ignore"] : "ignore" }); let stdout = "";
+    const child = spawn(program, args, { stdio: ["ignore", capture ? "pipe" : "ignore", "pipe"] }); let stdout = ""; let stderr = "";
     child.stdout?.on("data", (chunk) => { stdout += String(chunk); if (stdout.length > 2_000_000) child.kill("SIGKILL"); });
-    const timer = setTimeout(() => { child.kill("SIGKILL"); reject(new Error(`${program.toUpperCase().replace("-", "_")}_TIMEOUT`)); }, timeout);
-    child.once("error", reject); child.once("exit", (code) => { clearTimeout(timer); code === 0 ? resolve(stdout) : reject(new Error(`${program.toUpperCase().replace("-", "_")}_FAILED`)); });
+    child.stderr?.on("data", (chunk) => { if (stderr.length < 64_000) stderr += String(chunk).slice(0, 64_000 - stderr.length); });
+    const prefix = program.toUpperCase().replace("-", "_");
+    const timer = setTimeout(() => { child.kill("SIGKILL"); reject(new WorkerError(`${prefix}_TIMEOUT`)); }, timeout);
+    child.once("error", () => reject(new WorkerError(`${prefix}_FAILED`)));
+    child.once("exit", (code) => {
+      clearTimeout(timer);
+      if (code === 0) resolve(stdout);
+      else reject(new WorkerError(program === "yt-dlp" ? classifyYtDlpFailure(stderr) : `${prefix}_FAILED`));
+    });
   });
 }
 function required(name: string) { const value = process.env[name]; if (!value) throw new Error(`Missing ${name}`); return value; }

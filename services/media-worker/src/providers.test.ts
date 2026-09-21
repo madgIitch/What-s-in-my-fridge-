@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { OllamaRecipeProvider } from "./providers.js";
+import { OllamaRecipeProvider, providerTimeout } from "./providers.js";
 
 test("Ollama adapter calls generate endpoint with a non-streaming JSON prompt", async () => {
   const originalFetch = globalThis.fetch;
@@ -22,4 +22,9 @@ test("Ollama adapter calls generate endpoint with a non-streaming JSON prompt", 
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test("provider timeouts allow Ollama cold starts without changing Whisper", () => {
+  assert.equal(providerTimeout("OLLAMA"), 300_000);
+  assert.equal(providerTimeout("WHISPER"), 120_000);
 });
