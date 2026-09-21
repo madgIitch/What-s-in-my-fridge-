@@ -823,7 +823,7 @@
     {
       "id": "sprint-8-favorites-cooking-and-shopping",
       "name": "Sprint 8 - Favorites, Cooking and Shopping List",
-      "status": "spec_ready",
+      "status": "done",
       "sdd": true,
       "priority": "P1",
       "milestone": "0.6.0",
