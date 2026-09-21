@@ -217,3 +217,30 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
 - **edge_cases:** Se fijan normalización, estrategia, categorías ausentes, vacíos y desempates.
 - **ui_states:** La ruta de recetas cubre todos los estados funcionales y accesibles.
 
+<!-- harness:sprint-7-url-recipe-import-jobs -->
+## sprint-7-url-recipe-import-jobs · Sprint 7 - Social Share Recipe Import, Cloud Tasks and Cloud Run Media Pipeline
+
+
+
+### Scope aprobado
+
+  - `apps/web/src/app/(auth)/app/recipes/import/**`
+  - `apps/web/src/app/api/recipe-jobs/**`
+  - `apps/web/src/app/api/share-target/**`
+  - `apps/web/src/app/manifest.ts`
+  - `apps/web/public/manifest.webmanifest`
+  - `apps/web/src/components/recipe-import/**`
+  - `apps/web/src/lib/recipe-import/**`
+  - `packages/domain/src/recipe-jobs/**`
+  - `packages/domain/src/recipes/**`
+  - `services/media-worker/**`
+  - `infrastructure/gcp/cloud-run/**`
+  - `infrastructure/gcp/cloud-tasks/**`
+  - `infrastructure/gcp/storage/**`
+  - `supabase/**`
+  - `tests/**`
+  - `docs/**`
+  - `.env.example`
+  - `vercel.json`
+  - `spec.json`
+

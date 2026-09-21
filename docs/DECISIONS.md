@@ -113,3 +113,12 @@ Decisiones registradas:
 - **tests:** Hay matriz unit, golden, import, pgTAP, integración y Playwright.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+<!-- harness:sprint-7-url-recipe-import-jobs -->
+## 2026-09-21 · sprint-7-url-recipe-import-jobs aprobado
+
+Contexto: se aprobó el spec `sprint-7-url-recipe-import-jobs` (Sprint 7 - Social Share Recipe Import, Cloud Tasks and Cloud Run Media Pipeline).
+
+Decisión: implementar según el spec aprobado.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.

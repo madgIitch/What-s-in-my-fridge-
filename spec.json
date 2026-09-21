@@ -810,10 +810,10 @@
         "vercel.json",
         "spec.json"
       ],
-      "spec_approved": false,
-      "answers_hash": "sha256:3e0bbf988dcbb23dafefc98274e664d497931633100d7e707b43294c4cc94da1",
-      "approved_by": null,
-      "approved_at": null,
+      "spec_approved": true,
+      "answers_hash": "sha256:c659f63be03777d31da583f8cbb85a9fa3a8790a7f4443bfd1b56cc1bc34669b",
+      "approved_by": "peorr",
+      "approved_at": "2026-09-21T12:42:03.279Z",
       "manual_spec_ready": true,
       "manual_spec_ready_at": "2026-09-20T22:16:19.205Z",
       "manual_spec_ready_reason": "Dev override: Fase 0 marcada como suficientemente especificada pese a suposiciones pendientes."
