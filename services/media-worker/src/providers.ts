@@ -1,15 +1,20 @@
 import type { RecipeExtractionProvider, SourceType, TranscriptionProvider } from "./contracts.js";
 
 async function providerFetch(url: string, body: unknown) {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(process.env.INTERNAL_SERVICE_TOKEN ? { Authorization: `Bearer ${process.env.INTERNAL_SERVICE_TOKEN}` } : {}),
-    },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(120_000),
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(process.env.INTERNAL_SERVICE_TOKEN ? { Authorization: `Bearer ${process.env.INTERNAL_SERVICE_TOKEN}` } : {}),
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(120_000),
+    });
+  } catch {
+    throw new Error("PROVIDER_UNAVAILABLE");
+  }
   if (!response.ok) throw new Error("PROVIDER_UNAVAILABLE");
   return response.json() as Promise<Record<string, unknown>>;
 }

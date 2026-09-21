@@ -23,7 +23,9 @@ export async function processJob(job: Job, workerId: string, repo: JobRepository
       const response = await safeFetch(job.sourceUrl);
       if (!response.ok) throw new Error("DOWNLOAD_FAILED");
       if (!(response.headers.get("content-type") ?? "").includes("text/html")) throw new Error("SOURCE_UNSUPPORTED");
-      const html = (await response.text()).slice(0, 2_000_000);
+      let html: string;
+      try { html = (await response.text()).slice(0, 2_000_000); }
+      catch { throw new Error("DOWNLOAD_FAILED"); }
       text = extractText(html);
       path.push(html.includes("application/ld+json") ? "jsonld" : "html");
     }
