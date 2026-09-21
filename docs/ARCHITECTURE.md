@@ -310,3 +310,33 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
 - **edge_cases:** Se permiten múltiples comidas por día. La outbox preserva orden causal por `meal_entry`, compacta create y updates todavía no enviados y elimina create+delete únicamente cuando consta que el create nunca pudo llegar al servidor; si la entrega fue incierta, primero reconcilia y después envía un delete idempotente independiente. El borrador se persiste por `user_id` y `meal_entry_id` al navegar a otro mes, se restaura al volver y solo se descarta explícitamente. Durante un pull paginado no se publica ningún lote ni se avanza el cursor hasta completar todas las páginas; dentro de cada página se deduplica por id conservando la mayor versión y una fila remota solo se aplica si `(version,updated_at,id)` es posterior al estado local confirmado. Una versión remota nunca reemplaza un borrador o mutación pendiente: si es anterior se ignora y si es posterior crea un conflicto visible. Si la receta se elimina mientras existe una edición local, se conserva el snapshot, se establece `recipe_id:null`, el borrador continúa editable y al guardar se muestra el aviso «La receta original ya no existe» sin perder nombre, ingredientes ni notas.
 - **ui_states:** La vista mensual contempla loading, mes vacío autoritativo, offline sin caché no autoritativo, caché offline fechada, pending editable, synced, conflict, error recuperable, validación y sesión expirada. Offline sin caché muestra «Sin conexión; aún no hay datos guardados» y «Reintentar». Red, timeout o 5xx conservan el borrador y ofrecen «Reintentar». Los conflictos conservan el borrador, presentan la versión canónica y ofrecen «Descartar mis cambios» o «Revisar y reintentar». Un 401 pausa la outbox y redirige a `/login?error=session_expired&returnTo=<ruta allowlisted>`; después de autenticarse, la sincronización se reanuda reconciliando antes de enviar. Las mutaciones pendientes nunca se muestran como confirmadas. Los tipos se presentan en orden breakfast, lunch, dinner y snack; dentro de cada tipo y día se ordena por `consumed_at` ascendente y después por `created_at,id`, dejando las filas sin `consumed_at` al final.
 
+<!-- harness:sprint-10-stripe-pro-and-usage -->
+## sprint-10-stripe-pro-and-usage · Sprint 10 - Stripe Pro and Usage Enforcement
+
+
+
+### Scope aprobado
+
+  - `apps/web/src/app/api/stripe/**`
+  - `apps/web/src/app/api/usage/**`
+  - `apps/web/src/app/(auth)/app/pro/**`
+  - `apps/web/src/components/billing/**`
+  - `apps/web/src/lib/billing/**`
+  - `apps/web/src/lib/supabase/**`
+  - `apps/web/src/types/database.generated.ts`
+  - `packages/domain/src/billing/**`
+  - `supabase/migrations/**`
+  - `supabase/tests/**`
+  - `scripts/migration/stripe/**`
+  - `tests/fixtures/stripe/**`
+  - `tests/e2e/stripe-pro-usage*.spec.ts`
+  - `docs/**`
+  - `apps/web/.env.example`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** Se define una única fila canónica de subscriptions por user_id y customer, con stripe_customer_id y stripe_subscription_id únicos cuando no son null. La fila persiste status, current_period_end, cancel_at_period_end, cursor (last_event_created,last_event_id), timestamps y version. La selección determinista entre varias subscriptions, el ledger de eventos, el agregado y ledger idempotente de uso, el override nullable con auditoría append-only, RLS y la convivencia transitoria con user_entitlements y contadores legacy quedan especificados.
+- **external_contracts:** Se fijan rutas, métodos, payloads y respuestas exactas; allowlist de redirect; eventos Stripe soportados; traducción de estados; metadata de Checkout; fallback por legacy_id_map; idempotencia; versión API del adaptador; contrato de consume_usage; esquema exhaustivo de entitlement; y reconciliación autenticada con tipos, semántica de applied y eventCursor, selección canónica y errores 404/409 estables.
+- **edge_cases:** Los eventos simultáneos y fuera de orden se resuelven mediante (event.created,event.id). Si Stripe devuelve varias subscriptions, se elige la más reciente por ese orden, se registra la anomalía y esa fila determina entitlement y reconcile. Los eventos invoice aplican el estado actual recuperado y, si no cambió, solo avanzan cursor y ledger. También se cubren cancel_at_period_end, estados no habilitantes, frontera mensual UTC, bypass Pro, downgrade sin imputación retroactiva y replays de uso.
+- **ui_states:** El Paywall cubre loading, free, trialing, active, past_due, canceled y error; sesión expirada; retornos success/cancel; refetch canónico; errores recuperables y no recuperables con acciones concretas; portal o checkout según estado; teclado y live region.

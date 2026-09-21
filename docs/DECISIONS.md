@@ -158,3 +158,16 @@ Decisiones registradas:
 - **tests:** La cobertura obligatoria incluye unitarios de fecha civil y DST, snapshots, validación y orden/compactación de outbox; pgTAP e integración de RLS, constraints, idempotencia, CAS, tombstones, pull incremental paginado y atomicidad; y Playwright de los flujos principales, estados offline, borradores entre meses, recarga, reconexión, sesión expirada, receta eliminada durante una edición y conflictos con dos contextos. La matriz temporal mínima usa `Europe/Madrid` en 2026-03-29 y 2026-10-25, `America/New_York` en 2026-03-08 y 2026-11-01, y `UTC` y `Asia/Tokyo` como zonas sin transición en esas fechas; crear, editar, recargar y sincronizar conserva exactamente el `YYYY-MM-DD` elegido.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+<!-- harness:sprint-10-stripe-pro-and-usage -->
+## 2026-09-21 · sprint-10-stripe-pro-and-usage aprobado
+
+Contexto: se aprobó el spec `sprint-10-stripe-pro-and-usage` (Sprint 10 - Stripe Pro and Usage Enforcement).
+
+Decisiones registradas:
+
+- **auth_secrets:** Checkout, portal, entitlement y usage derivan identidad de la sesión; los redirects aceptan únicamente /app/pro; el webhook exige firma sobre cuerpo crudo; reconcile y override son server-to-server con secretos dedicados. Los secretos permanecen server-only y el actor administrativo se deriva de configuración, nunca del navegador.
+- **rollback_compat:** Las migraciones y el backfill son aditivos e idempotentes; se define precedencia con fallback a user_entitlements, importación conservadora del consumo legacy, reconciliación repetible sin duplicados y rollback por deployment o feature flag sin eliminar datos.
+- **tests:** Se concretan adaptadores falsos, reloj inyectable y fixtures sintéticos sin red; matrices de estados y errores; pgTAP para constraints, RLS, idempotencia y concurrencia; Playwright para Paywall; reconciliación y mappings; eventos invoice sin cambio de estado; múltiples subscriptions; contratos exhaustivos de entitlement y reconcile; replay 429 exacto; y pruebas de ausencia de secretos en artefactos, respuestas y logs.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
