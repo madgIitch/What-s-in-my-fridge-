@@ -126,3 +126,16 @@ Contexto: se aprobó el spec `sprint-7-url-recipe-import-jobs` (Sprint 7 - Socia
 Decisión: implementar según el spec aprobado.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+<!-- harness:sprint-8-favorites-cooking-and-shopping -->
+## 2026-09-21 · sprint-8-favorites-cooking-and-shopping aprobado
+
+Contexto: se aprobó el spec `sprint-8-favorites-cooking-and-shopping` (Sprint 8 - Favorites, Cooking and Shopping List).
+
+Decisiones registradas:
+
+- **auth_secrets:** Todas las tablas privadas activan RLS basada en `auth.uid()` y las RPC derivan el propietario exclusivamente de la sesión; ningún `user_id` aportado por el cliente es autoritativo. El navegador solo recibe la URL y clave publishable/anon de Supabase. Service role y demás secretos permanecen server-side y no aparecen en bundles, IndexedDB, respuestas ni logs.
+- **rollback_compat:** El rollback se limita al deployment o feature flag. Las migraciones SQL e IndexedDB son aditivas y versionadas, conservan snapshots, mutaciones, tombstones y datos legacy, y no usan down migrations destructivas. No se modifica Expo/Firebase y una PWA anterior puede seguir usando sus contratos existentes aunque ignore las tablas o campos nuevos.
+- **tests:** La matriz incluye unitarios de snapshots, faltantes, unidades, límites, FEFO y outbox; pgTAP/integración de constraints, RLS, ownership, atomicidad, concurrencia e idempotencia; pruebas IndexedDB de offline, aislamiento, reconciliación y logout; y Playwright con Supabase local y viewport de 320 px para favoritos, reload offline, pasos, cocina, replay, conflictos, compra, deep links y aislamiento. También exige pasar lint, typecheck, unit, build y las pruebas Supabase/E2E disponibles.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.

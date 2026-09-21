@@ -244,3 +244,42 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
   - `vercel.json`
   - `spec.json`
 
+<!-- harness:sprint-8-favorites-cooking-and-shopping -->
+## sprint-8-favorites-cooking-and-shopping · Sprint 8 - Favorites, Cooking and Shopping List
+
+
+
+### Scope aprobado
+
+  - `apps/web/src/app/(auth)/app/favorites/**`
+  - `apps/web/src/app/(auth)/app/recipes/**`
+  - `apps/web/src/app/(auth)/app/shopping-list/**`
+  - `apps/web/src/app/api/favorites/**`
+  - `apps/web/src/app/api/cooking/**`
+  - `apps/web/src/app/api/shopping-list/**`
+  - `apps/web/src/components/favorites/**`
+  - `apps/web/src/components/cooking/**`
+  - `apps/web/src/components/shopping-list/**`
+  - `apps/web/src/lib/favorites/**`
+  - `apps/web/src/lib/cooking/**`
+  - `apps/web/src/lib/shopping-list/**`
+  - `apps/web/src/lib/inventory/**`
+  - `apps/web/src/lib/supabase/**`
+  - `apps/web/src/types/database.generated.ts`
+  - `packages/domain/src/favorites/**`
+  - `packages/domain/src/cooking/**`
+  - `packages/domain/src/shopping-list/**`
+  - `supabase/migrations/**`
+  - `supabase/tests/**`
+  - `tests/fixtures/recipes/**`
+  - `tests/e2e/favorites-cooking-shopping*.spec.ts`
+  - `docs/**`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** Se reutiliza `favorite_recipes` como autoridad, con extensiones aditivas para snapshot JSON validado e inmutable, `snapshot_version`, `version`, timestamps y `deleted_at`, además de unicidad parcial por `(user_id, recipe_id)` para favoritos activos. `cooking_mutations` persiste cada intención y su resultado canónico bajo `UNIQUE(user_id, client_mutation_id)`; el consumo confirmado crea un ledger/meal entry y actualiza inventario versionado. La compra combina una proyección no persistida de faltantes con selecciones explícitas versionadas y con tombstone. IndexedDB conserva réplicas, cursor, outbox y estado local por usuario, sin actuar como autoridad remota.
+- **external_contracts:** Se fijan contratos para favorito, cocina y selección explícita de compra, todos identificados por `client_mutation_id` y con versiones esperadas cuando corresponda. Las respuestas usan el sobre `{client_mutation_id,status,code,result,conflicts}`: `applied` devuelve la representación canónica, `duplicate` reproduce byte-semánticamente el resultado persistido del primer intento, `conflict` no escribe dominio y adjunta versiones/snapshots actuales, y `rejected` no se reintenta sin corregir el payload. La outbox se particiona por usuario, conserva el payload original y procesa en orden causal por entidad.
+- **edge_cases:** Los ingredientes repetidos solo se agrupan cuando comparten ingrediente canónico y unidad compatible. Cantidades ausentes, ingredientes no mapeados y unidades incompatibles requieren confirmación, mapeo o exclusión explícita. El consumo distribuido usa FEFO determinista por `expiry_date`, `created_at` e `id`; bloquea o compara todas las filas afectadas y valida el plan completo antes de escribir. Cualquier insuficiencia, versión obsoleta o cambio concurrente aborta la transacción completa, devuelve las filas canónicas en conflicto y evita consumos parciales o cantidades negativas.
+- **ui_states:** Cada pantalla contempla loading, vacío con acción útil, caché offline fechada, pendiente, sincronizado, conflicto, error recuperable y sesión expirada. Las mutaciones optimistas nunca aparecen como confirmadas antes del servidor; cocinar offline no altera cantidades canónicas visibles. Los conflictos comparan dato local y canónico y ofrecen descartar o revisar y reintentar mediante un nuevo mutation id y versiones actuales. Solo se puede descartar directamente una operación que no haya sido enviada; si pudo alcanzar el servidor, primero debe reconciliarse. Logout detiene workers y oculta o limpia de la vista la caché y outbox del usuario anterior.
+
