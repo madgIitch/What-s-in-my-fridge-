@@ -903,7 +903,7 @@
     {
       "id": "sprint-9-meal-calendar",
       "name": "Sprint 9 - Meal Calendar",
-      "status": "spec_ready",
+      "status": "done",
       "sdd": true,
       "priority": "P1",
       "milestone": "0.7.0",
