@@ -145,3 +145,16 @@ Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
 - Los favoritos conservan un snapshot v1 autocontenido (`title`, ingredientes estructurados e instrucciones). El inventario solo alimenta una proyección de disponibilidad y nunca reescribe el snapshot.
 - Favoritos, cocina y lista explícita usan RPC autenticadas con un ledger idempotente separado por dominio. Cocina bloquea todos los lotes solicitados, valida el plan completo y solo después descuenta y crea el meal entry.
 - La caché IndexedDB de Sprint 8 vive en una base aditiva propia y todas sus claves y consultas están particionadas por `userId`; ninguna operación pendiente se presenta como confirmada.
+
+<!-- harness:sprint-9-meal-calendar -->
+## 2026-09-21 · sprint-9-meal-calendar aprobado
+
+Contexto: se aprobó el spec `sprint-9-meal-calendar` (Sprint 9 - Meal Calendar).
+
+Decisiones registradas:
+
+- **auth_secrets:** Las RPC derivan ownership exclusivamente de `auth.uid()`, no aceptan un `user_id` autoritativo del cliente y RLS aísla select, insert, update y delete entre usuarios. Caché, borradores, cursores, ledger y outbox se particionan por usuario. Logout detiene la sincronización y evita exposición o procesamiento cruzado. El navegador solo usa la clave publishable/anon y la service role permanece exclusivamente server-side.
+- **rollback_compat:** Las migraciones SQL e IndexedDB son aditivas y versionadas. El rollback se limita a deployment o feature flag y conserva filas, snapshots, tombstones, borradores, cursores, ledgers y mutaciones. No rompe el contrato de cocina de Sprint 8 ni los clientes legacy que ignoren los campos o stores nuevos.
+- **tests:** La cobertura obligatoria incluye unitarios de fecha civil y DST, snapshots, validación y orden/compactación de outbox; pgTAP e integración de RLS, constraints, idempotencia, CAS, tombstones, pull incremental paginado y atomicidad; y Playwright de los flujos principales, estados offline, borradores entre meses, recarga, reconexión, sesión expirada, receta eliminada durante una edición y conflictos con dos contextos. La matriz temporal mínima usa `Europe/Madrid` en 2026-03-29 y 2026-10-25, `America/New_York` en 2026-03-08 y 2026-11-01, y `UTC` y `Asia/Tokyo` como zonas sin transición en esas fechas; crear, editar, recargar y sincronizar conserva exactamente el `YYYY-MM-DD` elegido.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
