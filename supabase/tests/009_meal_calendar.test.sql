@@ -1,0 +1,16 @@
+begin;
+select plan(12);
+select has_table('public','meal_mutations','meal mutation ledger exists');
+select has_column('public','meal_entries','recipe_snapshot','snapshot is additive');
+select col_is_null('public','meal_entries','recipe_id','recipe reference is nullable');
+select has_function('public','apply_meal_mutation',array['uuid','text','uuid','bigint','jsonb'],'mutation RPC exists');
+select has_function('public','pull_meal_entries',array['timestamp with time zone','uuid','integer'],'pull RPC exists');
+select col_type_is('public','meal_entries','meal_date','date','meal_date is a civil date');
+select col_type_is('public','meal_entries','version','bigint','version supports CAS');
+select has_index('public','meal_mutations','meal_mutations_user_id_client_mutation_id_key','idempotency is unique per user');
+select policies_are('public','meal_entries',array['meal_entries_delete_own','meal_entries_insert_own','meal_entries_select_own','meal_entries_update_own'],'meal entries retain owner RLS');
+select policies_are('public','meal_mutations',array['meal_mutations_owner_insert','meal_mutations_owner_select'],'ledger is isolated');
+select function_returns('public','apply_meal_mutation',array['uuid','text','uuid','bigint','jsonb'],'jsonb','mutation returns envelope');
+select function_returns('public','pull_meal_entries',array['timestamp with time zone','uuid','integer'],'jsonb','pull returns page');
+select * from finish();
+rollback;

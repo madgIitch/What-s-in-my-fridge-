@@ -1,0 +1,2 @@
+import {redirect} from "next/navigation";import {MealCalendarApp} from "@/components/meal-calendar/meal-calendar-app";import {createServerSupabaseClient} from "@/lib/supabase/server";
+export default async function CalendarPage(){const s=await createServerSupabaseClient(),{data:{user}}=await s.auth.getUser();if(!user)redirect("/login?error=session_expired&returnTo=%2Fapp%2Fcalendar");return <MealCalendarApp userId={user.id}/>}

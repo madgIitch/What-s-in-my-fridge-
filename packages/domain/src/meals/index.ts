@@ -1,0 +1,7 @@
+export type MealType = "breakfast" | "lunch" | "dinner" | "snack";
+export type RecipeSnapshot = Readonly<{version:1;recipeId:string;title:string;ingredients:readonly Readonly<{ingredientKey:string|null;name:string;quantity:number|null;unit:string|null}>[];instructions:readonly string[]}>;
+export type ConsumedIngredient = Readonly<{inventoryItemId:string|null;ingredientKey:string|null;name:string;quantity:number|null;unit:string|null;mutationId:string|null}>;
+export type MealPayload = Readonly<{mealType:MealType;mealDate:string;recipeId:string|null;recipeSnapshot:RecipeSnapshot|null;customName:string|null;ingredientsConsumed:readonly ConsumedIngredient[];notes:string|null;caloriesEstimate:number|null;consumedAt:string|null}>;
+export const MEAL_TYPES:readonly MealType[]=["breakfast","lunch","dinner","snack"];
+export function isCivilDate(value:string){if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;const [y,m,d]=value.split("-").map(Number);const date=new Date(Date.UTC(y,m-1,d));return date.getUTCFullYear()===y&&date.getUTCMonth()===m-1&&date.getUTCDate()===d}
+export function assertMealPayload(value:MealPayload){if(!isCivilDate(value.mealDate)||!MEAL_TYPES.includes(value.mealType))throw new Error("VALIDATION_ERROR");if(Boolean(value.recipeSnapshot)===Boolean(value.customName?.trim()))throw new Error("MEAL_IDENTITY_REQUIRED");for(const x of value.ingredientsConsumed)if(!x.name.trim()||(x.quantity!==null&&(x.quantity<=0||!x.unit?.trim())))throw new Error("INVALID_CONSUMED_INGREDIENT");return value}

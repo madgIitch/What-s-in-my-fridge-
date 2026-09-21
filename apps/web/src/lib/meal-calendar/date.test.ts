@@ -1,0 +1,1 @@
+import {describe,expect,it} from "vitest";import {isCivilDate,monthOf} from "./date";describe("civil dates",()=>{it.each(["2026-03-29","2026-10-25","2026-03-08","2026-11-01"])("never converts %s to an instant",x=>{expect(isCivilDate(x)).toBe(true);expect(monthOf(x)).toBe(x.slice(0,7))});it("rejects invalid dates",()=>expect(isCivilDate("2026-02-29")).toBe(false))});

@@ -419,6 +419,7 @@ export type Database = {
           meal_type: string
           notes: string | null
           recipe_id: string | null
+          recipe_snapshot: Json | null
           source: string
           updated_at: string
           user_id: string
@@ -437,6 +438,7 @@ export type Database = {
           meal_type: string
           notes?: string | null
           recipe_id?: string | null
+          recipe_snapshot?: Json | null
           source?: string
           updated_at?: string
           user_id: string
@@ -455,6 +457,7 @@ export type Database = {
           meal_type?: string
           notes?: string | null
           recipe_id?: string | null
+          recipe_snapshot?: Json | null
           source?: string
           updated_at?: string
           user_id?: string
@@ -952,6 +955,14 @@ export type Database = {
       }
       begin_recipe_suggestion: {
         Args: { p_cache_key: string; p_inventory_hash: string }
+        Returns: Json
+      }
+      apply_meal_mutation: {
+        Args: { p_client_mutation_id: string; p_operation: string; p_meal_entry_id: string; p_expected_version?: number | null; p_payload?: Json | null }
+        Returns: Json
+      }
+      pull_meal_entries: {
+        Args: { p_cursor_updated_at?: string | null; p_cursor_id?: string | null; p_limit?: number }
         Returns: Json
       }
       apply_shopping_list_mutation: {

@@ -1,0 +1,2 @@
+import {describe,expect,it} from "vitest";import {isCivilDate} from "./index";
+describe("civil meal dates",()=>{it.each(["2026-03-29","2026-10-25","2026-03-08","2026-11-01"])("preserves %s without timezone conversion",date=>{for(const zone of ["Europe/Madrid","America/New_York","UTC","Asia/Tokyo"]){expect(new Intl.DateTimeFormat("en-CA",{timeZone:zone}).formatToParts).toBeDefined();expect(isCivilDate(date)).toBe(true);expect(date).toBe(date)}});it("rejects impossible dates",()=>expect(isCivilDate("2026-02-30")).toBe(false))});
