@@ -12,9 +12,23 @@ where recipe_id is not null and recipe_snapshot is null;
 -- The original text reference predated the catalog FK. Invalid legacy references become
 -- null while their historical title remains in recipe_snapshot/custom_name.
 alter table public.meal_entries drop constraint if exists meal_entries_recipe_id_fkey;
+
+update public.meal_entries
+set recipe_id = null
+where recipe_id is not null
+  and recipe_id !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$';
+
+update public.meal_entries as meal
+set recipe_id = null
+where meal.recipe_id is not null
+  and not exists (
+    select 1
+    from public.recipes as recipe
+    where recipe.id = meal.recipe_id::uuid
+  );
+
 alter table public.meal_entries alter column recipe_id type uuid
-using (case when recipe_id ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
-  and exists(select 1 from public.recipes r where r.id = recipe_id::uuid) then recipe_id::uuid else null end);
+using recipe_id::uuid;
 alter table public.meal_entries add constraint meal_entries_recipe_id_fkey
   foreign key (recipe_id) references public.recipes(id) on delete set null;
 
