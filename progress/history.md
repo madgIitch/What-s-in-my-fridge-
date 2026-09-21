@@ -9,3 +9,10 @@
 - Implementación: commit `1a66688`.
 - Gates aprobados: boundaries, env, Supabase boundaries, typecheck, lint, 33 tests, build, dry-run y tests del importador.
 - Pendiente por infraestructura: pgTAP/RLS y smoke E2E autenticado (Docker Desktop no está activo).
+
+# Sprint 7 · Social Share Recipe Import, Cloud Tasks and Cloud Run Media Pipeline → review_pending
+
+- Implementación principal: `db56be1`; endurecimiento SQL y sincronización de tipos: `3930120`, `34e3a17`.
+- CI `35606578423` aprobó web, reconstrucción completa de base, lint SQL, pgTAP/RLS, tipos generados y despliegue de migraciones a staging.
+- Worker media/IA: build y 13 tests aprobados localmente; incluye idempotencia, captions-first, fallback Whisper, validación estructurada, SSRF y cleanup.
+- Pendiente para `done`: smoke humano móvil autenticado y verificación end-to-end con Cloud Tasks, Cloud Run y proveedores reales.
