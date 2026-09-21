@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# init.sh — Bootstrap del SDD Harness (agnóstico de repo y de agente).
+# init.sh — Bootstrap del SDD Harness para Codex.
 # Crea .harness/ + memoria (docs/ spec/ progress/), detecta el stack, escribe
 # gates.config.json, deja punteros en CLAUDE.md/AGENTS.md, parchea .gitignore.
 #
@@ -7,14 +7,13 @@
 #   bash init.sh            # instala (no clobbera spec.json, memoria ni punteros)
 #   bash init.sh --force    # reescribe también los scripts de .harness/
 #
-# Requisitos: bash, git, node. Elige agente con HARNESS_AGENT=claude|codex (def. claude).
+# Requisitos: bash, git, node y Codex CLI.
 
 set -euo pipefail
 
 FORCE=0
 [ "${1:-}" = "--force" ] && FORCE=1
 
-AGENT="${HARNESS_AGENT:-claude}"
 say()  { printf '  %s\n' "$1"; }
 step() { printf '\n== %s\n' "$1"; }
 warn() { printf '  ⚠️  %s\n' "$1" >&2; }
@@ -39,10 +38,8 @@ step "Comprobaciones previas"
 command -v git  >/dev/null 2>&1 || die "git no está en el PATH."
 command -v node >/dev/null 2>&1 || die "node no está en el PATH."
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "esto no es un repo git. Corre 'git init' primero."
-if [ "$AGENT" = "claude" ]; then command -v claude >/dev/null 2>&1 || warn "HARNESS_AGENT=claude pero 'claude' no está en el PATH.";
-elif [ "$AGENT" = "codex" ]; then command -v codex >/dev/null 2>&1 || warn "HARNESS_AGENT=codex pero 'codex' no está en el PATH.";
-else die "HARNESS_AGENT debe ser 'claude' o 'codex' (es '$AGENT')."; fi
-say "agente seleccionado: $AGENT"
+command -v codex >/dev/null 2>&1 || die "Codex CLI no está en el PATH."
+say "agente seleccionado: codex"
 
 step "Creando .harness/"
 mkdir -p .harness/interviews
@@ -51,7 +48,6 @@ mkdir -p .harness/interviews
 write .harness/runner.mjs <<'RUNNER_EOF'
 import { spawnSync } from "node:child_process";
 
-const AGENT = (process.env.HARNESS_AGENT || "claude").toLowerCase(); // "claude" | "codex"
 const UNATTENDED = process.env.HARNESS_UNATTENDED === "1";
 const IS_WIN = process.platform === "win32";
 const TIMEOUT = Number(process.env.HARNESS_TIMEOUT_MS || 900000); // 15 min por corrida
@@ -79,14 +75,7 @@ function exec(name, args, prompt) {
 }
 
 export function runAgent(prompt, { write = false } = {}) {
-  return AGENT === "codex" ? runCodex(prompt, write) : runClaude(prompt, write);
-}
-function runClaude(prompt, write) {
-  const tools = write ? "Edit,Write,Bash,Read,Grep,Glob" : "Read,Grep,Glob";
-  const args = ["-p", "--output-format", "json", "--max-turns", String(write ? 30 : 8), "--allowedTools", tools];
-  if (write && UNATTENDED) args.push("--dangerously-skip-permissions");
-  const j = JSON.parse(exec("claude", args, prompt));
-  return { text: j.result ?? "", cost: j.total_cost_usd ?? j.cost?.total_cost ?? null };
+  return runCodex(prompt, write);
 }
 function runCodex(prompt, write) {
   const sandbox = write ? "workspace-write" : "read-only";
@@ -510,7 +499,7 @@ function writeProgress(task, state, branch) {
   mkdirSync(PDIR, { recursive: true });
   const attempts = state.tasks[task.id]?.attempts ?? [];
   const ts = new Date().toISOString();
-  const agent = process.env.HARNESS_AGENT || "claude";
+  const agent = "codex";
   const table = attemptsTable(attempts);
 
   const impl = `${PDIR}/impl_${task.name}.md`;
@@ -937,7 +926,6 @@ cat <<'DONE'
 
 ✅ Harness + memoria instalados. Próximos pasos:
 
-   export HARNESS_AGENT=claude        # o codex
    # rellena docs/ARCHITECTURE.md y docs/CONVENTIONS.md con el contexto del repo
    node .harness/spec.mjs interview 1 # escribe .harness/interviews/<id>-<name>.md
    #   responde los **R:** en ese archivo

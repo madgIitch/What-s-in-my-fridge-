@@ -1,6 +1,5 @@
 import { spawnSync } from "node:child_process";
 
-const AGENT = (process.env.HARNESS_AGENT || "claude").toLowerCase(); // "claude" | "codex"
 const UNATTENDED = process.env.HARNESS_UNATTENDED === "1";
 const IS_WIN = process.platform === "win32";
 const TIMEOUT = Number(process.env.HARNESS_TIMEOUT_MS || 900000); // 15 min por corrida
@@ -28,14 +27,7 @@ function exec(name, args, prompt) {
 }
 
 export function runAgent(prompt, { write = false } = {}) {
-  return AGENT === "codex" ? runCodex(prompt, write) : runClaude(prompt, write);
-}
-function runClaude(prompt, write) {
-  const tools = write ? "Edit,Write,Bash,Read,Grep,Glob" : "Read,Grep,Glob";
-  const args = ["-p", "--output-format", "json", "--max-turns", String(write ? 30 : 8), "--allowedTools", tools];
-  if (write && UNATTENDED) args.push("--dangerously-skip-permissions");
-  const j = JSON.parse(exec("claude", args, prompt));
-  return { text: j.result ?? "", cost: j.total_cost_usd ?? j.cost?.total_cost ?? null };
+  return runCodex(prompt, write);
 }
 function runCodex(prompt, write) {
   const sandbox = write ? "workspace-write" : "read-only";
