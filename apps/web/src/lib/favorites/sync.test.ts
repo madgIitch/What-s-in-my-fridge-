@@ -1,0 +1,3 @@
+import {describe,expect,it} from "vitest";
+import {reduceFeatureMutations,type FeatureMutation} from "./db";
+describe("feature outbox",()=>it("reduces state-target mutations but keeps cooking intentions",()=>{const base={userId:"u",entityId:"e",payload:{},state:"pending" as const,createdAt:"x"};const favorite={...base,clientMutationId:"1",kind:"favorite" as const};expect(reduceFeatureMutations([favorite],{...favorite,clientMutationId:"2"})).toHaveLength(1);const cooking={...base,clientMutationId:"1",kind:"cooking" as const} satisfies FeatureMutation;expect(reduceFeatureMutations([cooking],{...cooking,clientMutationId:"2"})).toHaveLength(2)}));

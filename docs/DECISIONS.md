@@ -139,3 +139,9 @@ Decisiones registradas:
 - **tests:** La matriz incluye unitarios de snapshots, faltantes, unidades, límites, FEFO y outbox; pgTAP/integración de constraints, RLS, ownership, atomicidad, concurrencia e idempotencia; pruebas IndexedDB de offline, aislamiento, reconciliación y logout; y Playwright con Supabase local y viewport de 320 px para favoritos, reload offline, pasos, cocina, replay, conflictos, compra, deep links y aislamiento. También exige pasar lint, typecheck, unit, build y las pruebas Supabase/E2E disponibles.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+## 2026-09-21 · Sprint 8 — snapshots inmutables y mutaciones de cocina
+
+- Los favoritos conservan un snapshot v1 autocontenido (`title`, ingredientes estructurados e instrucciones). El inventario solo alimenta una proyección de disponibilidad y nunca reescribe el snapshot.
+- Favoritos, cocina y lista explícita usan RPC autenticadas con un ledger idempotente separado por dominio. Cocina bloquea todos los lotes solicitados, valida el plan completo y solo después descuenta y crea el meal entry.
+- La caché IndexedDB de Sprint 8 vive en una base aditiva propia y todas sus claves y consultas están particionadas por `userId`; ninguna operación pendiente se presenta como confirmada.

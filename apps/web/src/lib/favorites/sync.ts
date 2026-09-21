@@ -1,0 +1,5 @@
+import { finishFeatureMutation,listFeatureMutations,queueFeatureMutation,type FeatureMutation } from "./db";
+import type { MutationEnvelope } from "./types";
+const endpoint:Record<FeatureMutation["kind"],string>={favorite:"/api/favorites",cooking:"/api/cooking",shopping:"/api/shopping-list"};
+export async function syncFeatureOutbox(userId:string){if(!navigator.onLine)return;for(const mutation of await listFeatureMutations(userId)){if(mutation.state==="conflict"||mutation.state==="rejected")continue;try{const response=await fetch(endpoint[mutation.kind],{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(mutation.payload)});if(response.status===401)return;const result=await response.json() as MutationEnvelope<unknown>;if(result.status==="applied"||result.status==="duplicate")await finishFeatureMutation(mutation.clientMutationId);else await queueFeatureMutation({...mutation,state:result.status==="conflict"?"conflict":"rejected",result:result.result,conflicts:result.conflicts})}catch{return}}}
+

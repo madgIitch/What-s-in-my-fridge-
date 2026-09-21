@@ -1,0 +1,6 @@
+import {describe,expect,it} from "vitest";
+import {buildCookingPlan} from "./plan";
+import type {LocalInventoryItem} from "@/lib/inventory/types";
+const lot=(id:string,quantity:number,expiryDate:string,version=1):LocalInventoryItem=>({key:`u:${id}`,id,userId:"u",name:"tomate",normalizedName:"tomate",expiryDate,category:null,quantity,notes:null,unit:"ud",addedAt:"2026-01-01T00:00:00Z",createdAt:"2026-01-01T00:00:00Z",updatedAt:"2026-01-01T00:00:00Z",deletedAt:null,version,syncState:"synced",remoteSnapshot:null});
+describe("cooking plan",()=>{it("allocates all lots in deterministic FEFO order",()=>expect(buildCookingPlan([{ingredientKey:"tomate",name:"Tomate",quantity:3,unit:"ud"}],[lot("late",2,"2026-02-01"),lot("early",2,"2026-01-01")]).map(x=>[x.inventory_item_id,x.quantity])).toEqual([["early",2],["late",1]]));it("rejects zero, insufficient and incompatible quantities without a partial plan",()=>{expect(()=>buildCookingPlan([{ingredientKey:"tomate",name:"Tomate",quantity:0,unit:"ud"}],[lot("a",1,"2026-01-01")])).toThrow("INVALID_QUANTITY");expect(()=>buildCookingPlan([{ingredientKey:"tomate",name:"Tomate",quantity:2,unit:"ud"}],[lot("a",1,"2026-01-01")])).toThrow("INSUFFICIENT_QUANTITY")})});
+

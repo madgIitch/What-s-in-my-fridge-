@@ -1,0 +1,5 @@
+import type { SnapshotIngredient } from "../favorites/types";
+export interface ShoppingLine { ingredientKey:string|null; name:string; quantity:number|null; unit:string|null; source:"derived"|"explicit" }
+export function deriveMissing(ingredients:SnapshotIngredient[],inventory:Array<{normalizedName:string|null;name:string;quantity:number;unit:string}>):ShoppingLine[]{return ingredients.flatMap(line=>{const total=inventory.filter(i=>(i.normalizedName??i.name).toLocaleLowerCase("es")===line.ingredientKey?.replaceAll("-"," ")&&i.unit===line.unit).reduce((n,i)=>n+i.quantity,0);if(line.quantity!==null&&total>=line.quantity)return[];return[{...line,quantity:line.quantity===null?null:Math.max(0,line.quantity-total),source:"derived" as const}]})}
+export function aggregateLines(lines:ShoppingLine[]){const map=new Map<string,ShoppingLine>();for(const line of lines){const key=`${line.ingredientKey??line.name.toLocaleLowerCase("es")}|${line.unit??"?"}`;const old=map.get(key);map.set(key,old&&old.quantity!==null&&line.quantity!==null?{...old,quantity:old.quantity+line.quantity}:old??line)}return [...map.values()]}
+

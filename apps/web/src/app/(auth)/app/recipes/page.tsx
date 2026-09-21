@@ -6,5 +6,5 @@ export default async function RecipesPage() {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?error=session_expired");
-  return <RecipeSuggestions />;
+  return <RecipeSuggestions userId={user.id} />;
 }

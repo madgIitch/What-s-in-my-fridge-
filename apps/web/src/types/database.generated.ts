@@ -126,6 +126,8 @@ export type Database = {
           name: string
           recipe_id: string
           saved_at: string
+          snapshot: Json
+          snapshot_version: number
           source: string
           updated_at: string
           user_id: string
@@ -144,6 +146,8 @@ export type Database = {
           name: string
           recipe_id: string
           saved_at: string
+          snapshot: Json
+          snapshot_version?: number
           source?: string
           updated_at?: string
           user_id: string
@@ -162,6 +166,8 @@ export type Database = {
           name?: string
           recipe_id?: string
           saved_at?: string
+          snapshot?: Json
+          snapshot_version?: number
           source?: string
           updated_at?: string
           user_id?: string
@@ -862,6 +868,30 @@ export type Database = {
           },
         ]
       }
+      cooking_mutations: {
+        Row: { id:string; user_id:string; client_mutation_id:string; payload:Json; status:string; code:string; result:Json|null; conflicts:Json; created_at:string }
+        Insert: { id?:string; user_id:string; client_mutation_id:string; payload:Json; status:string; code:string; result?:Json|null; conflicts?:Json; created_at?:string }
+        Update: { id?:string; user_id?:string; client_mutation_id?:string; payload?:Json; status?:string; code?:string; result?:Json|null; conflicts?:Json; created_at?:string }
+        Relationships: []
+      }
+      favorite_mutations: {
+        Row: { id:string; user_id:string; client_mutation_id:string; recipe_id:string; payload:Json; status:string; code:string; result:Json|null; conflicts:Json; created_at:string }
+        Insert: { id?:string; user_id:string; client_mutation_id:string; recipe_id:string; payload:Json; status:string; code:string; result?:Json|null; conflicts?:Json; created_at?:string }
+        Update: { id?:string; user_id?:string; client_mutation_id?:string; recipe_id?:string; payload?:Json; status?:string; code?:string; result?:Json|null; conflicts?:Json; created_at?:string }
+        Relationships: []
+      }
+      shopping_list_items: {
+        Row: { id: string; user_id: string; ingredient_key: string | null; name: string; quantity: number | null; unit: string | null; checked: boolean; deleted_at: string | null; version: number; created_at: string; updated_at: string }
+        Insert: { id?: string; user_id: string; ingredient_key?: string | null; name: string; quantity?: number | null; unit?: string | null; checked?: boolean; deleted_at?: string | null; version?: number; created_at?: string; updated_at?: string }
+        Update: { id?: string; user_id?: string; ingredient_key?: string | null; name?: string; quantity?: number | null; unit?: string | null; checked?: boolean; deleted_at?: string | null; version?: number; created_at?: string; updated_at?: string }
+        Relationships: []
+      }
+      shopping_list_mutations: {
+        Row: { id:string; user_id:string; client_mutation_id:string; payload:Json; status:string; code:string; result:Json|null; conflicts:Json; created_at:string }
+        Insert: { id?:string; user_id:string; client_mutation_id:string; payload:Json; status:string; code:string; result?:Json|null; conflicts?:Json; created_at?:string }
+        Update: { id?:string; user_id?:string; client_mutation_id?:string; payload?:Json; status?:string; code?:string; result?:Json|null; conflicts?:Json; created_at?:string }
+        Relationships: []
+      }
       user_entitlements: {
         Row: {
           plan: string
@@ -898,6 +928,14 @@ export type Database = {
         }
         Returns: Json
       }
+      apply_cooking_mutation: {
+        Args: { p_client_mutation_id: string; p_recipe_snapshot: Json; p_lines: Json }
+        Returns: Json
+      }
+      apply_favorite_mutation: {
+        Args: { p_client_mutation_id: string; p_recipe_id: string; p_desired_state: string; p_snapshot?: Json | null; p_expected_version?: number | null }
+        Returns: Json
+      }
       apply_inventory_mutation: {
         Args: {
           p_client_mutation_id: string
@@ -914,6 +952,10 @@ export type Database = {
       }
       begin_recipe_suggestion: {
         Args: { p_cache_key: string; p_inventory_hash: string }
+        Returns: Json
+      }
+      apply_shopping_list_mutation: {
+        Args: { p_client_mutation_id: string; p_item_id: string; p_name: string; p_ingredient_key: string | null; p_quantity: number | null; p_unit: string | null; p_desired_state: string; p_expected_version?: number | null }
         Returns: Json
       }
       claim_recipe_import_job: {
@@ -1698,4 +1740,3 @@ export const Constants = {
     },
   },
 } as const
-
