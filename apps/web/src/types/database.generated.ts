@@ -112,6 +112,81 @@ export type Database = {
         }
         Relationships: []
       }
+      cooking_mutations: {
+        Row: {
+          client_mutation_id: string
+          code: string
+          conflicts: Json
+          created_at: string
+          id: string
+          payload: Json
+          result: Json | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          client_mutation_id: string
+          code: string
+          conflicts?: Json
+          created_at?: string
+          id?: string
+          payload: Json
+          result?: Json | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          client_mutation_id?: string
+          code?: string
+          conflicts?: Json
+          created_at?: string
+          id?: string
+          payload?: Json
+          result?: Json | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      favorite_mutations: {
+        Row: {
+          client_mutation_id: string
+          code: string
+          conflicts: Json
+          created_at: string
+          id: string
+          payload: Json
+          recipe_id: string
+          result: Json | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          client_mutation_id: string
+          code: string
+          conflicts?: Json
+          created_at?: string
+          id?: string
+          payload: Json
+          recipe_id: string
+          result?: Json | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          client_mutation_id?: string
+          code?: string
+          conflicts?: Json
+          created_at?: string
+          id?: string
+          payload?: Json
+          recipe_id?: string
+          result?: Json | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       favorite_recipes: {
         Row: {
           created_at: string
@@ -408,7 +483,7 @@ export type Database = {
       meal_entries: {
         Row: {
           calories_estimate: number | null
-          consumed_at: string
+          consumed_at: string | null
           created_at: string
           custom_name: string | null
           deleted_at: string | null
@@ -427,7 +502,7 @@ export type Database = {
         }
         Insert: {
           calories_estimate?: number | null
-          consumed_at: string
+          consumed_at?: string | null
           created_at?: string
           custom_name?: string | null
           deleted_at?: string | null
@@ -446,7 +521,7 @@ export type Database = {
         }
         Update: {
           calories_estimate?: number | null
-          consumed_at?: string
+          consumed_at?: string | null
           created_at?: string
           custom_name?: string | null
           deleted_at?: string | null
@@ -462,6 +537,53 @@ export type Database = {
           updated_at?: string
           user_id?: string
           version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_entries_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_mutations: {
+        Row: {
+          client_mutation_id: string
+          code: string
+          conflicts: Json
+          created_at: string
+          id: number
+          meal_entry_id: string
+          request_hash: string
+          result: Json | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          client_mutation_id: string
+          code: string
+          conflicts?: Json
+          created_at?: string
+          id?: never
+          meal_entry_id: string
+          request_hash: string
+          result?: Json | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          client_mutation_id?: string
+          code?: string
+          conflicts?: Json
+          created_at?: string
+          id?: never
+          meal_entry_id?: string
+          request_hash?: string
+          result?: Json | null
+          status?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -871,28 +993,82 @@ export type Database = {
           },
         ]
       }
-      cooking_mutations: {
-        Row: { id:string; user_id:string; client_mutation_id:string; payload:Json; status:string; code:string; result:Json|null; conflicts:Json; created_at:string }
-        Insert: { id?:string; user_id:string; client_mutation_id:string; payload:Json; status:string; code:string; result?:Json|null; conflicts?:Json; created_at?:string }
-        Update: { id?:string; user_id?:string; client_mutation_id?:string; payload?:Json; status?:string; code?:string; result?:Json|null; conflicts?:Json; created_at?:string }
-        Relationships: []
-      }
-      favorite_mutations: {
-        Row: { id:string; user_id:string; client_mutation_id:string; recipe_id:string; payload:Json; status:string; code:string; result:Json|null; conflicts:Json; created_at:string }
-        Insert: { id?:string; user_id:string; client_mutation_id:string; recipe_id:string; payload:Json; status:string; code:string; result?:Json|null; conflicts?:Json; created_at?:string }
-        Update: { id?:string; user_id?:string; client_mutation_id?:string; recipe_id?:string; payload?:Json; status?:string; code?:string; result?:Json|null; conflicts?:Json; created_at?:string }
-        Relationships: []
-      }
       shopping_list_items: {
-        Row: { id: string; user_id: string; ingredient_key: string | null; name: string; quantity: number | null; unit: string | null; checked: boolean; deleted_at: string | null; version: number; created_at: string; updated_at: string }
-        Insert: { id?: string; user_id: string; ingredient_key?: string | null; name: string; quantity?: number | null; unit?: string | null; checked?: boolean; deleted_at?: string | null; version?: number; created_at?: string; updated_at?: string }
-        Update: { id?: string; user_id?: string; ingredient_key?: string | null; name?: string; quantity?: number | null; unit?: string | null; checked?: boolean; deleted_at?: string | null; version?: number; created_at?: string; updated_at?: string }
+        Row: {
+          checked: boolean
+          created_at: string
+          deleted_at: string | null
+          id: string
+          ingredient_key: string | null
+          name: string
+          quantity: number | null
+          unit: string | null
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          checked?: boolean
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          ingredient_key?: string | null
+          name: string
+          quantity?: number | null
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          checked?: boolean
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          ingredient_key?: string | null
+          name?: string
+          quantity?: number | null
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
         Relationships: []
       }
       shopping_list_mutations: {
-        Row: { id:string; user_id:string; client_mutation_id:string; payload:Json; status:string; code:string; result:Json|null; conflicts:Json; created_at:string }
-        Insert: { id?:string; user_id:string; client_mutation_id:string; payload:Json; status:string; code:string; result?:Json|null; conflicts?:Json; created_at?:string }
-        Update: { id?:string; user_id?:string; client_mutation_id?:string; payload?:Json; status?:string; code?:string; result?:Json|null; conflicts?:Json; created_at?:string }
+        Row: {
+          client_mutation_id: string
+          code: string
+          conflicts: Json
+          created_at: string
+          id: string
+          payload: Json
+          result: Json | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          client_mutation_id: string
+          code: string
+          conflicts?: Json
+          created_at?: string
+          id?: string
+          payload: Json
+          result?: Json | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          client_mutation_id?: string
+          code?: string
+          conflicts?: Json
+          created_at?: string
+          id?: string
+          payload?: Json
+          result?: Json | null
+          status?: string
+          user_id?: string
+        }
         Relationships: []
       }
       user_entitlements: {
@@ -932,11 +1108,21 @@ export type Database = {
         Returns: Json
       }
       apply_cooking_mutation: {
-        Args: { p_client_mutation_id: string; p_recipe_snapshot: Json; p_lines: Json }
+        Args: {
+          p_client_mutation_id: string
+          p_lines: Json
+          p_recipe_snapshot: Json
+        }
         Returns: Json
       }
       apply_favorite_mutation: {
-        Args: { p_client_mutation_id: string; p_recipe_id: string; p_desired_state: string; p_snapshot?: Json | null; p_expected_version?: number | null }
+        Args: {
+          p_client_mutation_id: string
+          p_desired_state: string
+          p_expected_version?: number
+          p_recipe_id: string
+          p_snapshot?: Json
+        }
         Returns: Json
       }
       apply_inventory_mutation: {
@@ -949,24 +1135,35 @@ export type Database = {
         }
         Returns: Json
       }
+      apply_meal_mutation: {
+        Args: {
+          p_client_mutation_id: string
+          p_expected_version?: number
+          p_meal_entry_id: string
+          p_operation: string
+          p_payload?: Json
+        }
+        Returns: Json
+      }
+      apply_shopping_list_mutation: {
+        Args: {
+          p_client_mutation_id: string
+          p_desired_state: string
+          p_expected_version?: number
+          p_ingredient_key: string
+          p_item_id: string
+          p_name: string
+          p_quantity: number
+          p_unit: string
+        }
+        Returns: Json
+      }
       attach_receipt_image: {
         Args: { p_draft_id: string; p_image_path: string }
         Returns: undefined
       }
       begin_recipe_suggestion: {
         Args: { p_cache_key: string; p_inventory_hash: string }
-        Returns: Json
-      }
-      apply_meal_mutation: {
-        Args: { p_client_mutation_id: string; p_operation: string; p_meal_entry_id: string; p_expected_version?: number | null; p_payload?: Json | null }
-        Returns: Json
-      }
-      pull_meal_entries: {
-        Args: { p_cursor_updated_at?: string | null; p_cursor_id?: string | null; p_limit?: number }
-        Returns: Json
-      }
-      apply_shopping_list_mutation: {
-        Args: { p_client_mutation_id: string; p_item_id: string; p_name: string; p_ingredient_key: string | null; p_quantity: number | null; p_unit: string | null; p_desired_state: string; p_expected_version?: number | null }
         Returns: Json
       }
       claim_recipe_import_job: {
@@ -1040,6 +1237,14 @@ export type Database = {
         Returns: undefined
       }
       owns_row: { Args: { row_user_id: string }; Returns: boolean }
+      pull_meal_entries: {
+        Args: {
+          p_cursor_id?: string
+          p_cursor_updated_at?: string
+          p_limit?: number
+        }
+        Returns: Json
+      }
       release_receipt_ocr: { Args: { p_draft_id: string }; Returns: undefined }
       reserve_receipt_ocr: {
         Args: {
@@ -1054,6 +1259,7 @@ export type Database = {
         Args: { p_job_id: string; p_stage: string; p_worker_id: string }
         Returns: boolean
       }
+      valid_meal_consumed: { Args: { value: Json }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
@@ -1751,3 +1957,4 @@ export const Constants = {
     },
   },
 } as const
+
