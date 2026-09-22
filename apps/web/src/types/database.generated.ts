@@ -34,6 +34,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      billing_anomalies: {
+        Row: {
+          code: string
+          created_at: string
+          detail: Json
+          id: number
+          stripe_customer_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          detail?: Json
+          id?: never
+          stripe_customer_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          detail?: Json
+          id?: never
+          stripe_customer_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      billing_override_audit: {
+        Row: {
+          actor: string
+          after_state: Json
+          before_state: Json
+          created_at: string
+          id: number
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          actor: string
+          after_state: Json
+          before_state: Json
+          created_at?: string
+          id?: never
+          reason: string
+          user_id: string
+        }
+        Update: {
+          actor?: string
+          after_state?: Json
+          before_state?: Json
+          created_at?: string
+          id?: never
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      billing_overrides: {
+        Row: {
+          actor: string
+          reason: string
+          updated_at: string
+          user_id: string
+          value: boolean | null
+        }
+        Insert: {
+          actor?: string
+          reason: string
+          updated_at?: string
+          user_id: string
+          value?: boolean | null
+        }
+        Update: {
+          actor?: string
+          reason?: string
+          updated_at?: string
+          user_id?: string
+          value?: boolean | null
+        }
+        Relationships: []
+      }
       catalog_versions: {
         Row: {
           active: boolean
@@ -1071,6 +1152,132 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_events: {
+        Row: {
+          created_at: string
+          event_created: number
+          event_id: string
+          event_type: string
+          processed_at: string
+          processing_status: string
+          result: Json
+        }
+        Insert: {
+          created_at?: string
+          event_created: number
+          event_id: string
+          event_type: string
+          processed_at?: string
+          processing_status: string
+          result: Json
+        }
+        Update: {
+          created_at?: string
+          event_created?: number
+          event_id?: string
+          event_type?: string
+          processed_at?: string
+          processing_status?: string
+          result?: Json
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          last_event_created: number | null
+          last_event_id: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          last_event_created?: number | null
+          last_event_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          last_event_created?: number | null
+          last_event_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      usage_counters: {
+        Row: {
+          feature: string
+          period: string
+          updated_at: string
+          used: number
+          user_id: string
+        }
+        Insert: {
+          feature: string
+          period: string
+          updated_at?: string
+          used?: number
+          user_id: string
+        }
+        Update: {
+          feature?: string
+          period?: string
+          updated_at?: string
+          used?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      usage_ledger: {
+        Row: {
+          allowed: boolean
+          created_at: string
+          feature: string
+          idempotency_key: string
+          period: string
+          response: Json
+          user_id: string
+        }
+        Insert: {
+          allowed: boolean
+          created_at?: string
+          feature: string
+          idempotency_key: string
+          period: string
+          response: Json
+          user_id: string
+        }
+        Update: {
+          allowed?: boolean
+          created_at?: string
+          feature?: string
+          idempotency_key?: string
+          period?: string
+          response?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_entitlements: {
         Row: {
           plan: string
@@ -1166,6 +1373,7 @@ export type Database = {
         Args: { p_cache_key: string; p_inventory_hash: string }
         Returns: Json
       }
+      billing_entitlement: { Args: { p_user_id: string }; Returns: Json }
       claim_recipe_import_job: {
         Args: { p_job_id: string; p_worker_id: string }
         Returns: Json
@@ -1196,6 +1404,10 @@ export type Database = {
         Args: { p_draft_id: string; p_lines: Json }
         Returns: Json
       }
+      consume_usage: {
+        Args: { p_feature: string; p_idempotency_key: string }
+        Returns: Json
+      }
       create_recipe_import_job: {
         Args: {
           p_idempotency_key: string
@@ -1224,6 +1436,7 @@ export type Database = {
         Args: { p_cache_key: string }
         Returns: undefined
       }
+      invoke_receipt_vision: { Args: { p_draft_id: string }; Returns: Json }
       link_firebase_auth_identity: {
         Args: { firebase_uid: string; target_user_id: string }
         Returns: undefined
@@ -1237,11 +1450,39 @@ export type Database = {
         Returns: undefined
       }
       owns_row: { Args: { row_user_id: string }; Returns: boolean }
+      process_stripe_event: {
+        Args: {
+          p_cancel_at_period_end: boolean
+          p_customer_id: string
+          p_event_created: number
+          p_event_id: string
+          p_event_type: string
+          p_period_end: string
+          p_result: Json
+          p_status: string
+          p_subscription_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       pull_meal_entries: {
         Args: {
           p_cursor_id?: string
           p_cursor_updated_at?: string
           p_limit?: number
+        }
+        Returns: Json
+      }
+      reconcile_subscription: {
+        Args: {
+          p_cancel_at_period_end: boolean
+          p_customer_id: string
+          p_event_created: number
+          p_event_id: string
+          p_period_end: string
+          p_status: string
+          p_subscription_id: string
+          p_user_id: string
         }
         Returns: Json
       }
@@ -1252,6 +1493,15 @@ export type Database = {
           p_image_hash: string
           p_locale: string
           p_request_id: string
+        }
+        Returns: Json
+      }
+      set_billing_override: {
+        Args: {
+          p_actor?: string
+          p_reason: string
+          p_user_id: string
+          p_value: boolean
         }
         Returns: Json
       }

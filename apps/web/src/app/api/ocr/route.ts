@@ -34,8 +34,18 @@ export async function POST(request: Request) {
     const { error: uploadError } = await admin.storage.from(RECEIPT_BUCKET).upload(imagePath, bytes, { contentType:mime, upsert:false });
     if (uploadError) { await supabase.rpc("release_receipt_ocr", {p_draft_id:draftId}); return errorResponse("VISION_UNAVAILABLE", requestId); }
     await supabase.rpc("attach_receipt_image", {p_draft_id:draftId,p_image_path:imagePath});
-    const { error: consumptionError } = await supabase.rpc("mark_receipt_vision_invoked", {p_draft_id:draftId});
-    if (consumptionError) return errorResponse("DRAFT_STATE_CONFLICT", requestId);
+    const { data: consumption, error: consumptionError } = await supabase.rpc("invoke_receipt_vision" as never, {p_draft_id:draftId} as never);
+    if (consumptionError || !consumption) {
+      await admin.storage.from(RECEIPT_BUCKET).remove([imagePath]);
+      await supabase.rpc("release_receipt_ocr", {p_draft_id:draftId});
+      return errorResponse("DRAFT_STATE_CONFLICT", requestId);
+    }
+    const usage = consumption as { allowed?: boolean; code?: string };
+    if (!usage.allowed) {
+      await admin.storage.from(RECEIPT_BUCKET).remove([imagePath]);
+      await supabase.rpc("release_receipt_ocr", {p_draft_id:draftId});
+      return errorResponse(usage.code === "QUOTA_EXCEEDED" ? "OCR_QUOTA_EXHAUSTED" : "DRAFT_STATE_CONFLICT", requestId);
+    }
     try {
       const vision = await getVisionAdapter().recognize({ bytes, mime, requestId });
       const draft = parseReceipt(vision.text, locale);

@@ -1,0 +1,13 @@
+{
+  "id": "evt_checkout_synthetic_001",
+  "type": "checkout.session.completed",
+  "created": 1789948800,
+  "data": {
+    "object": {
+      "id": "cs_test_synthetic_001",
+      "customer": "cus_synthetic_001",
+      "subscription": "sub_synthetic_001",
+      "metadata": { "supabase_user_id": "00000000-0000-4000-8000-000000000001" }
+    }
+  }
+}

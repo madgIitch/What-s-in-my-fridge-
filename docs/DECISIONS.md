@@ -40,6 +40,13 @@ Decisión: implementar según el spec aprobado.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
 
+## 2026-09-22 · Sprint 10 — autoridad económica y cuota única
+
+- Stripe se integra exclusivamente desde módulos server-only y se fija `Stripe-Version: 2024-06-20`; Checkout recibe el precio configurado en servidor y el webhook valida la firma sobre el cuerpo crudo antes de cualquier acceso a datos.
+- `subscriptions` y `stripe_events` forman la autoridad económica idempotente. Los cursores usan `(event.created,event.id)` con colación byte a byte y las reconciliaciones sintéticas no pueden bloquear un webhook real del mismo segundo.
+- `consume_usage` es la única reserva de cuota para OCR, sugerencias e importaciones. Los contadores anteriores quedan como proyecciones aditivas para rollback, nunca como segunda autoridad.
+- Las funciones económicas internas revocan explícitamente permisos a `anon` y `authenticated`; solo `consume_usage` y la reserva OCR derivada están disponibles para sesiones autenticadas.
+
 <!-- harness:sprint-1-supabase-platform-foundation -->
 ## 2026-09-17 · sprint-1-supabase-platform-foundation aprobado
 

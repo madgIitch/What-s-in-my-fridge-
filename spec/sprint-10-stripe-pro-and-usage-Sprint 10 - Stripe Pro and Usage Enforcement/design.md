@@ -4,6 +4,9 @@
 
 - `apps/web/src/app/api/stripe/**`
 - `apps/web/src/app/api/usage/**`
+- `apps/web/src/app/api/ocr/**`
+- `apps/web/src/app/api/recipes/suggestions/**`
+- `apps/web/src/app/api/recipe-jobs/**`
 - `apps/web/src/app/(auth)/app/pro/**`
 - `apps/web/src/components/billing/**`
 - `apps/web/src/lib/billing/**`
@@ -15,8 +18,13 @@
 - `scripts/migration/stripe/**`
 - `tests/fixtures/stripe/**`
 - `tests/e2e/stripe-pro-usage*.spec.ts`
+- `apps/web/tests/e2e/stripe-pro-usage*.spec.ts`
+- `apps/web/tests/e2e/stripe-pro-usage-paywall.spec.ts`
 - `docs/**`
 - `apps/web/.env.example`
+- `apps/web/package.json`
+- `apps/web/pnpm-lock.yaml`
+- `apps/web/vitest.config.ts`
 - `spec.json`
 
 ## Enfoque

@@ -1,5 +1,8 @@
 # Historial de sesiones
 
+## 2026-09-22 — sprint-10-stripe-pro-and-usage → review_pending
+- Stripe Pro, entitlement y uso canónico implementados; gates y pruebas adicionales aprobados.
+
 ## 2026-09-20 — sprint-5-receipt-ocr-and-draft-review → review_pending
 - Flujo OCR/revisión implementado; gates web en verde. SQL/RLS y smoke quedan pendientes por Docker Desktop inactivo.
 
