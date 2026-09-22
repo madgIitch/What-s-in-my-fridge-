@@ -44,6 +44,7 @@ describe("Stripe adapter", () => {
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     const body = new URLSearchParams(String(init.body));
     expect(body.get("line_items[0][price]")).toBe("price_server_only");
+    expect(body.get("allow_promotion_codes")).toBe("true");
     expect(body.get("metadata[supabase_user_id]")).toBe("user-one");
     expect(body.get("customer")).toBe("cus_one");
     expect(body.toString()).not.toContain("sk_test_private");

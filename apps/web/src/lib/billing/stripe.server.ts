@@ -34,7 +34,7 @@ export const stripe = {
   createCheckout(customerId: string, userId: string, success: string, cancel: string) {
     const price = process.env.STRIPE_PRO_PRICE_ID;
     if (!price) throw new Error("STRIPE_UNAVAILABLE");
-    return call("/checkout/sessions", { method: "POST", headers: { "Idempotency-Key": `checkout:${userId}:${Math.floor(Date.now() / 300000)}` }, body: form({ mode: "subscription", customer: customerId, "line_items[0][price]": price, "line_items[0][quantity]": "1", success_url: success, cancel_url: cancel, "metadata[supabase_user_id]": userId }) });
+    return call("/checkout/sessions", { method: "POST", headers: { "Idempotency-Key": `checkout:${userId}:${Math.floor(Date.now() / 300000)}` }, body: form({ mode: "subscription", customer: customerId, "line_items[0][price]": price, "line_items[0][quantity]": "1", allow_promotion_codes: "true", success_url: success, cancel_url: cancel, "metadata[supabase_user_id]": userId }) });
   },
   createPortal(customerId: string, returnUrl: string) { return call("/billing_portal/sessions", { method: "POST", body: form({ customer: customerId, return_url: returnUrl }) }); },
   async subscriptions(customerId: string): Promise<StripeObject[]> { return (await call(`/subscriptions?customer=${encodeURIComponent(customerId)}&status=all&limit=100`)).data ?? []; },

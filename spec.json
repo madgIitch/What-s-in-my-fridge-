@@ -1049,6 +1049,7 @@
         "apps/web/package.json",
         "apps/web/pnpm-lock.yaml",
         "apps/web/vitest.config.ts",
+        ".vercelignore",
         "spec.json"
       ],
       "spec_approved": true,
