@@ -348,3 +348,42 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
 - **external_contracts:** Se fijan rutas, métodos, payloads y respuestas exactas; allowlist de redirect; eventos Stripe soportados; traducción de estados; metadata de Checkout; fallback por legacy_id_map; idempotencia; versión API del adaptador; contrato de consume_usage; esquema exhaustivo de entitlement; y reconciliación autenticada con tipos, semántica de applied y eventCursor, selección canónica y errores 404/409 estables.
 - **edge_cases:** Los eventos simultáneos y fuera de orden se resuelven mediante (event.created,event.id). Si Stripe devuelve varias subscriptions, se elige la más reciente por ese orden, se registra la anomalía y esa fila determina entitlement y reconcile. Los eventos invoice aplican el estado actual recuperado y, si no cambió, solo avanzan cursor y ledger. También se cubren cancel_at_period_end, estados no habilitantes, frontera mensual UTC, bypass Pro, downgrade sin imputación retroactiva y replays de uso.
 - **ui_states:** El Paywall cubre loading, free, trialing, active, past_due, canceled y error; sesión expirada; retornos success/cancel; refetch canónico; errores recuperables y no recuperables con acciones concretas; portal o checkout según estado; teclado y live region.
+
+<!-- harness:sprint-11-pwa-install-offline-shell-and-push -->
+## sprint-11-pwa-install-offline-shell-and-push · Sprint 11 - PWA Install, Offline Shell and Web Push
+
+
+
+### Scope aprobado
+
+  - `apps/web/src/app/manifest.ts`
+  - `apps/web/public/manifest.webmanifest`
+  - `apps/web/public/icons/**`
+  - `apps/web/public/sw.js`
+  - `apps/web/src/app/(auth)/app/**`
+  - `apps/web/src/app/api/push/**`
+  - `apps/web/src/app/api/recipe-jobs/**`
+  - `apps/web/src/app/api/share-target/**`
+  - `apps/web/src/components/pwa/**`
+  - `apps/web/src/lib/pwa/**`
+  - `apps/web/src/lib/push/**`
+  - `apps/web/src/lib/recipe-import/**`
+  - `apps/web/src/types/database.generated.ts`
+  - `packages/domain/src/push/**`
+  - `packages/domain/src/recipe-jobs/**`
+  - `supabase/migrations/**`
+  - `supabase/tests/**`
+  - `tests/e2e/pwa*.spec.ts`
+  - `tests/e2e/push*.spec.ts`
+  - `tests/fixtures/push/**`
+  - `docs/**`
+  - `.env.example`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** Se define `push_subscriptions` con UUID, `user_id`, hash SHA-256 único del endpoint, endpoint, claves, timestamps y `revoked_at`, permitiendo varias suscripciones por usuario y una por dispositivo/navegador. `push_deliveries` mantiene estado, intentos, próximo intento, código seguro y timestamps, con `UNIQUE(subscription_id,event_key)` y `event_key=recipe-job-completed:<job_id>:<completed_version>`.
+- **external_contracts:** Se fijan los contratos exactos de POST y DELETE, sus sobres de respuesta, ownership derivado de sesión, códigos estables y el contrato server-only del sender. Antes de reclamar una entrega, el sender relee la fuente canónica y comprueba estado `completed`, resultado `recipe-v1` válido y coincidencia de `completedVersion`. El payload `push-v1` está limitado a 4 KiB y contiene exclusivamente `{type,eventId,path}` con ruta allowlisted.
+- **edge_cases:** Se cubren logout y cambio de cuenta, baja pendiente sin red, limpieza de réplicas privadas y outbox, múltiples dispositivos, rotación de endpoint, duplicados, redelivery y jobs reabiertos. La versión de completado forma parte de la clave idempotente para distinguir nuevos eventos válidos del mismo job.
+- **ui_states:** La instalación distingue `unsupported`, `available`, `prompting`, `installed`, `dismissed` y `error`, con instalación habilitada solo en `available` y guía manual para iOS sin prompt. Push distingue `unsupported`, `default`, `prompting`, `enabled`, `denied` y `error`; solo `default` permite solicitar permiso y solo `enabled` permite desactivar. Offline conserva los estados canónicos y sus restricciones operativas.
+

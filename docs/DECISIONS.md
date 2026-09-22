@@ -178,3 +178,16 @@ Decisiones registradas:
 - **tests:** Se concretan adaptadores falsos, reloj inyectable y fixtures sintéticos sin red; matrices de estados y errores; pgTAP para constraints, RLS, idempotencia y concurrencia; Playwright para Paywall; reconciliación y mappings; eventos invoice sin cambio de estado; múltiples subscriptions; contratos exhaustivos de entitlement y reconcile; replay 429 exacto; y pruebas de ausencia de secretos en artefactos, respuestas y logs.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+<!-- harness:sprint-11-pwa-install-offline-shell-and-push -->
+## 2026-09-22 · sprint-11-pwa-install-offline-shell-and-push aprobado
+
+Contexto: se aprobó el spec `sprint-11-pwa-install-offline-shell-and-push` (Sprint 11 - PWA Install, Offline Shell and Web Push).
+
+Decisiones registradas:
+
+- **auth_secrets:** Alta y baja requieren sesión Supabase, `Origin` same-origin y JSON estricto; cualquier `userId` del cliente se ignora. `VAPID_PRIVATE_KEY` y service role son exclusivamente server-side y solo `NEXT_PUBLIC_VAPID_PUBLIC_KEY` puede ser pública. Endpoints, claves, cookies, cabeceras de autorización y payloads privados quedan excluidos de logs, errores, fixtures y bundles.
+- **rollback_compat:** Flags server-only independientes permiten desactivar promoción de instalación, alta/envío Push y Share Target sin borrar datos. Las cachés tienen versión explícita y `activate` elimina solo versiones conocidas del shell; las migraciones son aditivas y paste URL más polling permanecen siempre disponibles, sin down migrations durante rollback.
+- **tests:** Se concreta la matriz por navegador y nivel: Chromium cubre APIs PWA y Push mock; WebKit y Firefox cubren degradación progresiva y offline aplicable. Unitarias, integración y E2E verifican caché, aislamiento y limpieza por usuario, gesto de permiso, contratos, auth/origin, deduplicación concurrente, commit autoritativo, retries, revocación, primer arranque offline, polling, click seguro y exclusión de respuestas sensibles. Las capacidades no emulables se documentan y se cubren con mocks deterministas de integración.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
