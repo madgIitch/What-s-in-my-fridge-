@@ -1060,7 +1060,7 @@
     {
       "id": "sprint-11-pwa-install-offline-shell-and-push",
       "name": "Sprint 11 - PWA Install, Offline Shell and Web Push",
-      "status": "spec_ready",
+      "status": "done",
       "sdd": true,
       "priority": "P1",
       "milestone": "0.9.0",
