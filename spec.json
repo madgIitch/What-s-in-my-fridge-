@@ -1148,7 +1148,7 @@
     {
       "id": "sprint-12-firebase-data-migration-and-reconciliation",
       "name": "Sprint 12 - Firebase Data Migration and Reconciliation",
-      "status": "pending",
+      "status": "in_progress",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.9.1",
@@ -1200,10 +1200,10 @@
         ".env.example",
         "spec.json"
       ],
-      "spec_approved": false,
-      "answers_hash": "sha256:a09955ffbb692de83b8a934b16600ee1e36586eba12d268d1fc2e3d02d2c2042",
-      "approved_by": null,
-      "approved_at": null
+      "spec_approved": true,
+      "answers_hash": "sha256:15d5d9c4c48041c14e63b2a959fbabead8b826b22622afa2f1ace017ac34182e",
+      "approved_by": "peorr",
+      "approved_at": "2026-09-24T15:57:01.257Z"
     },
     {
       "id": "sprint-13-ui-parity-responsive-and-accessibility",

@@ -387,3 +387,24 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
 - **edge_cases:** Se cubren logout y cambio de cuenta, baja pendiente sin red, limpieza de réplicas privadas y outbox, múltiples dispositivos, rotación de endpoint, duplicados, redelivery y jobs reabiertos. La versión de completado forma parte de la clave idempotente para distinguir nuevos eventos válidos del mismo job.
 - **ui_states:** La instalación distingue `unsupported`, `available`, `prompting`, `installed`, `dismissed` y `error`, con instalación habilitada solo en `available` y guía manual para iOS sin prompt. Push distingue `unsupported`, `default`, `prompting`, `enabled`, `denied` y `error`; solo `default` permite solicitar permiso y solo `enabled` permite desactivar. Offline conserva los estados canónicos y sus restricciones operativas.
 
+<!-- harness:sprint-12-firebase-data-migration-and-reconciliation -->
+## sprint-12-firebase-data-migration-and-reconciliation · Sprint 12 - Firebase Data Migration and Reconciliation
+
+
+
+### Scope aprobado
+
+  - `scripts/migration/**`
+  - `supabase/**`
+  - `tests/migration/**`
+  - `docs/migration/**`
+  - `.env.example`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** Snapshot JSONL inmutable por colección, ruta completa y checksum; legacy_id_map enlaza UID y documentos con UUID target estable.
+- **external_contracts:** Comandos capture, plan, dry-run, import y reconcile; origen Firestore exacto what-s-in-my-fridge-a2a07 y destino local/staging.
+- **edge_cases:** Rerun, cambio de documento, checkpoint incompatible y drift durante captura tienen resultados deterministas; datos locales WatermelonDB sin export se declaran cobertura parcial.
+- **ui_states:** No hay UI en este sprint; estados operativos running, completed, partial y failed en reportes.
+

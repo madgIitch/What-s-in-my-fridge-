@@ -191,3 +191,16 @@ Decisiones registradas:
 - **tests:** Se concreta la matriz por navegador y nivel: Chromium cubre APIs PWA y Push mock; WebKit y Firefox cubren degradación progresiva y offline aplicable. Unitarias, integración y E2E verifican caché, aislamiento y limpieza por usuario, gesto de permiso, contratos, auth/origin, deduplicación concurrente, commit autoritativo, retries, revocación, primer arranque offline, polling, click seguro y exclusión de respuestas sensibles. Las capacidades no emulables se documentan y se cubren con mocks deterministas de integración.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+<!-- harness:sprint-12-firebase-data-migration-and-reconciliation -->
+## 2026-09-24 · sprint-12-firebase-data-migration-and-reconciliation aprobado
+
+Contexto: se aprobó el spec `sprint-12-firebase-data-migration-and-reconciliation` (Sprint 12 - Firebase Data Migration and Reconciliation).
+
+Decisiones registradas:
+
+- **auth_secrets:** Lectura Firestore con credenciales de solo lectura; reportes saneados fuera del repo; destino staging requiere confirmación explícita.
+- **rollback_compat:** Import idempotente y aditivo por legacy ID; producción fuera de alcance; Stripe conserva autoridad económica.
+- **tests:** Fixtures sintéticos cubren duplicados, reanudación, documentos modificados, referencias, cuarentena y reconciliación por claves y digest.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.

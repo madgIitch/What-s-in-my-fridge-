@@ -1,15 +1,15 @@
 # Sesión actual
 
-Feature: **sprint-11-pwa-install-offline-shell-and-push** — cierre solicitado por el usuario; estado `done`.
+Feature: **sprint-12-firebase-data-migration-and-reconciliation** — spec aprobado; implementación en curso.
 
-Manifest e iconos PNG, service worker con caché pública, lector de inventario local sin conexión, limpieza de IndexedDB al cambiar de cuenta, Share Target y alta/baja de suscripciones Push implementados. La migración crea suscripciones y entregas con idempotencia por evento; el despachador autenticado por `CRON_SECRET` relee job y propietario antes de enviar y aplica reintentos acotados. La configuración y los límites operativos están en `docs/PWA_PUSH.md`.
+El usuario aprobó la propuesta en `docs/migration/SPRINT12_PROPOSAL.md`. Se implementó el primer incremento: captura Firestore por lotes con checkpoint, snapshot JSONL y manifiesto SHA-256, más validación `plan`. El origen es `what-s-in-my-fridge-a2a07`; no hay export de datos exclusivos de WatermelonDB, así que la cobertura global se declara parcial. No se ha ejecutado lectura real ni import: faltan credenciales Firebase en esta sesión y las fases restantes del runner.
 
 ## Verificación
 
-- Web: typecheck, lint, 109 tests, build y checks de boundaries/env/Supabase aprobados.
-- E2E PWA/Push: 8 aprobados, 4 omisiones documentadas por límites de Playwright en Windows. Chromium valida navegación offline; WebKit valida lectura de datos locales; Firefox ejecuta el caso API sin navegador.
-- SQL/pgTAP: reset local completo, 176 tests y lint del esquema `public` aprobados.
+- Dependencias Sprint 9, 10 y 11 cerradas.
+- Mappings previos de Auth y dominio revisados; Stripe se mantiene como autoridad económica.
+- Dos pruebas sintéticas de captura, checksum y reanudación aprobadas.
 
 ## Siguiente acción
 
-- Continuar con el siguiente sprint. Los límites de verificación aceptados para este cierre constan en `progress/review_Sprint 11 - PWA Install, Offline Shell and Web Push.md`.
+- Implementar transformaciones, cuarentena, import idempotente, Storage referenciado y reconciliación; después ejecutar captura y ensayo staging con credenciales de lectura.
