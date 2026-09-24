@@ -743,6 +743,105 @@ export type Database = {
         }
         Relationships: []
       }
+      push_deliveries: {
+        Row: {
+          attempts: number
+          completed_version: number
+          created_at: string
+          error_code: string | null
+          event_key: string
+          id: string
+          job_id: string
+          next_attempt_at: string
+          sent_at: string | null
+          status: string
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          completed_version: number
+          created_at?: string
+          error_code?: string | null
+          event_key: string
+          id?: string
+          job_id: string
+          next_attempt_at?: string
+          sent_at?: string | null
+          status?: string
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          completed_version?: number
+          created_at?: string
+          error_code?: string | null
+          event_key?: string
+          id?: string
+          job_id?: string
+          next_attempt_at?: string
+          sent_at?: string | null
+          status?: string
+          subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_deliveries_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "recipe_import_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_deliveries_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "push_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          endpoint_hash: string
+          expiration_time: string | null
+          id: string
+          p256dh: string
+          revoked_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          endpoint_hash: string
+          expiration_time?: string | null
+          id?: string
+          p256dh: string
+          revoked_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          endpoint_hash?: string
+          expiration_time?: string | null
+          id?: string
+          p256dh?: string
+          revoked_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       receipt_drafts: {
         Row: {
           captured_at: string
@@ -849,6 +948,7 @@ export type Database = {
         Row: {
           attempts: number
           completed_at: string | null
+          completed_version: number
           created_at: string
           enqueued_at: string | null
           error_code: string | null
@@ -870,6 +970,7 @@ export type Database = {
         Insert: {
           attempts?: number
           completed_at?: string | null
+          completed_version?: number
           created_at?: string
           enqueued_at?: string | null
           error_code?: string | null
@@ -891,6 +992,7 @@ export type Database = {
         Update: {
           attempts?: number
           completed_at?: string | null
+          completed_version?: number
           created_at?: string
           enqueued_at?: string | null
           error_code?: string | null
@@ -1374,6 +1476,7 @@ export type Database = {
         Returns: Json
       }
       billing_entitlement: { Args: { p_user_id: string }; Returns: Json }
+      claim_push_delivery: { Args: never; Returns: Json }
       claim_recipe_import_job: {
         Args: { p_job_id: string; p_worker_id: string }
         Returns: Json
@@ -1436,6 +1539,16 @@ export type Database = {
         Args: { p_cache_key: string }
         Returns: undefined
       }
+      finish_push_delivery: {
+        Args: {
+          p_delivery_id: string
+          p_error_code: string
+          p_next_attempt_at: string
+          p_revoke_subscription: boolean
+          p_status: string
+        }
+        Returns: boolean
+      }
       invoke_receipt_vision: { Args: { p_draft_id: string }; Returns: Json }
       link_firebase_auth_identity: {
         Args: { firebase_uid: string; target_user_id: string }
@@ -1486,6 +1599,16 @@ export type Database = {
         }
         Returns: Json
       }
+      register_push_subscription: {
+        Args: {
+          p_auth: string
+          p_endpoint: string
+          p_endpoint_hash: string
+          p_expiration_time: string
+          p_p256dh: string
+        }
+        Returns: string
+      }
       release_receipt_ocr: { Args: { p_draft_id: string }; Returns: undefined }
       reserve_receipt_ocr: {
         Args: {
@@ -1495,6 +1618,10 @@ export type Database = {
           p_request_id: string
         }
         Returns: Json
+      }
+      revoke_push_subscription: {
+        Args: { p_endpoint_hash: string }
+        Returns: boolean
       }
       set_billing_override: {
         Args: {

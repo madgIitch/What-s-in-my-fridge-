@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f4f0e6">
+<title>Neverita · sin conexión</title>
+<style>
+  body{font:16px system-ui,sans-serif;background:#f4f0e6;color:#263329;margin:0;padding:1.5rem;max-width:40rem}
+  h1{font-size:2rem} li{margin:.75rem 0;padding:.75rem;background:white;border-radius:.5rem}
+  button{padding:.7rem 1rem;border:1px solid currentColor;border-radius:.5rem;background:white;color:inherit}
+</style>
+<main>
+  <h1>Neverita</h1>
+  <p role="status">Sin conexión. Comprobando tus datos guardados en este dispositivo…</p>
+  <section aria-labelledby="inventory-title" hidden>
+    <h2 id="inventory-title">Inventario local</h2>
+    <p id="cache-age"></p>
+    <ul id="items"></ul>
+  </section>
+  <button type="button" id="retry">Reintentar conexión</button>
+</main>
+<script src="/offline.js" defer></script>
+</html>

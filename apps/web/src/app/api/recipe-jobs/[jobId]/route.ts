@@ -8,7 +8,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ job
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return jobError("AUTH_REQUIRED", "Inicia sesión", 401);
-  const { data, error } = await supabase.from("recipe_import_jobs" as never).select("id,state,source_type,source_url,provenance,result,error_code,retryable,attempts,created_at,updated_at").eq("id", jobId).maybeSingle();
+  const { data, error } = await supabase.from("recipe_import_jobs" as never).select("id,state,source_type,source_url,provenance,result,error_code,retryable,attempts,completed_version,created_at,updated_at").eq("id", jobId).maybeSingle();
   if (error || !data) return jobError("JOB_NOT_FOUND", "No se encontró la importación", 404);
   return Response.json({ contract: "recipe-import-job-v1", job: data }, { headers: { "Cache-Control": "no-store" } });
 }

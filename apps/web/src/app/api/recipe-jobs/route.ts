@@ -26,7 +26,7 @@ export async function GET() {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return jobError("AUTH_REQUIRED", "Inicia sesión", 401);
-  const { data, error } = await supabase.from("recipe_import_jobs" as never).select("id,state,source_type,source_url,provenance,result,error_code,retryable,created_at,updated_at").order("created_at", { ascending: false }).limit(50);
+  const { data, error } = await supabase.from("recipe_import_jobs" as never).select("id,state,source_type,source_url,provenance,result,error_code,retryable,completed_version,created_at,updated_at").order("created_at", { ascending: false }).limit(50);
   if (error) return jobError("JOB_READ_FAILED", "No se pudieron recuperar las importaciones", 500, true);
   return Response.json({ contract: "recipe-import-jobs-v1", jobs: data }, { headers: { "Cache-Control": "no-store" } });
 }
