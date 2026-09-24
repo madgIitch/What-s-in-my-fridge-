@@ -1,6 +1,6 @@
 # Sesión actual
 
-Feature: **sprint-11-pwa-install-offline-shell-and-push** — implementación en revisión.
+Feature: **sprint-11-pwa-install-offline-shell-and-push** — cierre solicitado por el usuario; estado `done`.
 
 Manifest e iconos PNG, service worker con caché pública, lector de inventario local sin conexión, limpieza de IndexedDB al cambiar de cuenta, Share Target y alta/baja de suscripciones Push implementados. La migración crea suscripciones y entregas con idempotencia por evento; el despachador autenticado por `CRON_SECRET` relee job y propietario antes de enviar y aplica reintentos acotados. La configuración y los límites operativos están en `docs/PWA_PUSH.md`.
 
@@ -12,4 +12,4 @@ Manifest e iconos PNG, service worker con caché pública, lector de inventario 
 
 ## Siguiente acción
 
-- Publicar el commit y comprobar el despliegue de la migración en staging. Probar allí un Push real, Share Target y cambio de cuenta. No cerrar el sprint antes de esos smoke tests.
+- Continuar con el siguiente sprint. Los límites de verificación aceptados para este cierre constan en `progress/review_Sprint 11 - PWA Install, Offline Shell and Web Push.md`.
