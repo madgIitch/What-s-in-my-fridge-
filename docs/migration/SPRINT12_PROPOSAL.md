@@ -1,6 +1,6 @@
 # Sprint 12 — propuesta de migración y reconciliación
 
-Estado: **borrador para aprobación**. `spec_approved` sigue en `false`; no se ejecutará un import con datos reales hasta aprobar el spec.
+Estado: **aprobado por el usuario** el 24 de septiembre de 2026. La implementación sigue en curso; no se ha ejecutado un import con datos reales.
 
 ## Alcance y fuente
 
@@ -44,4 +44,4 @@ El reporte JSON/CSV incluye run ID, snapshot digest, transformador, entorno, rec
 
 ## Decisiones confirmadas
 
-El origen será la lectura directa del proyecto Firestore `what-s-in-my-fridge-a2a07`. No hay export WatermelonDB y la cobertura se declara parcial. Sigue pendiente la aprobación formal del spec antes de implementar o importar.
+El origen será la lectura directa del proyecto Firestore `what-s-in-my-fridge-a2a07`. No hay export WatermelonDB y la cobertura se declara parcial. La propuesta fue aprobada para implementar el Sprint 12.

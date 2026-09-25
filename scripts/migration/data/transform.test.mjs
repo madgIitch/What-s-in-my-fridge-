@@ -18,7 +18,7 @@ test('legacy inventory maps to the domain schema without using email ownership',
   assert.equal(result.row.source, 'FIREBASE');
 });
 
-test('dry-run quarantines missing auth and unsupported collections with safe codes', async () => {
+test('dry-run quarantines missing auth and maps historical usage without affecting canonical counters', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'fridge-s12-dry-'));
   try {
     const adapter = {
@@ -30,8 +30,8 @@ test('dry-run quarantines missing auth and unsupported collections with safe cod
     await capture({ adapter, destination: directory, projectId: SOURCE_PROJECT });
     const report = await dryRun(directory, uid => uid === 'known' ? '11111111-1111-4111-8111-111111111111' : null);
     assert.equal(report.source, 4);
-    assert.equal(report.ready, 1);
-    assert.deepEqual(report.quarantine.map(item => item.code).sort(), ['AUTH_MAPPING_MISSING', 'AUTH_MAPPING_MISSING', 'MAPPING_NOT_IMPLEMENTED']);
+    assert.equal(report.ready, 2);
+    assert.deepEqual(report.quarantine.map(item => item.code).sort(), ['AUTH_MAPPING_MISSING', 'AUTH_MAPPING_MISSING']);
     assert.ok(report.quarantine.every(item => !JSON.stringify(item).includes('users/')));
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

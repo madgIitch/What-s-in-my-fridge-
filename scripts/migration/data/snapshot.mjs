@@ -91,6 +91,20 @@ export async function capture({ adapter, destination, projectId, batchSize = 200
   for (const task of tasks) {
     const name = fileName(task);
     const content = await readFile(join(directory, name));
+    const captured = content.toString('utf8').split('\n').filter(Boolean).map(JSON.parse);
+    let checked = 0;
+    let verifyAfter = null;
+    while (true) {
+      const batch = await adapter.listDocuments(task.uid, task.collection, verifyAfter, batchSize);
+      if (!Array.isArray(batch) || batch.length > batchSize) throw new Error('INVALID_ADAPTER_BATCH');
+      for (const document of batch) {
+        const original = captured[checked++];
+        if (!original || original.path !== document.path || original.updateTime !== (document.updateTime ?? null)) throw new Error('SOURCE_DRIFT_DETECTED');
+      }
+      verifyAfter = batch.at(-1)?.path ?? verifyAfter;
+      if (batch.length < batchSize) break;
+    }
+    if (checked !== captured.length) throw new Error('SOURCE_DRIFT_DETECTED');
     files.push({ name, count: checkpoint.counts[task.key] ?? 0, sha256: sha256(content) });
   }
   const manifest = { version: SNAPSHOT_VERSION, projectId, startedAt: checkpoint.startedAt, completedAt: now(), coverage: { watermelonDb: 'not_available', overall: 'partial' }, files };

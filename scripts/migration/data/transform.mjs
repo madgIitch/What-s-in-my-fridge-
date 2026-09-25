@@ -68,6 +68,38 @@ export function transform(record, userId) {
         consumed_at: timestamp(data.consumedAt, 'INVALID_CONSUMED_AT'),
       } };
     }
+    case 'cookingPreferences':
+      return { table: 'legacy_migration_records', row: {
+        ...base, collection: record.collection, canonical_data: {
+          cookingTime: amount(data.cookingTime, 'INVALID_COOKING_TIME'),
+        }, source_updated_at: record.updateTime,
+      } };
+    case 'usage': {
+      const period = record.path.split('/').at(-1);
+      if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) throw new Error('INVALID_USAGE_PERIOD');
+      const counters = {};
+      for (const key of ['recipeCallsUsed', 'ocrScansUsed', 'urlImportsUsed']) {
+        if (data[key] !== undefined) {
+          const value = amount(data[key], 'INVALID_USAGE_COUNT');
+          if (!Number.isInteger(value)) throw new Error('INVALID_USAGE_COUNT');
+          counters[key] = value;
+        }
+      }
+      return { table: 'legacy_migration_records', row: { ...base, collection: record.collection,
+        canonical_data: { period, counters }, source_updated_at: record.updateTime } };
+    }
+    case 'subscription':
+      return { table: 'legacy_migration_records', row: { ...base, collection: record.collection,
+        canonical_data: { isPro: data.isPro === true, status: typeof data.status === 'string' ? data.status : null,
+          manualProOverride: data.manualProOverride === true }, source_updated_at: record.updateTime } };
+    case 'recipe_jobs': {
+      const status = requiredText(data.status, 'INVALID_JOB_STATUS');
+      return { table: 'legacy_migration_records', row: { ...base, collection: record.collection,
+        canonical_data: { status, sourceType: typeof data.sourceType === 'string' ? data.sourceType : null,
+          createdAt: data.createdAt == null ? null : timestamp(data.createdAt, 'INVALID_JOB_CREATED_AT'),
+          updatedAt: data.updatedAt == null ? null : timestamp(data.updatedAt, 'INVALID_JOB_UPDATED_AT') },
+        source_updated_at: record.updateTime } };
+    }
     default: throw new Error('MAPPING_NOT_IMPLEMENTED');
   }
 }
