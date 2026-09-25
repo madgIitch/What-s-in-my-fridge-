@@ -1,1 +1,13 @@
 .shell{min-height:100vh;background:#f4f0e7;color:#20251f}.nav{display:flex;justify-content:space-between;gap:1rem;padding:1rem max(1rem,calc((100vw - 62rem)/2));border-bottom:1px solid #d8d1c3}.nav span{display:flex;gap:1rem}.nav a{color:#315b3b}.shell main{width:min(62rem,calc(100% - 2rem));margin:auto;padding:2.5rem 0 5rem}.shell header p{margin:0;color:#55715a;text-transform:uppercase;letter-spacing:.12em;font-size:.75rem}.shell h1{font:700 clamp(2.5rem,9vw,5rem)/1 Georgia,serif;margin:.35rem 0}.list article{display:grid;grid-template-columns:1fr auto;gap:1rem;padding:1.4rem 0;border-top:1px solid #cec7b9;animation:enter .3s ease both}.list h2{margin:0;font:700 1.5rem Georgia,serif}.list details{grid-column:1/-1}.list summary{cursor:pointer;font-weight:700}.list li[data-missing=true]{color:#81531d}.actions{display:flex;gap:.5rem}.actions button,.empty a{border:0;border-radius:999px;padding:.7rem 1rem;background:#274d32;color:white;font-weight:700;text-decoration:none}.actions button+button{background:transparent;color:#62382d;border:1px solid #9b7a70}.empty{padding:2rem 0}@keyframes enter{from{opacity:0;transform:translateY(6px)}}@media(max-width:420px){.nav{font-size:.78rem}.list article{grid-template-columns:1fr}.actions{grid-row:2}.shell main{padding-top:1.5rem}}@media(prefers-reduced-motion:reduce){.list article{animation:none}}
+.shell{background:#fff0f5;color:#5a4a5e;font-family:var(--font-sans),sans-serif}
+.nav{display:none}
+.shell main{padding-top:24px}
+.shell header p{color:#aa6378}
+.shell h1{margin:4px 0 10px;font:800 clamp(30px,7vw,40px)/1.12 var(--font-sans),sans-serif;letter-spacing:-.035em;color:#5a4a5e}
+.shell header small{display:inline-block;padding:7px 11px;border-radius:999px;background:#e8f8f3;color:#5a4a5e;font-weight:700}
+.empty{margin-top:24px;padding:26px 22px;border:1px solid #f2cdd5;border-radius:20px;background:#fffbf7;text-align:center}
+.empty h2{margin:0 0 16px;font:800 19px/1.3 var(--font-sans),sans-serif}
+.empty a,.actions button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border-radius:12px;background:#ff9aa2;color:#4d3340}
+.list article{border-color:#f2cdd5}
+.list h2{font-family:var(--font-sans),sans-serif}
+@media(max-width:420px){.shell main{padding-top:22px}.shell h1{font-size:32px}.empty{padding:23px 17px}}

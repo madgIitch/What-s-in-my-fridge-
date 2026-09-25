@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { registerNeveritaServiceWorker, urlBase64ToBytes } from "@/lib/pwa/registration";
 
 type InstallPrompt = Event & { prompt(): Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
@@ -8,6 +9,7 @@ type InstallState = "unsupported" | "available" | "prompting" | "installed" | "d
 type PushState = "unsupported" | "default" | "prompting" | "enabled" | "denied" | "error";
 
 export function PwaControls({ installPromotion = true, pushEnabled = true }: { installPromotion?: boolean; pushEnabled?: boolean }) {
+  const pathname = usePathname();
   const [prompt, setPrompt] = useState<InstallPrompt | null>(null);
   const [install, setInstall] = useState<InstallState>("unsupported");
   const [push, setPush] = useState<PushState>("unsupported");
@@ -60,7 +62,7 @@ export function PwaControls({ installPromotion = true, pushEnabled = true }: { i
     } catch { setPush("error"); }
   }
 
-  return <aside className="pwa-controls" aria-label="Aplicación instalada y avisos">
+  return pathname === "/app/settings" && <aside className="pwa-controls" aria-label="Aplicación instalada y avisos">
     {installPromotion && install === "available" && <button type="button" onClick={() => void installApp()}>Instalar Neverita</button>}
     {installPromotion && install === "dismissed" && <span role="status">Instalación cancelada. Puedes intentarlo más tarde.</span>}
     {push === "default" && <button type="button" onClick={() => void enablePush()}>Activar avisos de recetas</button>}

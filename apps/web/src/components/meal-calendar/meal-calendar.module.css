@@ -1,2 +1,17 @@
 .shell{min-height:100vh;background:#f5f0e5;color:#20241e}.shell nav{display:flex;justify-content:space-between;padding:1rem max(1rem,calc((100vw - 64rem)/2));border-bottom:1px solid #d3cab9}.shell nav a{color:#315b3b}.shell main{width:min(64rem,calc(100% - 2rem));margin:auto;padding:2rem 0 5rem}.shell header{display:grid;grid-template-columns:1fr auto;align-items:end;gap:1rem}.shell header>p{margin:0;grid-column:1/-1;text-transform:uppercase;letter-spacing:.12em;color:#54705a}.shell h1{font:700 clamp(3rem,9vw,5.5rem)/.9 Georgia,serif;margin:0}.month{display:flex;align-items:center;gap:.8rem}.shell button{cursor:pointer;border:1px solid #8f968a;background:transparent;border-radius:999px;padding:.65rem 1rem}.primary{background:#254c31!important;color:white;border-color:#254c31!important}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1rem;margin-top:2rem}.grid article,.editor,.conflict,.empty{background:#fffdf7;border:1px solid #d7cebd;border-radius:1rem;padding:1.2rem}.grid h2{font:700 1.5rem Georgia,serif}.grid article div,.editor div,.conflict{display:flex;gap:.5rem;flex-wrap:wrap}.editor,.conflict{position:fixed;inset:auto 1rem 1rem;margin:auto;max-width:32rem;box-shadow:0 1rem 4rem #25342644;display:grid;gap:1rem}.editor label{display:grid;gap:.35rem;font-weight:700}.editor input,.editor select,.editor textarea{font:inherit;padding:.7rem;border:1px solid #a9aa9f;border-radius:.5rem}.conflict{border-color:#9b5d35}.empty{margin-top:2rem}@media(max-width:520px){.shell header{grid-template-columns:1fr}.month{justify-content:space-between}.grid{grid-template-columns:1fr}.editor{inset:auto .5rem .5rem}.shell h1{font-size:3.4rem}}
 .shell a.primary,.grid article a{min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:.65rem 1rem;border:1px solid #8f968a;border-radius:999px;color:#254c31;font-weight:750;text-decoration:none}.shell a.primary{background:#254c31;color:white}.shell button{min-height:44px}.editor{z-index:30;max-height:calc(100svh - 2rem);overflow:auto}.shell :is(a,button,input,select,textarea):focus-visible,.editor h2:focus-visible{outline:3px solid #254c31;outline-offset:3px}
+.shell{background:#fff0f5;color:#5a4a5e;font-family:var(--font-sans),sans-serif}
+.shell nav{display:none}
+.shell main{padding-top:22px}
+.shell header>p{color:#aa6378}
+.shell h1{display:flex;align-items:center;gap:10px;margin:3px 0 16px;font:800 clamp(30px,7vw,40px)/1.12 var(--font-sans),sans-serif;letter-spacing:-.035em;color:#5a4a5e}
+.shell h1:after{content:"";display:block;flex:none;width:52px;height:52px;background:url('/neverito-calendar.png') center/contain no-repeat}
+.month{justify-content:space-between;margin-bottom:12px;padding:5px;border-radius:16px;background:#ffe5ec}
+.month button{width:44px;height:44px;padding:0;border:0;background:#fffbf7;color:#5a4a5e}
+.shell a.primary{background:#ff9aa2;color:#4d3340;border-color:#ff9aa2;border-radius:13px}
+.primary{background:#ff9aa2!important;color:#4d3340;border-color:#ff9aa2!important}
+.grid article,.editor,.conflict,.empty{background:#fffbf7;border-color:#f2cdd5}
+.grid h2,.empty h2,.editor h2{font-family:var(--font-sans),sans-serif}
+.shell button{border-color:#e5b6c1;color:#5a4a5e}
+.shell :is(a,button,input,select,textarea):focus-visible,.editor h2:focus-visible{outline-color:#c95670}
+@media(max-width:520px){.shell main{padding-top:22px}.shell h1{font-size:32px}.shell h1:after{width:44px;height:44px}.shell header{gap:10px}}
