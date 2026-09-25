@@ -8,6 +8,8 @@ El cliente legado declara 20 pantallas en `AppNavigator`. La PWA tiene rutas exp
 
 ## Dirección visual
 
+Corrección solicitada en revisión: la referencia visual definitiva es la app Expo existente, especialmente `src/screens/HomeScreen.tsx` y `src/theme/colors.ts`. Su rosa pastel, texto violeta, acentos menta, tipografía sans y mascota Neverito sustituyen la dirección verde/editorial provisional de la PWA. La pantalla principal vuelve a priorizar inventario, filtros y accesos a las tareas; el alta usa `/app/items/new`.
+
 - **Tesis visual:** conservar provisionalmente “Neverita”, identidad actual de la PWA, con superficie cálida, verde profundo, tipografía legible y una jerarquía calmada que priorice el trabajo del usuario. Si el usuario elige “Neverito”, se ajustará el spec antes de implementarlo.
 - **Plan de contenido:** cada pantalla abre en su tarea primaria; contexto secundario y estados aparecen debajo o al lado según el ancho. En desktop se amplía el área de trabajo y se muestra contexto lateral cuando ayuda, sin cambiar el recorrido.
 - **Interacción:** transiciones breves de panel/editor y cambio de estado de navegación; indicación visible de sincronización. Todas se desactivan con `prefers-reduced-motion`.

@@ -2,23 +2,27 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { formatCivilDate } from "@/lib/inventory/dates";
 import { listItems, listOutbox } from "@/lib/inventory/db";
-import { createLocalItem, discardConflict, retryFailedMutation, retryWithRemoteVersion } from "@/lib/inventory/repository";
+import { discardConflict, retryFailedMutation, retryWithRemoteVersion } from "@/lib/inventory/repository";
 import { inventoryEvents, syncInventory } from "@/lib/inventory/sync";
 import type { LocalInventoryItem } from "@/lib/inventory/types";
 
-const today = () => {
-  const value = new Date();
-  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
-};
+type InventoryFilter = "all" | "fresh" | "soon" | "expired" | "prepared";
+
+function expiryState(date: string) {
+  const days = Math.round((Date.parse(`${date}T12:00:00Z`) - Date.parse(`${new Date().toISOString().slice(0, 10)}T12:00:00Z`)) / 86_400_000);
+  return days < 0 ? "expired" : days <= 3 ? "soon" : "fresh";
+}
 
 export function InventoryApp({ userId }: { userId: string }) {
   const [items, setItems] = useState<LocalInventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
   const [hasCache, setHasCache] = useState(false);
+  const [filter, setFilter] = useState<InventoryFilter>("all");
   const supabase = useState(() => {
     try {
       return createBrowserSupabaseClient();
@@ -52,41 +56,27 @@ export function InventoryApp({ userId }: { userId: string }) {
     };
   }, [refresh, sync, userId]);
 
-  async function add(formData: FormData) {
-    await createLocalItem(userId, {
-      name: String(formData.get("name") ?? ""), expiryDate: String(formData.get("expiryDate") ?? ""),
-      category: String(formData.get("category") ?? ""), quantity: Number(formData.get("quantity") ?? 1),
-      notes: String(formData.get("notes") ?? ""), unit: String(formData.get("unit") ?? "unidad"),
-    });
-    await refresh(); void sync();
-  }
+  const visibleItems = items.filter(item => filter === "all" || (filter === "prepared" ? item.category === "Platos preparados" : expiryState(item.expiryDate) === filter));
 
   return <main className="inventory-page">
     <header className="inventory-header">
-      <div><p className="eyebrow">INVENTARIO OFFLINE-FIRST</p><h1>Tu nevera</h1></div>
-      <p className="connection-state" role="status">
-        {!supabase ? "Modo local · sincronización sin configurar" : online ? "Con conexión" : "Sin conexión"}
-      </p>
+      <div className="inventory-header-copy"><h1>Mi Nevera <Image src="/neverito-nevera.png" alt="" width={48} height={48} /></h1><p>{items.length} alimentos guardados ♡</p></div>
+      <div className="inventory-header-links"><Link href="/app/settings" aria-label="Ajustes">⚙</Link><Link href="/app/calendar" aria-label="Calendario">▦</Link><Link href="/app/shopping-list" aria-label="Lista de compra">🛒</Link></div>
+      <div className="inventory-filters" role="group" aria-label="Filtrar alimentos">
+        {([ ["all", "Todos"], ["fresh", "♡ Fresco"], ["soon", "⚠ Pronto"], ["expired", "Caducado"], ["prepared", "🍲 Platos"] ] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}
+      </div>
     </header>
-
-    <form className="inventory-form" action={add}>
-      <h2>Añadir alimento</h2>
-      <label>Nombre<input name="name" required maxLength={120} /></label>
-      <label>Caducidad<input name="expiryDate" type="date" required defaultValue={today()} /></label>
-      <label>Cantidad<input name="quantity" type="number" min="0" step="0.01" defaultValue="1" required /></label>
-      <label>Unidad<input name="unit" defaultValue="unidad" required /></label>
-      <label>Categoría<input name="category" /></label>
-      <label>Notas<input name="notes" /></label>
-      <button type="submit">Añadir al inventario</button>
-    </form>
+    <div className="inventory-shortcuts"><Link href="/app/items/new">＋ Añadir alimento</Link><Link href="/app/scan">▣ Escanear ticket</Link><Link href="/app/recipes">♨ Recetas</Link></div>
+    <p className="connection-state" role="status">{!supabase ? "Modo local · sincronización sin configurar" : online ? "Con conexión" : "Sin conexión"}</p>
 
     <section className="inventory-list" aria-labelledby="inventory-title">
-      <div className="inventory-list-heading"><h2 id="inventory-title">Alimentos</h2><Link href="/app/items/new">Añadir alimento</Link><button type="button" onClick={() => void sync()}>Sincronizar</button></div>
+      <div className="inventory-list-heading"><h2 id="inventory-title">Alimentos</h2><button type="button" onClick={() => void sync()}>Sincronizar</button></div>
       {loading && <p role="status">Cargando inventario…</p>}
       {!loading && !online && !hasCache && <p role="status">Sin conexión y todavía no hay una copia local.</p>}
       {!loading && items.length === 0 && (online || hasCache) && <p role="status">Tu inventario está vacío.</p>}
+      {!loading && visibleItems.length === 0 && items.length > 0 && <p>No hay alimentos en este filtro.</p>}
       <ul>
-        {items.map((item) => <li key={item.id} className="inventory-item">
+        {visibleItems.map((item) => <li key={item.id} className="inventory-item">
           <div className="inventory-item-copy"><strong>{item.name}</strong><span>{item.quantity} {item.unit} · Caduca {formatCivilDate(item.expiryDate)}</span></div>
           <span className={`sync-label sync-${item.syncState}`}>Estado: {item.syncState}</span>
           {item.syncState === "conflict" && <div className="conflict-panel" role="alert">
