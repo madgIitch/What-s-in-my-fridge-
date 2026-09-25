@@ -561,6 +561,42 @@ export type Database = {
         }
         Relationships: []
       }
+      legacy_migration_records: {
+        Row: {
+          canonical_data: Json
+          collection: string
+          created_at: string
+          id: string
+          legacy_id: string
+          source: string
+          source_updated_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          canonical_data?: Json
+          collection: string
+          created_at?: string
+          id?: string
+          legacy_id: string
+          source?: string
+          source_updated_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          canonical_data?: Json
+          collection?: string
+          created_at?: string
+          id?: string
+          legacy_id?: string
+          source?: string
+          source_updated_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       meal_entries: {
         Row: {
           calories_estimate: number | null
