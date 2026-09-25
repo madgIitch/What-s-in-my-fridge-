@@ -1,1 +1,1 @@
-{"functions":{"apps/web/src/app/api/recipe-jobs/route.ts":{"maxDuration":10}},"crons":[{"path":"/api/push/dispatch","schedule":"*/5 * * * *"}]}
+{"functions":{"apps/web/src/app/api/recipe-jobs/route.ts":{"maxDuration":10}}}

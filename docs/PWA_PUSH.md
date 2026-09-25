@@ -3,8 +3,8 @@
 ## Despliegue
 
 - Aplicar la migración `20260922000300_pwa_push.sql` antes de activar Push.
-- Configurar `NEXT_PUBLIC_VAPID_PUBLIC_KEY` y `VAPID_PUBLIC_KEY` con la misma clave pública, además de `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` y `CRON_SECRET` en producción. La clave privada y el secreto del cron son solo de servidor.
-- Los archivos `vercel.json` de la raíz y de `apps/web` configuran `/api/push/dispatch` cada cinco minutos, según cuál sea el Root Directory del proyecto Vercel. Esa cadencia requiere un plan que admita cron más frecuente que una vez al día. El endpoint exige `Authorization: Bearer <CRON_SECRET>` y procesa hasta 20 entregas por llamada.
+- Configurar `NEXT_PUBLIC_VAPID_PUBLIC_KEY` y `VAPID_PUBLIC_KEY` con la misma clave pública, además de `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT` si se activa Push. La clave privada permanece solo en servidor.
+- No hay cron de Vercel. `/api/push/dispatch` permanece disponible para una invocación autorizada con `CRON_SECRET`, pero no se ejecuta automáticamente. Las pantallas consultan el estado canónico por polling aunque no llegue una notificación Push.
 - `PUSH_ENABLED=false`, `PWA_INSTALL_PROMOTION_ENABLED=false` y `SHARE_TARGET_ENABLED=false` desactivan las funciones promocionadas sin migración inversa.
 
 ## Datos locales y notificaciones
