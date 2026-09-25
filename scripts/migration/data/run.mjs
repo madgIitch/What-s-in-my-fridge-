@@ -1,5 +1,8 @@
 import { capture, plan, SOURCE_PROJECT } from './snapshot.mjs';
 import { createFirestoreAdapter } from './firestore.mjs';
+import { dryRun } from './dry-run.mjs';
+import { importDomain } from './import.mjs';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, relative, resolve, sep } from 'node:path';
 
@@ -21,7 +24,7 @@ function args(argv) {
 
 async function main() {
   const { command, options } = args(process.argv.slice(2));
-  if (!['capture', 'plan'].includes(command)) throw new Error('COMMAND_NOT_IMPLEMENTED');
+  if (!['capture', 'plan', 'dry-run', 'import'].includes(command)) throw new Error('COMMAND_NOT_IMPLEMENTED');
   if (!['local', 'staging'].includes(options.environment)) throw new Error('ENVIRONMENT_REQUIRED');
   if (!options.snapshot) throw new Error('SNAPSHOT_PATH_REQUIRED');
   outsideRepository(options.snapshot);
@@ -31,8 +34,22 @@ async function main() {
     const adapter = await createFirestoreAdapter(options['source-project']);
     const result = await capture({ adapter, destination: options.snapshot, projectId: options['source-project'] });
     console.log(JSON.stringify({ projectId: result.projectId, files: result.files.length, coverage: result.coverage }));
-  } else {
+  } else if (command === 'plan') {
     console.log(JSON.stringify(await plan(options.snapshot), null, 2));
+  } else {
+    if (!options['auth-map']) throw new Error('AUTH_MAP_REQUIRED');
+    outsideRepository(options['auth-map']);
+    const mappings = JSON.parse(await readFile(options['auth-map'], 'utf8'));
+    if (!mappings || typeof mappings !== 'object' || Array.isArray(mappings)) throw new Error('INVALID_AUTH_MAP');
+    if (command === 'dry-run') {
+      const report = await dryRun(options.snapshot, uid => mappings[uid] ?? null);
+      console.log(JSON.stringify(report, null, 2));
+      if (report.quarantine.length) process.exitCode = 2;
+    } else {
+      const report = await importDomain({ snapshot: options.snapshot, authMap: mappings, url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SERVICE_ROLE_KEY, environment: options.environment, confirmWrite: options['confirm-write'] });
+      console.log(JSON.stringify(report, null, 2));
+      if (report.quarantined.length) process.exitCode = 2;
+    }
   }
 }
 

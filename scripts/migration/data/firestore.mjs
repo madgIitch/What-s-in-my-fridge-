@@ -17,6 +17,12 @@ export async function createFirestoreAdapter(projectId) {
       return docs.map(doc => doc.id);
     },
     async listDocuments(uid, collection, after, limit) {
+      if (collection === 'cookingPreferences') {
+        if (after) return [];
+        const user = await db.collection('users').doc(uid).get();
+        const data = user.data()?.cookingPreferences;
+        return data ? [{ path: `users/${uid}/cookingPreferences/status`, data, updateTime: user.updateTime?.toDate().toISOString() ?? null }] : [];
+      }
       const FieldPath = firestore.FieldPath;
       let query = db.collection('users').doc(uid).collection(collection).orderBy(FieldPath.documentId()).limit(limit);
       if (after) query = query.startAfter(after.split('/').at(-1));

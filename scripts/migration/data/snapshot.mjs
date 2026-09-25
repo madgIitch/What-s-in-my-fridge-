@@ -70,7 +70,7 @@ export async function capture({ adapter, destination, projectId, batchSize = 200
     if (index < resumeIndex) continue;
     const file = join(directory, fileName(task));
     let after = checkpoint.cursor?.key === task.key ? checkpoint.cursor.after : null;
-    if (!after && checkpoint.cursor?.key === task.key && checkpoint.cursor.complete) continue;
+    if (checkpoint.cursor?.key === task.key && checkpoint.cursor.complete) continue;
     if (checkpoint.cursor?.key === task.key && checkpoint.cursor.offset !== undefined) await truncate(file, checkpoint.cursor.offset);
     while (true) {
       const batch = await adapter.listDocuments(task.uid, task.collection, after, batchSize);
