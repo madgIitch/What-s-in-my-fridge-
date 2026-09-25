@@ -1148,7 +1148,7 @@
     {
       "id": "sprint-12-firebase-data-migration-and-reconciliation",
       "name": "Sprint 12 - Firebase Data Migration and Reconciliation",
-      "status": "in_progress",
+      "status": "done",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.9.1",
