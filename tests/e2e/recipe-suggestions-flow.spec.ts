@@ -12,6 +12,7 @@ test.describe("recipe suggestions mobile", () => {
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Contraseña").fill("recipe-test-password");
     await page.getByRole("button", { name: /Entrar/ }).click();
+    await expect(page).toHaveURL(/\/app/);
   });
   test("renders results, cache metadata and blocks a double refresh", async ({ page }) => {
     let calls = 0;

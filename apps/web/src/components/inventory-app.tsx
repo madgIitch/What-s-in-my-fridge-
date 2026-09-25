@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { formatCivilDate } from "@/lib/inventory/dates";
 import { listItems, listOutbox } from "@/lib/inventory/db";
-import { createLocalItem, deleteLocalItem, discardConflict, retryFailedMutation, retryWithRemoteVersion, updateLocalItem } from "@/lib/inventory/repository";
+import { createLocalItem, discardConflict, retryFailedMutation, retryWithRemoteVersion } from "@/lib/inventory/repository";
 import { inventoryEvents, syncInventory } from "@/lib/inventory/sync";
 import type { LocalInventoryItem } from "@/lib/inventory/types";
 
@@ -60,16 +61,6 @@ export function InventoryApp({ userId }: { userId: string }) {
     await refresh(); void sync();
   }
 
-  async function rename(item: LocalInventoryItem) {
-    const name = window.prompt("Nuevo nombre", item.name)?.trim();
-    if (!name || name === item.name) return;
-    await updateLocalItem(userId, item.id, { name }); await refresh(); void sync();
-  }
-
-  async function remove(item: LocalInventoryItem) {
-    await deleteLocalItem(userId, item.id); await refresh(); void sync();
-  }
-
   return <main className="inventory-page">
     <header className="inventory-header">
       <div><p className="eyebrow">INVENTARIO OFFLINE-FIRST</p><h1>Tu nevera</h1></div>
@@ -90,7 +81,7 @@ export function InventoryApp({ userId }: { userId: string }) {
     </form>
 
     <section className="inventory-list" aria-labelledby="inventory-title">
-      <div className="inventory-list-heading"><h2 id="inventory-title">Alimentos</h2><button type="button" onClick={() => void sync()}>Sincronizar</button></div>
+      <div className="inventory-list-heading"><h2 id="inventory-title">Alimentos</h2><Link href="/app/items/new">Añadir alimento</Link><button type="button" onClick={() => void sync()}>Sincronizar</button></div>
       {loading && <p role="status">Cargando inventario…</p>}
       {!loading && !online && !hasCache && <p role="status">Sin conexión y todavía no hay una copia local.</p>}
       {!loading && items.length === 0 && (online || hasCache) && <p role="status">Tu inventario está vacío.</p>}
@@ -104,7 +95,7 @@ export function InventoryApp({ userId }: { userId: string }) {
             <button type="button" onClick={async () => { await retryWithRemoteVersion(userId, item.id); await refresh(); void sync(); }}>Reintentar con la versión actual</button>
           </div>}
           {item.syncState === "error" && <button type="button" onClick={async () => { await retryFailedMutation(userId, item.id); await refresh(); void sync(); }}>Reintentar sincronización</button>}
-          <div className="item-actions"><button type="button" onClick={() => void rename(item)}>Editar</button><button type="button" onClick={() => void remove(item)}>Eliminar</button></div>
+          <div className="item-actions"><Link href={`/app/items/${item.id}`} aria-label={`Ver y editar ${item.name}`}>Ver detalle y editar</Link></div>
         </li>)}
       </ul>
     </section>

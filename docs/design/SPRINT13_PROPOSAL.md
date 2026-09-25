@@ -1,6 +1,6 @@
 # Sprint 13 — propuesta de paridad PWA, responsive y accesibilidad
 
-Estado: **aprobado por el usuario** el 25 de septiembre de 2026. Implementación en curso; primera fase de navegación compartida y ajustes integrada.
+Estado: **review_pending**. Spec aprobado por el usuario el 25 de septiembre de 2026; implementación y verificación local completadas para revisión.
 
 ## Diagnóstico de partida
 
@@ -27,7 +27,33 @@ El cliente legado declara 20 pantallas en `AppNavigator`. La PWA tiene rutas exp
 | Paywall | `/app/pro` | Existe |
 | ConsumeIngredients | Acción accesible desde inventario/detalle, con confirmación | Falta |
 
-La matriz final se completará con cada pantalla legada del scope; ningún flujo queda implícitamente descartado. Los equivalentes pueden usar paneles en desktop y páginas completas en móvil, pero conservan URL y semántica estables.
+### Inventario de rutas del `AppNavigator` legado
+
+El navegador legado declara 19 nombres de pantalla: 1 de acceso, 6 pestañas y 12 pantallas de pila. Su documentación anterior hablaba de 20; el recuento del código fuente actual es 19.
+
+| Pantalla legado | Equivalente PWA | Comportamiento |
+| --- | --- | --- |
+| Login | `/login` | Acceso y retorno al enlace privado original |
+| HomeTab | `/app` | Inventario y sincronización |
+| ScanTab | `/app/scan` | Captura o archivo |
+| RecipesTab | `/app/recipes` | Sugerencias y catálogo |
+| CalendarTab | `/app/calendar` | Mes y comidas |
+| SettingsTab | `/app/settings` | Cuenta y accesos; mantenimiento Firebase legado no se traslada |
+| FavoritesTab | `/app/favorites` | Recetas guardadas |
+| RecipeSteps | `/app/recipes/[id]` | Ingredientes y pasos con enlace estable |
+| ReviewDraft | Panel de revisión de `/app/scan` | Edición de líneas antes de confirmar |
+| Detail | `/app/items/[id]` | Detalle, edición, eliminación y consumo |
+| AddItem | `/app/items/new` | Alta con soporte offline |
+| Crop | Panel de recorte de `/app/scan` | Controles con teclado, Escape y retorno de foco |
+| ConsumeIngredients | Confirmación en `/app/items/[id]` | Descuento de cantidad con outbox |
+| ConsumeRecipeIngredients | Acción «Cocinar» de `/app/favorites` | Plan de ingredientes y commit de consumo |
+| AddMeal | `/app/calendar/new` | Enlace profundo al editor |
+| MealDetail | `/app/calendar/[id]` | Enlace profundo al editor de comida |
+| AddRecipeFromUrl | `/app/recipes/import` | URL, texto o archivo |
+| ShoppingList | `/app/shopping-list` | Compra derivada y explícita |
+| Paywall | `/app/pro` | Plan, estados y acceso a pagos |
+
+Los paneles de recorte y revisión forman parte de un borrador temporal iniciado en `/app/scan`; sus controles tienen salida explícita. Los equivalentes pueden usar paneles en desktop y páginas completas en móvil.
 
 ## Contratos de navegación y accesibilidad
 
@@ -48,3 +74,11 @@ La matriz final se completará con cada pantalla legada del scope; ningún flujo
 
 - Nombre y referencia visual definitiva: se mantiene “Neverita”, la identidad actual de la PWA, según el inicio aprobado del sprint.
 - La paridad se considera completada cuando la matriz y los flujos sean navegables y verificados. El cierre administrativo del Sprint 12 no prueba la migración de datos; las pruebas de UI del Sprint 13 usarán datos sintéticos y no darán por validado un import de producción.
+
+## Evidencia de implementación local
+
+- Inventario explícito de los 19 nombres de pantalla del `AppNavigator` legado, con URL o panel equivalente.
+- Playwright conecta la carpeta E2E del paquete web y la suite histórica de la raíz. El recorrido `auth → inventory → scan mock → review → recipes → favorite → calendar → paywall` pasa con Supabase local y datos sintéticos.
+- La auditoría `@axe-core/playwright` no detecta infracciones `critical` ni `serious` en login y 11 rutas privadas. Mide botones y navegación principal de al menos 44 × 44 px.
+- Login y las 11 rutas privadas auditadas no presentan overflow horizontal a 320, 375, 430, 768, 1024 y 1440 px en Chromium. El recorte, la edición de comida y las confirmaciones de inventario admiten Escape y retorno de foco.
+- La pasada móvil completa de 30 pruebas E2E, `pnpm test` (116 casos), lint, typecheck y build se ejecutaron localmente. La comprobación visual manual en hardware móvil y con lector de pantalla queda para revisión de aceptación.
