@@ -1,5 +1,8 @@
 # Historial de sesiones
 
+## 2026-09-25 — sprint-12-firebase-data-migration-and-reconciliation → done administrativo
+- Cierre del spec solicitado por el usuario. Nueve pruebas sintéticas aprobadas; ensayo real de Firebase y Supabase staging pendiente por credenciales, bucket y mapping Auth. El review conserva los criterios sin verificar; no implica cutover ni migración completada.
+
 ## 2026-09-22 — sprint-10-stripe-pro-and-usage → review_pending
 - Stripe Pro, entitlement y uso canónico implementados; gates y pruebas adicionales aprobados.
 
