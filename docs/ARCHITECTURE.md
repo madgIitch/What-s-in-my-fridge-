@@ -408,3 +408,23 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
 - **edge_cases:** Rerun, cambio de documento, checkpoint incompatible y drift durante captura tienen resultados deterministas; datos locales WatermelonDB sin export se declaran cobertura parcial.
 - **ui_states:** No hay UI en este sprint; estados operativos running, completed, partial y failed en reportes.
 
+<!-- harness:sprint-13-ui-parity-responsive-and-accessibility -->
+## sprint-13-ui-parity-responsive-and-accessibility · Sprint 13 - UI Parity, Responsive and Accessibility
+
+
+
+### Scope aprobado
+
+  - `apps/web/**`
+  - `packages/ui/**`
+  - `tests/e2e/**`
+  - `docs/design/**`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** Sin cambios de dominio. Las rutas de detalle usan IDs existentes y estados de no encontrado; los fixtures sintéticos sustituyen el staging de datos aún pendiente.
+- **external_contracts:** Matriz de paridad para las 20 pantallas y rutas PWA; flujo crítico auth → inventory → scan mock → review → recipes → favorite → calendar → paywall.
+- **edge_cases:** Pantallas legacy sin URL obtienen ruta o sustituto documentado; 320 px, zoom 200 %, texto largo, orientación y prefers-reduced-motion se verifican.
+- **ui_states:** Navegación única con aria-current; destinos consistentes en móvil y desktop; targets 44×44, foco visible y diálogos con Escape y retorno de foco.
+

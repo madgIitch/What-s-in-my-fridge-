@@ -204,3 +204,16 @@ Decisiones registradas:
 - **tests:** Fixtures sintéticos cubren duplicados, reanudación, documentos modificados, referencias, cuarentena y reconciliación por claves y digest.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+<!-- harness:sprint-13-ui-parity-responsive-and-accessibility -->
+## 2026-09-25 · sprint-13-ui-parity-responsive-and-accessibility aprobado
+
+Contexto: se aprobó el spec `sprint-13-ui-parity-responsive-and-accessibility` (Sprint 13 - UI Parity, Responsive and Accessibility).
+
+Decisiones registradas:
+
+- **auth_secrets:** Las rutas privadas conservan deep links con safeReturnTo /app/**; no se expone información privada en estados de error.
+- **rollback_compat:** Cambios de UI dentro de apps/web y packages/ui, sin alterar contratos de dominio ni migraciones. Mantener rutas existentes como enlaces funcionales.
+- **tests:** Playwright seis anchos y flujo crítico; axe critical/serious; pruebas de returnTo, teclado/foco y movimiento reducido.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.

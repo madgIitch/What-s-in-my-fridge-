@@ -1,6 +1,6 @@
 # Sprint 13 — propuesta de paridad PWA, responsive y accesibilidad
 
-Estado: **borrador para aprobación**. En `spec.json`, `spec_approved` sigue en `false`; no se implementarán cambios visuales hasta aprobar este spec.
+Estado: **aprobado por el usuario** el 25 de septiembre de 2026. Implementación en curso; primera fase de navegación compartida y ajustes integrada.
 
 ## Diagnóstico de partida
 
@@ -21,7 +21,7 @@ El cliente legado declara 20 pantallas en `AppNavigator`. La PWA tiene rutas exp
 | Recipes, RecipeSteps, ConsumeRecipeIngredients | `/app/recipes`, `/app/recipes/[id]`, confirmación de consumo | Parcial |
 | Favorites | `/app/favorites` | Existe |
 | Calendar, AddMeal, MealDetail | `/app/calendar`, `/app/calendar/new`, `/app/calendar/[id]` | Parcial |
-| Settings | `/app/settings` | Falta |
+| Settings | `/app/settings` | Hub de navegación y cuenta implementado; ajustes funcionales pendientes |
 | Import | `/app/recipes/import` | Existe |
 | ShoppingList | `/app/shopping-list` | Existe |
 | Paywall | `/app/pro` | Existe |
@@ -46,5 +46,5 @@ La matriz final se completará con cada pantalla legada del scope; ningún flujo
 
 ## Decisiones abiertas
 
-- Nombre y referencia visual definitiva: se propone “Neverita”, pendiente de la respuesta del usuario.
+- Nombre y referencia visual definitiva: se mantiene “Neverita”, la identidad actual de la PWA, según el inicio aprobado del sprint.
 - La paridad se considera completada cuando la matriz y los flujos sean navegables y verificados. El cierre administrativo del Sprint 12 no prueba la migración de datos; las pruebas de UI del Sprint 13 usarán datos sintéticos y no darán por validado un import de producción.

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+.app-content{min-height:calc(100svh - 72px)}
+@media(max-width:700px){.app-content{padding-bottom:calc(76px + env(safe-area-inset-bottom))}}
+
 :root { --ink:#17352b; --paper:#f4f0e6; --cream:#fffdf7; --green:#2f6b51; --lime:#cddd75; --line:rgba(23,53,43,.14); }
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; background:var(--paper); }
