@@ -60,7 +60,7 @@ export function PwaControls({ installPromotion = true, pushEnabled = true }: { i
     } catch { setPush("error"); }
   }
 
-  return <aside aria-label="Aplicación instalada y avisos" style={{ display: "flex", gap: ".5rem", flexWrap: "wrap", padding: ".5rem 1rem" }}>
+  return <aside className="pwa-controls" aria-label="Aplicación instalada y avisos">
     {installPromotion && install === "available" && <button type="button" onClick={() => void installApp()}>Instalar Neverita</button>}
     {installPromotion && install === "dismissed" && <span role="status">Instalación cancelada. Puedes intentarlo más tarde.</span>}
     {push === "default" && <button type="button" onClick={() => void enablePush()}>Activar avisos de recetas</button>}

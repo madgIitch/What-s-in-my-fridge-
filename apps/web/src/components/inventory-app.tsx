@@ -66,14 +66,14 @@ export function InventoryApp({ userId }: { userId: string }) {
         {([ ["all", "Todos"], ["fresh", "♡ Fresco"], ["soon", "⚠ Pronto"], ["expired", "Caducado"], ["prepared", "🍲 Platos"] ] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}
       </div>
     </header>
-    <div className="inventory-shortcuts"><Link href="/app/items/new">＋ Añadir alimento</Link><Link href="/app/scan">▣ Escanear ticket</Link><Link href="/app/recipes">♨ Recetas</Link></div>
+    <nav className="inventory-shortcuts" aria-label="Acciones del inventario"><Link href="/app/items/new"><span aria-hidden="true">＋</span><span>Añadir alimento</span></Link><Link href="/app/scan"><span aria-hidden="true">▣</span><span>Escanear ticket</span></Link><Link href="/app/recipes"><span aria-hidden="true">♨</span><span>Ver recetas</span></Link></nav>
     <p className="connection-state" role="status">{!supabase ? "Modo local · sincronización sin configurar" : online ? "Con conexión" : "Sin conexión"}</p>
 
     <section className="inventory-list" aria-labelledby="inventory-title">
       <div className="inventory-list-heading"><h2 id="inventory-title">Alimentos</h2><button type="button" onClick={() => void sync()}>Sincronizar</button></div>
       {loading && <p role="status">Cargando inventario…</p>}
       {!loading && !online && !hasCache && <p role="status">Sin conexión y todavía no hay una copia local.</p>}
-      {!loading && items.length === 0 && (online || hasCache) && <p role="status">Tu inventario está vacío.</p>}
+      {!loading && items.length === 0 && (online || hasCache) && <div className="inventory-empty" role="status"><span aria-hidden="true">♡</span><h3>Tu nevera está esperando</h3><p>Añade tu primer alimento o escanea un ticket para empezar.</p><Link href="/app/items/new">Añadir alimento</Link></div>}
       {!loading && visibleItems.length === 0 && items.length > 0 && <p>No hay alimentos en este filtro.</p>}
       <ul>
         {visibleItems.map((item) => <li key={item.id} className="inventory-item">

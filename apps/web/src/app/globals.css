@@ -96,3 +96,17 @@ button { color:inherit; }
 .inventory-item-copy strong{font-size:16px}
 .inventory-item-copy span{color:#8b7c8e}
 @media(max-width:700px){.inventory-header-copy{padding-right:0}.inventory-header-copy h1{max-width:calc(100% - 130px);font-size:27px}.inventory-header-copy img{width:38px;height:38px}.inventory-shortcuts{gap:6px}.inventory-shortcuts a{font-size:11px}.inventory-item{display:grid;grid-template-columns:minmax(0,1fr) auto}.sync-label{grid-column:2;grid-row:1}.inventory-item-copy{grid-column:1}.item-actions{grid-column:1/-1}}
+
+.pwa-controls{display:flex;gap:8px;align-items:center;justify-content:flex-end;min-height:0;padding:8px max(16px,calc((100vw - 1040px)/2));background:#ffe5ec;color:var(--ink);font-size:13px}
+.pwa-controls:empty{display:none}
+.pwa-controls button{min-height:36px;padding:6px 12px;border:1px solid rgba(201,86,112,.3);border-radius:999px;background:#fff9fb;color:var(--ink);font-weight:700;cursor:pointer}
+.inventory-filters{flex-wrap:wrap;overflow:visible}
+.inventory-filters button{min-height:44px}
+.inventory-shortcuts a{display:flex;flex-direction:column;gap:5px;justify-content:center;min-height:76px;font-size:14px;line-height:1.2}
+.inventory-shortcuts a span:first-child{font-size:23px;line-height:1}
+.inventory-empty{margin-top:18px;padding:28px 22px 32px;border:1px dashed rgba(201,86,112,.28);border-radius:24px;background:#fffbf7;text-align:center}
+.inventory-empty>span{display:block;color:#e57d91;font-size:42px;line-height:1}
+.inventory-empty h3{margin:12px 0 7px;font-size:20px;line-height:1.2}
+.inventory-empty p{max-width:26ch;margin:0 auto 20px;color:#756778;font-size:14px;line-height:1.5}
+.inventory-empty a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:9px 18px;border-radius:12px;background:#ff9aa2;color:#4d3340;font-weight:800;text-decoration:none}
+@media(max-width:700px){.inventory-header{padding:20px 16px 18px}.inventory-header-links{top:17px;right:14px}.inventory-header-links a{width:40px;height:40px;font-size:17px}.inventory-header-copy h1{max-width:calc(100% - 125px);font-size:26px}.inventory-header-copy img{width:36px;height:36px}.inventory-filters{gap:7px;margin-top:20px}.inventory-filters button{padding:7px 11px}.inventory-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}.inventory-shortcuts a{min-height:74px;font-size:14px}.inventory-shortcuts a:first-child{grid-column:1/-1;min-height:60px;flex-direction:row;gap:10px}.inventory-shortcuts a:first-child span:first-child{font-size:26px}.inventory-empty{margin-top:14px}.pwa-controls{justify-content:center;padding:6px 16px}}
