@@ -1,5 +1,15 @@
 import { expect, test } from "@playwright/test";
 
+for (const width of [320, 393, 768, 1440]) {
+  test(`public home fits ${width}px and leads to account routes`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: /Todo lo que tienes/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Crear cuenta" })).toHaveAttribute("href", "/signup");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  });
+}
+
 for (const width of [320, 375, 430, 768, 1024, 1440]) {
   test(`login fits ${width}px without horizontal overflow`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });

@@ -110,3 +110,33 @@ button { color:inherit; }
 .inventory-empty p{max-width:26ch;margin:0 auto 20px;color:#756778;font-size:14px;line-height:1.5}
 .inventory-empty a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:9px 18px;border-radius:12px;background:#ff9aa2;color:#4d3340;font-weight:800;text-decoration:none}
 @media(max-width:700px){.inventory-header{padding:20px 16px 18px}.inventory-header-links{top:17px;right:14px}.inventory-header-links a{width:40px;height:40px;font-size:17px}.inventory-header-copy h1{max-width:calc(100% - 125px);font-size:26px}.inventory-header-copy img{width:36px;height:36px}.inventory-filters{gap:7px;margin-top:20px}.inventory-filters button{padding:7px 11px}.inventory-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}.inventory-shortcuts a{min-height:74px;font-size:14px}.inventory-shortcuts a:first-child{grid-column:1/-1;min-height:60px;flex-direction:row;gap:10px}.inventory-shortcuts a:first-child span:first-child{font-size:26px}.inventory-empty{margin-top:14px}.pwa-controls{justify-content:center;padding:6px 16px}}
+body{--font-display:var(--font-sans)}
+.welcome-shell{min-height:100svh;background:#fff0f5;color:#5a4a5e;font-family:var(--font-sans),sans-serif}
+.welcome-nav{width:min(calc(100% - 40px),1120px);min-height:76px;margin:auto;display:flex;align-items:center;justify-content:space-between}
+.welcome-brand{font-size:23px;font-weight:850;letter-spacing:-.04em}
+.welcome-nav a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border:1px solid #f0c4ce;border-radius:12px;color:#5a4a5e;font-weight:750;text-decoration:none}
+.welcome-hero{width:min(calc(100% - 40px),1120px);min-height:calc(100svh - 170px);margin:auto;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);align-items:center;gap:36px}
+.welcome-kicker{margin:0 0 18px;color:#aa6378;font-size:12px;font-weight:850;letter-spacing:.16em}
+.welcome-copy h1{max-width:16ch;margin:0;font-size:clamp(38px,5vw,66px);font-weight:850;line-height:1.04;letter-spacing:-.055em}
+.welcome-copy>p:last-of-type{max-width:38ch;margin:22px 0;color:#756778;font-size:17px;line-height:1.55}
+.welcome-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.welcome-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:12px 20px;border:1px solid #f0c4ce;border-radius:14px;color:#5a4a5e;font-weight:800;text-decoration:none}
+.welcome-actions a:first-child{border-color:#ff9aa2;background:#ff9aa2;color:#4d3340}
+.welcome-mascot{width:100%;max-width:500px;height:auto;justify-self:center}
+.welcome-features{width:min(calc(100% - 40px),1120px);margin:0 auto;padding:18px 0 28px;border-top:1px solid #f0c4ce;display:flex;flex-wrap:wrap;gap:16px 36px;color:#756778;font-size:14px;font-weight:750}
+.welcome-features p{margin:0}
+.welcome-shell a:focus-visible{outline:3px solid #c95670;outline-offset:3px}
+.auth-shell{background:#fff0f5;color:#5a4a5e}
+.auth-shell:after{border-color:#f0c4ce;box-shadow:0 0 0 48px rgba(255,154,162,.12),0 0 0 96px rgba(255,154,162,.06)}
+.auth-heading h1{font-weight:850;line-height:1.06;letter-spacing:-.045em}
+.auth-heading>p:last-child,.auth-footer{color:#8b7c8e}
+.auth-form input{border-color:#dbb9c2;background:#fffbf7;color:#5a4a5e}
+.auth-form button{background:#ff9aa2;color:#4d3340;box-shadow:0 10px 24px rgba(201,86,112,.14)}
+.auth-form button:hover{background:#f78c9a;box-shadow:0 12px 25px rgba(201,86,112,.2)}
+.auth-form button:focus-visible,.auth-form input:focus-visible{outline-color:#c95670}
+.auth-message{border-color:#ff9aa2;background:#ffe5ec}
+.auth-brand,.auth-footer a{color:#5a4a5e}
+.auth-aside{font-weight:800}
+.private-check{width:min(calc(100% - 32px),720px);margin:36px auto;padding:26px;border:1px solid #f2cdd5;border-radius:20px;background:#fffbf7;color:#5a4a5e}
+.private-check h1{margin-top:0;font:800 30px var(--font-sans),sans-serif}
+@media(max-width:700px){.welcome-nav{width:min(calc(100% - 32px),1120px);min-height:66px}.welcome-hero{width:min(calc(100% - 32px),1120px);min-height:0;grid-template-columns:1fr;gap:12px;padding:36px 0 26px}.welcome-copy h1{font-size:38px}.welcome-copy>p:last-of-type{font-size:16px}.welcome-mascot{max-width:300px}.welcome-features{width:min(calc(100% - 32px),1120px);padding:20px 0 28px}.auth-heading h1{font-size:42px}.auth-aside{font-size:22px}}

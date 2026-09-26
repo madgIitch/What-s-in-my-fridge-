@@ -5,3 +5,11 @@
 .account{padding-top:42px}.account h2{font:600 30px var(--font-display),serif;margin:0 0 10px}.account p{color:#587067;overflow-wrap:anywhere}
 .account button{min-height:44px;padding:8px 16px;border:1px solid var(--green);border-radius:10px;background:transparent;color:var(--green);font:700 15px var(--font-sans),sans-serif;cursor:pointer}.account button:focus-visible{outline:3px solid var(--green);outline-offset:3px}
 @media(max-width:700px){.shell{width:min(calc(100% - 32px),880px);padding-top:34px}.links a{min-height:76px}}
+.shell{font-family:var(--font-sans),sans-serif}
+.kicker{color:#aa6378}
+.shell h1{font:800 clamp(30px,7vw,42px)/1.12 var(--font-sans),sans-serif;letter-spacing:-.035em}
+.shell header>p:last-child,.links small,.account p{color:#8b7c8e}
+.links a:hover{background:#ffe5ec}
+.account h2{font:800 23px var(--font-sans),sans-serif}
+.account button{border-color:#e5b6c1;background:#fff8fa;color:#a74d68}
+@media(max-width:700px){.shell{padding-top:24px}.shell header{padding-bottom:22px}}

@@ -5,3 +5,16 @@
 .shell :is(input,textarea,button,a):focus-visible{outline:3px solid var(--green);outline-offset:3px}
 .consume{margin-top:28px;padding:24px;border-top:1px solid var(--line)}.consume h2{margin:0 0 8px;font:600 30px var(--font-display),serif}.consume p{color:#587067}.consume label{display:grid;gap:7px;max-width:220px;font-size:13px;font-weight:800}.consume input{min-height:44px;padding:8px 12px;border:1px solid rgba(23,53,43,.3);border-radius:9px;font:500 16px var(--font-sans),sans-serif}.consume>button{min-height:44px;margin-top:14px;padding:8px 16px;border:1px solid var(--green);border-radius:9px;background:var(--cream);color:var(--green);font-weight:750;cursor:pointer}.consume>button:disabled{opacity:.5}.consume .confirm{margin-top:16px}
 @media(max-width:520px){.shell{padding-top:20px}.form{padding:18px}.columns{grid-template-columns:minmax(0,1fr)}}
+.shell{color:#5a4a5e;font-family:var(--font-sans),sans-serif}
+.back{color:#bd526e}
+.eyebrow{color:#aa6378}
+.shell h1{margin-bottom:24px;font:800 clamp(30px,7vw,42px)/1.12 var(--font-sans),sans-serif;letter-spacing:-.035em}
+.form{border:1px solid #f2cdd5;background:#fffbf7;box-shadow:0 8px 24px rgba(201,86,112,.07)}
+.form input,.form textarea,.consume input{border-color:#dbb9c2}
+.actions button{border-color:#e5b6c1;border-radius:12px;color:#5a4a5e}
+.actions .primary{border-color:#ff9aa2;background:#ff9aa2;color:#4d3340}
+.sync,.consume p{color:#8b7c8e}
+.consume h2{font:800 23px var(--font-sans),sans-serif}
+.consume>button{border-color:#e5b6c1;background:#fff8fa;color:#a74d68}
+.shell :is(input,textarea,button,a):focus-visible{outline-color:#c95670}
+@media(max-width:520px){.shell{padding-top:22px}.shell h1{font-size:31px}}

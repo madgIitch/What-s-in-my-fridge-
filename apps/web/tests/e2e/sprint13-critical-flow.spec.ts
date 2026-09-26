@@ -13,7 +13,7 @@ test("auth → inventory → scan → review → recipes → favorite → calend
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Contraseña").fill(password);
   await page.getByRole("button", { name: /Entrar/ }).click();
-  await expect(page.getByRole("heading", { name: "Tu nevera" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Mi Nevera/ })).toBeVisible();
 
   await page.route("**/api/ocr", route => route.fulfill({ json: {
     draftId: "51000000-0000-4000-a000-000000000001",

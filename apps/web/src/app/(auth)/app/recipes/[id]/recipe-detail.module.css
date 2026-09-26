@@ -7,3 +7,11 @@
 .columns h2{margin-top:0;font:700 1.5rem Georgia,serif}
 .columns li{padding:.4rem 0;line-height:1.5;overflow-wrap:anywhere}
 @media(max-width:700px){.columns{grid-template-columns:1fr}}
+.shell{color:#5a4a5e;font-family:var(--font-sans),sans-serif}
+.back{color:#bd526e}
+.eyebrow{color:#aa6378}
+.shell h1{font:800 clamp(30px,7vw,42px)/1.12 var(--font-sans),sans-serif;letter-spacing:-.035em}
+.columns section{border-color:#f2cdd5;background:#fffbf7}
+.columns h2{font:800 21px var(--font-sans),sans-serif}
+.shell a:focus-visible{outline:3px solid #c95670;outline-offset:3px}
+@media(max-width:700px){.shell{padding-top:22px}.columns section{padding:20px}}

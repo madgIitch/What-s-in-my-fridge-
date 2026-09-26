@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, Fraunces } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import "./globals.css";
 
 const sans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
-const display = Fraunces({ subsets: ["latin"], variable: "--font-display" });
 
 export const metadata: Metadata = {
   title: "Neverita — Tu despensa, al día",
@@ -13,13 +12,13 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f4f0e6",
+  themeColor: "#fff0f5",
   colorScheme: "light",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es" className={`${sans.variable} ${display.variable}`}>
+    <html lang="es" className={sans.variable}>
       <body>{children}</body>
     </html>
   );

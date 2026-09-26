@@ -20,4 +20,10 @@ describe("AppNavigation", () => {
     render(<AppNavigation />);
     expect(screen.getByRole("link", { name: "Más" })).toHaveAttribute("aria-current", "page");
   });
+
+  it("marks inventory active on its editor routes", () => {
+    navigation.pathname = "/app/items/new";
+    render(<AppNavigation />);
+    expect(screen.getByRole("link", { name: "Inventario" })).toHaveAttribute("aria-current", "page");
+  });
 });

@@ -18,7 +18,7 @@ export function AppNavigation() {
     <Link className={styles.brand} href="/app">Neverita</Link>
     <div className={styles.destinations}>
       {destinations.map(({ href, label, icon }) => {
-        const active = href === "/app" ? pathname === "/app" : pathname === href || pathname.startsWith(`${href}/`) || (href === "/app/settings" && ["/app/favorites", "/app/shopping-list", "/app/pro"].some(path => pathname === path || pathname.startsWith(`${path}/`)));
+        const active = href === "/app" ? pathname === "/app" || pathname.startsWith("/app/items/") : pathname === href || pathname.startsWith(`${href}/`) || (href === "/app/settings" && ["/app/favorites", "/app/shopping-list", "/app/pro"].some(path => pathname === path || pathname.startsWith(`${path}/`)));
         return <Link key={href} href={href} className={styles.destination} aria-current={active ? "page" : undefined}>
           <span className={styles.icon} aria-hidden="true">{icon}</span><span>{label}</span>
         </Link>;
