@@ -221,3 +221,7 @@ Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
 ## 2026-09-26 · Navegación del inventario según la app original
 
 La captura del cliente Expo confirma tres acciones flotantes en la parte inferior: recetas y escaneo en menta, y añadir alimento en coral y de mayor tamaño. Se elimina la barra de navegación persistente de la PWA. Los accesos a calendario, compra y ajustes permanecen en la cabecera del inventario; las rutas secundarias muestran un regreso a «Mi Nevera».
+
+## 2026-09-26 · Corrección del parser de tickets OCR
+
+El OCR de Vision ya devolvía nombres legibles en un ticket real, pero el parser `receipt-v1` no aceptaba cantidades como `1 PRODUCTO`, exigía precios en la misma línea y confundía una dirección terminada en número con un artículo. El parser web y el de dominio ahora reconocen cantidad prefijada, asocian un importe decimal solo cuando sigue inmediatamente al producto y excluyen cabeceras y cifras aisladas. Los nombres con ruido evidente quedan en revisión sin aceptación automática. El texto OCR bruto y las líneas no reconocidas se conservan; los drafts ya procesados no se recalculan automáticamente ni consumen otra cuota.
