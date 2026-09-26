@@ -17,3 +17,8 @@
 .shell :is(button,input,a,summary):focus-visible{outline-color:#c95670}
 @media(max-width:520px){.main{padding-top:22px}.panel{padding:18px}.actions{display:grid;grid-template-columns:1fr 1fr}.actions>*{min-width:0}.main h1:after{width:48px;height:48px}}
 .recover{width:100%;margin-top:12px}
+.confirmed{display:grid;gap:22px;text-align:center;justify-items:center;padding:clamp(20px,5vw,42px) 12px}
+.confirmed p{margin:0;font-size:clamp(18px,4vw,23px);font-weight:800;line-height:1.3}
+.homeAction{display:inline-flex;align-items:center;justify-content:center;min-height:52px;width:min(100%,320px);padding:12px 20px;border-radius:14px;background:#ff9aa2;color:#4d3340;font-size:16px;font-weight:800;text-decoration:none}
+.homeAction:hover{background:#f78c9a}
+.homeAction:focus-visible{outline:3px solid #c95670;outline-offset:3px}
