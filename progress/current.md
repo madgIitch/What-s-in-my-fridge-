@@ -9,7 +9,7 @@ La propuesta aprobada está en `docs/design/SPRINT13_PROPOSAL.md`. La navegació
 - Dependencia Sprint 12 marcada `done` administrativamente.
 - Se inventariaron 20 pantallas legado y rutas web existentes; varios detalles/editores requieren URL o sustituto accesible.
 - Pruebas de navegación (2), typecheck y lint aprobados.
-- Mantenimiento de Sprint 5: el parser de tickets se corrigió para cantidades sin `x`, precios en la línea siguiente, cabeceras administrativas e importes aislados; se añadieron casos sintéticos sin datos personales.
+- Mantenimiento de Sprint 5: el parser de tickets se corrigió para cantidades sin `x`, precios en la línea siguiente, cabeceras administrativas e importes aislados; se añadieron casos sintéticos sin datos personales y una acción para reinterpretar el último draft pendiente sin otra llamada OCR.
 
 ## Siguiente acción
 

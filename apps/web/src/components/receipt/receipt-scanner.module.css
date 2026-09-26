@@ -16,3 +16,4 @@
 .line input,.line select{border-color:#d9bbc4}
 .shell :is(button,input,a,summary):focus-visible{outline-color:#c95670}
 @media(max-width:520px){.main{padding-top:22px}.panel{padding:18px}.actions{display:grid;grid-template-columns:1fr 1fr}.actions>*{min-width:0}.main h1:after{width:48px;height:48px}}
+.recover{width:100%;margin-top:12px}
