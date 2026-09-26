@@ -19,6 +19,10 @@ una decisión de arquitectura relevante durante implementación.
 
 El catálogo de recetas se importa como una versión inmutable identificada por el SHA-256 de una representación JSON canónica; una RPC de importación valida y escribe vocabulario, aliases, recetas e ingredientes y solo activa la versión al final de la misma transacción. Las versiones anteriores se conservan para rollback. Las sugerencias se calculan exclusivamente en servidor con `matcher-v1`; una segunda RPC serializa por usuario y cache key, devuelve hits antes de cuota y crea el claim de una operación nueva junto al consumo mensual. Así, inventario vacío, rechazos, hits y carreras no incrementan el uso, mientras que una operación nueva Free incrementa exactamente una vez. Los mappings verificados siguen siendo privados por usuario y nunca modifican aliases globales.
 
+## 2026-09-26 · Importación inicial del catálogo por lotes
+
+La RPC monolítica superó el tiempo de espera del proxy al recibir 72 572 recetas y 666 043 ingredientes. La carga inicial usa ahora `scripts/migration/catalog/import-catalog-staged.mjs`: escribe una versión inactiva mediante operaciones idempotentes, verifica las cardinalidades y la activa solo al terminar. El proceso puede reanudarse tras un fallo. La primera activación requiere que no exista ya una versión activa; sustituir una versión existente sigue requiriendo una operación atómica en base de datos para evitar un intervalo sin catálogo.
+
 ## 2026-09-20 · Reserva OCR en dos fases y confirmación exactamente una vez
 
 La cuota mensual se reserva bajo bloqueo en PostgreSQL antes de preparar el objeto, se libera si el flujo falla antes de Vision y se convierte en consumo justo antes de invocar al proveedor. Desde ese instante, éxito o fallo facturable consume exactamente una unidad. La confirmación bloquea el draft y deriva IDs deterministas de `(draft_id, line_id)`, de modo que retries y carreras devuelven el primer resultado canónico sin duplicar inventario. Las imágenes permanecen en un bucket privado bajo `auth.uid()/draft_id`; cualquier URL firmada dura 60 segundos y no se persiste.

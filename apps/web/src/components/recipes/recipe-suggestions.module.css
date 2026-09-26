@@ -16,3 +16,5 @@
 .save,.detailLink{color:#bd526e;border-color:#bd526e}
 .cache{color:#5a4a5e}
 @media(max-width:420px){.main{padding-top:22px}.main h1{font-size:31px}.notice{padding:20px}.toolbar button{width:100%}}
+.importLink{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin-top:14px;padding:0 18px;border:1px solid #edbbcb;border-radius:13px;background:#fffbf7;color:#8d4f67;font-weight:750;text-decoration:none}
+.importLink:hover{background:#ffe3eb}.importLink:focus-visible{outline:3px solid #8d4f67;outline-offset:3px}
