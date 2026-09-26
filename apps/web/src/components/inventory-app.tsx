@@ -66,7 +66,6 @@ export function InventoryApp({ userId }: { userId: string }) {
         {([ ["all", "Todos"], ["fresh", "♡ Fresco"], ["soon", "⚠ Pronto"], ["expired", "Caducado"], ["prepared", "🍲 Platos"] ] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}
       </div>
     </header>
-    <nav className="inventory-shortcuts" aria-label="Acciones del inventario"><Link href="/app/items/new"><span aria-hidden="true">＋</span><span>Añadir alimento</span></Link><Link href="/app/scan"><span aria-hidden="true">▣</span><span>Escanear ticket</span></Link><Link href="/app/recipes"><span aria-hidden="true">♨</span><span>Ver recetas</span></Link></nav>
     <p className="connection-state" role="status">{!supabase ? "Modo local · sincronización sin configurar" : online ? "Con conexión" : "Sin conexión"}</p>
 
     <section className="inventory-list" aria-labelledby="inventory-title">
@@ -89,5 +88,10 @@ export function InventoryApp({ userId }: { userId: string }) {
         </li>)}
       </ul>
     </section>
+    <nav className="inventory-fab" aria-label="Acciones del inventario">
+      <Link className="inventory-fab-side" href="/app/recipes" aria-label="Ver recetas"><svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M12 29a9 9 0 0 1-2-17 10 10 0 0 1 19-2 9 9 0 0 1 7 17v13H12V29Z"/><path d="M12 32h24"/></svg></Link>
+      <Link className="inventory-fab-add" href="/app/items/new" aria-label="Añadir alimento"><svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 6v36M6 24h36"/></svg></Link>
+      <Link className="inventory-fab-side" href="/app/scan" aria-label="Escanear ticket"><svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M13 15h5l3-4h7l3 4h5a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4V19a4 4 0 0 1 4-4Z"/><circle cx="24" cy="27" r="7"/></svg></Link>
+    </nav>
   </main>;
 }

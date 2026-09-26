@@ -59,7 +59,7 @@ Los paneles de recorte y revisión forman parte de un borrador temporal iniciado
 
 ## Contratos de navegación y accesibilidad
 
-- Una navegación primaria consistente en `/app`: inventario, escanear, recetas, calendario y un menú para favoritos, compra, ajustes y Pro. En móvil se mantiene la navegación inferior con cinco destinos; en tablet/desktop usa una barra lateral o superior con las mismas rutas. El estado activo se indica con `aria-current="page"` y texto, no solo color.
+- Corrección del usuario del 26 de septiembre: el inventario sigue el patrón original de Expo, sin barra de navegación persistente. Recetas, añadir alimento y escanear ticket son tres acciones flotantes circulares, con el botón coral de añadir en el centro; calendario, compra y ajustes quedan en la cabecera. Las rutas secundarias ofrecen un regreso visible a «Mi Nevera».
 - La protección de rutas guarda `returnTo` solo para paths locales `/app/**` allowlisted, conserva query/hash seguros y retorna a la ruta tras login. Los links directos a detalles deben resolver o mostrar un estado de no encontrado útil.
 - Target principal mínimo de 44×44 CSS px; teclado completo, `:focus-visible`, labels asociados, orden de foco lógico, Escape/cancelar en diálogos, foco inicial y retorno al disparador. Los avisos asincrónicos usan regiones `status`/`alert` apropiadas.
 - Loading, vacío, offline, error, pendiente y conflicto tienen texto, iconografía y acciones distinguibles. Los formularios nunca confirman una escritura offline antes del commit autoritativo.

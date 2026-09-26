@@ -426,5 +426,4 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
 - **data_model:** Sin cambios de dominio. Las rutas de detalle usan IDs existentes y estados de no encontrado; los fixtures sintéticos sustituyen el staging de datos aún pendiente.
 - **external_contracts:** Matriz de paridad para las 20 pantallas y rutas PWA; flujo crítico auth → inventory → scan mock → review → recipes → favorite → calendar → paywall.
 - **edge_cases:** Pantallas legacy sin URL obtienen ruta o sustituto documentado; 320 px, zoom 200 %, texto largo, orientación y prefers-reduced-motion se verifican.
-- **ui_states:** Navegación única con aria-current; destinos consistentes en móvil y desktop; targets 44×44, foco visible y diálogos con Escape y retorno de foco.
-
+- **ui_states:** La corrección visual del usuario sustituye la barra persistente por tres acciones flotantes en el inventario y enlaces contextuales de regreso en rutas secundarias; targets 44×44, foco visible y diálogos con Escape y retorno de foco.

@@ -217,3 +217,7 @@ Decisiones registradas:
 - **tests:** Playwright seis anchos y flujo crítico; axe critical/serious; pruebas de returnTo, teclado/foco y movimiento reducido.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+## 2026-09-26 · Navegación del inventario según la app original
+
+La captura del cliente Expo confirma tres acciones flotantes en la parte inferior: recetas y escaneo en menta, y añadir alimento en coral y de mayor tamaño. Se elimina la barra de navegación persistente de la PWA. Los accesos a calendario, compra y ajustes permanecen en la cabecera del inventario; las rutas secundarias muestran un regreso a «Mi Nevera».

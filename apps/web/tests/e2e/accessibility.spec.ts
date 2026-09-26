@@ -31,7 +31,7 @@ test("critical private screens have no severe accessibility violations", async (
     await page.goto(path);
     await expect(page.locator("main").first()).toBeVisible();
     await expectNoSevereViolations(page);
-    const smallButtons = await page.locator("main button:visible, nav[aria-label='Navegación principal'] a:visible").evaluateAll(elements => elements.map(element => ({ label: element.getAttribute("aria-label") ?? element.textContent?.trim(), width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height })).filter(target => target.width < 44 || target.height < 44));
+    const smallButtons = await page.locator("main button:visible, nav[aria-label='Acciones del inventario'] a:visible, .app-back-row a:visible").evaluateAll(elements => elements.map(element => ({ label: element.getAttribute("aria-label") ?? element.textContent?.trim(), width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height })).filter(target => target.width < 44 || target.height < 44));
     expect(smallButtons, `${path} touch targets`).toEqual([]);
     for (const width of [320, 375, 430, 768, 1024, 1440]) {
       await page.setViewportSize({ width, height: 900 });

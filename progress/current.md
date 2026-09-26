@@ -12,4 +12,4 @@ La propuesta aprobada está en `docs/design/SPRINT13_PROPOSAL.md`. Se implement�
 
 ## Siguiente acción
 
-- Continuar rutas de detalle/edición y estados accesibles; verificar layout a 320–1440 px y flujo Playwright.
+- Verificar con sesión autenticada en navegador la disposición de los tres botones flotantes y el regreso desde rutas secundarias. La compilación, typecheck, lint y pruebas unitarias pasan; el Supabase local no está disponible en este host porque Docker Desktop no está iniciado.
