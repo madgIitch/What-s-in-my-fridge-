@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { validateImportedRecipe } from "../../../../../../../../../packages/domain/src/recipes/imported";
+import { validateImportedRecipe } from "@/lib/recipe-import/result";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import styles from "@/components/recipe-import/recipe-import.module.css";
 
