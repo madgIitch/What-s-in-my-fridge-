@@ -1575,6 +1575,12 @@ export type Database = {
         Args: { p_cache_key: string }
         Returns: undefined
       }
+      find_recipe_candidates: {
+        Args: { p_limit?: number; p_names: string[] }
+        Returns: {
+          recipe_id: string
+        }[]
+      }
       finish_push_delivery: {
         Args: {
           p_delivery_id: string

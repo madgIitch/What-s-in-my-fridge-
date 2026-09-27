@@ -23,6 +23,10 @@ El catálogo de recetas se importa como una versión inmutable identificada por 
 
 La RPC monolítica superó el tiempo de espera del proxy al recibir 72 572 recetas y 666 043 ingredientes. La carga inicial usa ahora `scripts/migration/catalog/import-catalog-staged.mjs`: escribe una versión inactiva mediante operaciones idempotentes, verifica las cardinalidades y la activa solo al terminar. El proceso puede reanudarse tras un fallo. La primera activación requiere que no exista ya una versión activa; sustituir una versión existente sigue requiriendo una operación atómica en base de datos para evitar un intervalo sin catálogo.
 
+## 2026-09-28 · Selección indexada de recetas
+
+El catálogo completo tardaba demasiado al transferirse a Vercel en cada cache miss. La función `find_recipe_candidates` ordena los IDs en PostgreSQL usando un índice de nombres; Vercel descarga únicamente las 50 recetas elegidas. El archivo `catalog-name-index.json`, generado por `build-name-index.mjs`, contiene los nombres únicos del mismo checksum activo y permite aplicar `matcher-v1` antes de consultar la base de datos. Una discrepancia de checksum aborta la búsqueda en vez de combinar versiones distintas. Los errores de cálculo liberan el claim de caché y el navegador corta la espera a los 25 segundos.
+
 ## 2026-09-20 · Reserva OCR en dos fases y confirmación exactamente una vez
 
 La cuota mensual se reserva bajo bloqueo en PostgreSQL antes de preparar el objeto, se libera si el flujo falla antes de Vision y se convierte en consumo justo antes de invocar al proveedor. Desde ese instante, éxito o fallo facturable consume exactamente una unidad. La confirmación bloquea el draft y deriva IDs deterministas de `(draft_id, line_id)`, de modo que retries y carreras devuelven el primer resultado canónico sin duplicar inventario. Las imágenes permanecen en un bucket privado bajo `auth.uid()/draft_id`; cualquier URL firmada dura 60 segundos y no se persiste.

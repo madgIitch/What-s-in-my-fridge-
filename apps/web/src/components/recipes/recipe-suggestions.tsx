@@ -18,8 +18,10 @@ export function RecipeSuggestions({ userId }: { userId: string }) {
   const load = useCallback(async () => {
     if (running.current) return;
     running.current = true; setState("loading"); setMessage("");
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 25_000);
     try {
-      const response = await fetch("/api/recipes/suggestions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ forceRefresh: false }) });
+      const response = await fetch("/api/recipes/suggestions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ forceRefresh: false }), signal: controller.signal });
       const body = await response.json();
       if (!response.ok) {
         setMessage(body.message ?? "No se pudieron cargar las sugerencias");
@@ -27,8 +29,8 @@ export function RecipeSuggestions({ userId }: { userId: string }) {
       }
       const result = body as RecipeSuggestionsResponse; setData(result);
       setState(result.recipes.length ? "results" : result.inventoryEmpty ? "empty" : "no-matches");
-    } catch { setMessage("No hay conexión. Inténtalo de nuevo."); setState("error"); }
-    finally { running.current = false; }
+    } catch { setMessage(controller.signal.aborted ? "La búsqueda está tardando demasiado. Inténtalo de nuevo." : "No hay conexión. Inténtalo de nuevo."); setState("error"); }
+    finally { window.clearTimeout(timeout); running.current = false; }
   }, []);
   useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
   const save = async (recipe: RecipeSuggestionsResponse["recipes"][number]) => {

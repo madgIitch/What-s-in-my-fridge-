@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isRecipeId } from "@/lib/recipes/ids";
 import styles from "./recipe-detail.module.css";
 
 export default async function RecipeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) notFound();
+  if (!isRecipeId(id)) notFound();
 
   const supabase = await createServerSupabaseClient();
   const { data: recipe, error } = await supabase
