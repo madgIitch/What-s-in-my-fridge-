@@ -427,3 +427,26 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
 - **external_contracts:** Matriz de paridad para las 20 pantallas y rutas PWA; flujo crítico auth → inventory → scan mock → review → recipes → favorite → calendar → paywall.
 - **edge_cases:** Pantallas legacy sin URL obtienen ruta o sustituto documentado; 320 px, zoom 200 %, texto largo, orientación y prefers-reduced-motion se verifican.
 - **ui_states:** La corrección visual del usuario sustituye la barra persistente por tres acciones flotantes en el inventario y enlaces contextuales de regreso en rutas secundarias; targets 44×44, foco visible y diálogos con Escape y retorno de foco.
+
+<!-- harness:fix-whisper-audio-handoff -->
+## fix-whisper-audio-handoff · Corregir transcripción de recetas por audio
+
+### Scope aprobado
+
+  - `services/media-worker/**`
+  - `whats-in-my-fridge-backend/whisper_api.py`
+  - `whats-in-my-fridge-backend/Dockerfile.whisper`
+  - `whats-in-my-fridge-backend/cloudbuild.whisper.yaml`
+  - `whats-in-my-fridge-backend/tests/**`
+  - `infrastructure/gcp/cloud-run/**`
+  - `docs/**`
+  - `spec/**`
+  - `progress/**`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** Sin migración; audio efímero y resultado actual.
+- **external_contracts:** Multipart binario en POST /transcribe.
+- **edge_cases:** Social, upload, silencio, formato, tamaño, duración y abortos.
+- **ui_states:** Estados actuales y reintento manual.

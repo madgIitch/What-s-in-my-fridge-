@@ -11,7 +11,7 @@ spec:
       containerConcurrency: 2
       timeoutSeconds: 900
       containers:
-        - image: europe-west1-docker.pkg.dev/what-s-in-my-fridge-a2a07/neverita/media-worker:latest
+        - image: europe-west1-docker.pkg.dev/what-s-in-my-fridge-a2a07/neverita/media-worker@sha256:9a4edc734e00b06fc0c4f23dfb737e23c05530ed6c18e8b198198118aa5a9368
           resources: { limits: { cpu: "2", memory: 4Gi } }
           env:
             - { name: WHISPER_SERVICE_URL, value: "https://whisper-service-placeholder.run.app" }
@@ -23,4 +23,5 @@ spec:
             - { name: RECIPE_IMPORT_WHISPER_ENABLED, value: "true" }
             - { name: RECIPE_IMPORT_EXTRACTION_ENABLED, value: "true" }
             - { name: SUPABASE_SERVICE_ROLE_KEY, valueFrom: { secretKeyRef: { name: supabase-service-role-key, key: latest } } }
+            - { name: INTERNAL_SERVICE_TOKEN, valueFrom: { secretKeyRef: { name: whisper-internal-service-token, key: "1" } } }
   traffic: [{ percent: 100, latestRevision: true }]

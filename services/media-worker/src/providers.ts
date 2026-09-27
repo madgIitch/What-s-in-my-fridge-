@@ -1,10 +1,11 @@
+import { readFile, stat } from "node:fs/promises";
 import type { RecipeExtractionProvider, SourceType, TranscriptionProvider } from "./contracts.js";
 import { WorkerError } from "./worker-error.js";
 
 type ProviderName = "OLLAMA" | "WHISPER";
 
 export function providerTimeout(provider: ProviderName) {
-  const fallback = provider === "OLLAMA" ? 300_000 : 120_000;
+  const fallback = 300_000;
   const configured = Number(process.env[`${provider}_PROVIDER_TIMEOUT_MS`] ?? fallback);
   return Number.isFinite(configured) && configured >= 1_000 && configured <= 600_000 ? configured : fallback;
 }
@@ -16,7 +17,6 @@ async function providerFetch(provider: ProviderName, url: string, body: unknown)
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(process.env.INTERNAL_SERVICE_TOKEN ? { Authorization: `Bearer ${process.env.INTERNAL_SERVICE_TOKEN}` } : {}),
       },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(providerTimeout(provider)),
@@ -39,7 +39,32 @@ function endpoint(base: string, path: string) {
 export class WhisperProvider implements TranscriptionProvider {
   constructor(private endpoint: string) {}
   async transcribe(audioPath: string) {
-    const result = await providerFetch("WHISPER", this.endpoint, { audioPath, format: "wav", sampleRate: 16000, channels: 1 });
+    const token = process.env.INTERNAL_SERVICE_TOKEN;
+    if (!token) throw new WorkerError("WHISPER_AUTH_FAILED");
+    const size = (await stat(audioPath)).size;
+    if (size === 0) throw new WorkerError("WHISPER_AUDIO_INVALID");
+    if (size > 20 * 1024 * 1024) throw new WorkerError("WHISPER_AUDIO_TOO_LARGE");
+    const form = new FormData();
+    form.set("audio", new Blob([await readFile(audioPath)], { type: "audio/mpeg" }), "audio.mp3");
+    let response: Response;
+    try {
+      response = await fetch(endpoint(this.endpoint, "/transcribe"), {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+        signal: AbortSignal.timeout(providerTimeout("WHISPER")),
+      });
+    } catch (error) {
+      throw new WorkerError(error instanceof Error && error.name === "TimeoutError" ? "WHISPER_TIMEOUT" : "WHISPER_UNAVAILABLE");
+    }
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) throw new WorkerError("WHISPER_AUTH_FAILED");
+      if (response.status === 413) throw new WorkerError("WHISPER_AUDIO_TOO_LARGE");
+      if (response.status === 400 || response.status === 415 || response.status === 422) throw new WorkerError("WHISPER_AUDIO_INVALID");
+      if (response.status === 429) throw new WorkerError("WHISPER_RATE_LIMITED");
+      throw new WorkerError(response.status >= 500 ? "WHISPER_UNAVAILABLE" : "WHISPER_REJECTED");
+    }
+    const result = await response.json() as Record<string, unknown>;
     if (typeof result.text !== "string") throw new Error("TRANSCRIPTION_INVALID");
     return { text: result.text, provider: "whisper-service" };
   }

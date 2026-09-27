@@ -6,12 +6,22 @@ import os
 import logging
 import subprocess
 import glob
+import hmac
+import shutil
+import json
+from werkzeug.exceptions import RequestEntityTooLarge
 from urllib.parse import urlparse
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 21 * 1024 * 1024
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def audio_too_large(_error):
+    return jsonify({"error": "AUDIO_TOO_LARGE"}), 413
 
 # Cargar modelo al iniciar (ya descargado durante build)
 logger.info("🔄 Cargando modelo Whisper...")
@@ -107,24 +117,53 @@ def transcribe():
     }
     """
     try:
-        data = request.get_json()
+        is_upload = request.mimetype == 'multipart/form-data'
+        if is_upload:
+            expected_token = os.environ.get('INTERNAL_SERVICE_TOKEN')
+            bearer = request.headers.get('Authorization', '')
+            supplied_token = bearer[7:] if bearer.startswith('Bearer ') else ''
+            if not expected_token:
+                return jsonify({"error": "SERVICE_UNAVAILABLE"}), 503
+            if not hmac.compare_digest(supplied_token.encode('utf-8'), expected_token.encode('utf-8')):
+                return jsonify({"error": "UNAUTHORIZED"}), 401
+            audio_file = request.files.get('audio')
+            if not audio_file or audio_file.mimetype != 'audio/mpeg':
+                return jsonify({"error": "AUDIO_INVALID"}), 415
+            language = request.form.get('language') or None
+        else:
+            data = request.get_json(silent=True)
+            if not data or not data.get('url'):
+                return jsonify({"error": "URL is required"}), 400
+            audio_url = data['url']
+            language = data.get('language', 'en')
 
-        if not data:
-            return jsonify({"error": "No data provided"}), 400
-
-        audio_url = data.get('url')
-        # Default solicitado: inglés
-        language = data.get('language', 'en')
-
-        if not audio_url:
-            return jsonify({"error": "URL is required"}), 400
-
-        logger.info(f"🎵 Resolviendo fuente de audio: {audio_url}")
         temp_dir = tempfile.mkdtemp(prefix="whisper-")
-        audio_source = "direct_url"
+        audio_source = "upload" if is_upload else "direct_url"
 
         try:
-            if _is_direct_audio_url(audio_url):
+            if is_upload:
+                temp_path = os.path.join(temp_dir, "audio.mp3")
+                audio_file.save(temp_path)
+                if os.path.getsize(temp_path) == 0 or os.path.getsize(temp_path) > 20 * 1024 * 1024:
+                    size = os.path.getsize(temp_path)
+                    shutil.rmtree(temp_dir, ignore_errors=True)
+                    return jsonify({"error": "AUDIO_TOO_LARGE" if size else "AUDIO_INVALID"}), 413 if size else 400
+                with open(temp_path, 'rb') as source:
+                    header = source.read(3)
+                if header != b'ID3' and not (len(header) >= 2 and header[0] == 0xff and (header[1] & 0xe0) == 0xe0):
+                    shutil.rmtree(temp_dir, ignore_errors=True)
+                    return jsonify({"error": "AUDIO_INVALID"}), 400
+                probe = subprocess.run(
+                    ['ffprobe', '-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=codec_name:format=duration', '-of', 'json', temp_path],
+                    capture_output=True, text=True, timeout=30,
+                )
+                metadata = json.loads(probe.stdout) if probe.returncode == 0 else {}
+                duration = float(metadata.get('format', {}).get('duration', 0))
+                streams = metadata.get('streams', [])
+                if not streams or streams[0].get('codec_name') != 'mp3' or not 0 < duration <= 600:
+                    shutil.rmtree(temp_dir, ignore_errors=True)
+                    return jsonify({"error": "AUDIO_INVALID"}), 400
+            elif _is_direct_audio_url(audio_url):
                 temp_path = _download_direct_audio(audio_url, temp_dir)
                 audio_source = "direct_url"
             elif _is_social_url(audio_url):
@@ -139,8 +178,9 @@ def transcribe():
                     temp_path = _download_audio_with_ytdlp(audio_url, temp_dir)
                     audio_source = "yt-dlp"
         except Exception as e:
-            logger.error(f"❌ Error resolviendo audio: {str(e)}")
-            return jsonify({"error": f"Failed to resolve audio: {str(e)}"}), 400
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            logger.error("Audio resolution failed (%s)", type(e).__name__)
+            return jsonify({"error": "AUDIO_INVALID"}), 400
 
         try:
             logger.info(f"🎤 Transcribiendo audio (source: {audio_source}, language: {language or 'auto'})...")
@@ -191,13 +231,16 @@ def transcribe():
             except Exception:
                 pass
 
+    except RequestEntityTooLarge:
+        return jsonify({"error": "AUDIO_TOO_LARGE"}), 413
+
     except requests.RequestException as e:
-        logger.error(f"❌ Error descargando audio: {str(e)}")
-        return jsonify({"error": f"Failed to download audio: {str(e)}"}), 400
+        logger.error("Audio download failed (%s)", type(e).__name__)
+        return jsonify({"error": "AUDIO_INVALID"}), 400
 
     except Exception as e:
-        logger.error(f"❌ Error en transcripción: {str(e)}")
-        return jsonify({"error": f"Transcription failed: {str(e)}"}), 500
+        logger.error("Transcription failed (%s)", type(e).__name__)
+        return jsonify({"error": "TRANSCRIPTION_FAILED"}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))

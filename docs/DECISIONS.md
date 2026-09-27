@@ -233,3 +233,16 @@ La captura del cliente Expo confirma tres acciones flotantes en la parte inferio
 ## 2026-09-26 · Corrección del parser de tickets OCR
 
 El OCR de Vision ya devolvía nombres legibles en un ticket real, pero el parser `receipt-v1` no aceptaba cantidades como `1 PRODUCTO`, exigía precios en la misma línea y confundía una dirección terminada en número con un artículo. El parser web y el de dominio ahora reconocen cantidad prefijada, asocian un importe decimal solo cuando sigue inmediatamente al producto y excluyen cabeceras y cifras aisladas. Los nombres con ruido evidente quedan en revisión sin aceptación automática. El texto OCR bruto se conserva; la acción «Retomar última revisión» reinterpreta el último draft pendiente para su propietario sin llamar a Vision, modificarlo ni consumir otra cuota. Los drafts confirmados no se alteran.
+
+<!-- harness:fix-whisper-audio-handoff -->
+## 2026-09-27 · fix-whisper-audio-handoff aprobado
+
+Contexto: se aprobó el spec `fix-whisper-audio-handoff` (Corregir transcripción de recetas por audio).
+
+Decisiones registradas:
+
+- **auth_secrets:** Secreto interno de runtime y logs saneados.
+- **rollback_compat:** Despliegue compatible y rollback del worker.
+- **tests:** Contrato, integración, seguridad y smoke.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.

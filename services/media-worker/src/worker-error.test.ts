@@ -28,6 +28,9 @@ test("only transient yt-dlp failures are retryable", () => {
   assert.equal(isRetryable("OLLAMA_TIMEOUT"), true);
   assert.equal(isRetryable("OLLAMA_UNAVAILABLE"), true);
   assert.equal(isRetryable("WHISPER_TIMEOUT"), true);
+  assert.equal(isRetryable("WHISPER_RATE_LIMITED"), true);
+  assert.equal(isRetryable("WHISPER_AUTH_FAILED"), false);
+  assert.equal(isRetryable("WHISPER_AUDIO_INVALID"), false);
   assert.equal(isRetryable("YTDLP_AUTH_REQUIRED"), false);
   assert.equal(isRetryable("OLLAMA_REJECTED"), false);
   assert.equal(isRetryable("YTDLP_UNAVAILABLE"), false);

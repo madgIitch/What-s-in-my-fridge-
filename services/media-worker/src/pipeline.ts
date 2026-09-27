@@ -37,10 +37,13 @@ export async function processJob(job: Job, workerId: string, repo: JobRepository
       await repo.stage(job.id, workerId, "transcribing");
       dir ??= await mkdtemp(join(tmpdir(), "neverita-"));
       const input = join(dir, "media");
-      const audio = join(dir, "audio.wav");
+      const audio = join(dir, "audio.mp3");
       if (job.uploadObject) await downloadUpload(job.uploadObject, input);
       else if (job.sourceUrl && isSocial(job.sourceType)) await downloadSocial(job.sourceUrl, input);
       else throw new Error("TEXT_INSUFFICIENT");
+      const duration = Number((await command("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", input], 30_000, true)).trim());
+      if (!Number.isFinite(duration) || duration <= 0) throw new WorkerError("WHISPER_AUDIO_INVALID");
+      if (duration > 600) throw new WorkerError("MEDIA_TOO_LONG");
       await ffmpeg(input, audio);
       text = (await transcriber.transcribe(audio)).text;
       path.push("whisper");
@@ -97,7 +100,7 @@ async function googleAccessToken() {
   return result.access_token;
 }
 async function writeResponse(path: string, response: Response) { const bytes = new Uint8Array(await response.arrayBuffer()); if (bytes.length > 100 * 1024 * 1024) throw new Error("MEDIA_TOO_LARGE"); await writeFile(path, bytes); }
-async function ffmpeg(input: string, output: string) { await command("ffmpeg", ["-nostdin", "-y", "-i", input, "-vn", "-ac", "1", "-ar", "16000", "-f", "wav", output], 120_000); }
+async function ffmpeg(input: string, output: string) { await command("ffmpeg", ["-nostdin", "-y", "-i", input, "-vn", "-ac", "1", "-ar", "16000", "-b:a", "48k", "-f", "mp3", output], 120_000); }
 async function command(program: string, args: string[], timeout: number, capture = false) {
   return new Promise<string>((resolve, reject) => {
     const child = spawn(program, args, { stdio: ["ignore", capture ? "pipe" : "ignore", "pipe"] }); let stdout = ""; let stderr = "";

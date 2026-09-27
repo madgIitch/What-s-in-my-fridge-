@@ -1,0 +1,16 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: whisper-service
+  labels: { cloud.googleapis.com/location: europe-west1 }
+spec:
+  template:
+    spec:
+      serviceAccountName: 534730978435-compute@developer.gserviceaccount.com
+      timeoutSeconds: 900
+      containers:
+        - image: gcr.io/what-s-in-my-fridge-a2a07/whisper-service@sha256:f3e774c2602b558f1e28c578b7bbb5b9e2b4c999e146aa39a87f0cc729b193fc
+          resources: { limits: { cpu: "2", memory: 2Gi } }
+          env:
+            - { name: INTERNAL_SERVICE_TOKEN, valueFrom: { secretKeyRef: { name: whisper-internal-service-token, key: "1" } } }
+  traffic: [{ percent: 100, latestRevision: true }]

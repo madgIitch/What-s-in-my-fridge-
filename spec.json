@@ -1450,6 +1450,55 @@
       "answers_hash": "sha256:60488ab45fcb487dd06a930d060dabdaae7a5ed1be717e4d03985d4c013c8a8f",
       "approved_by": null,
       "approved_at": null
+    },
+    {
+      "id": "fix-whisper-audio-handoff",
+      "name": "Fix - Private audio handoff to Whisper",
+      "title": "Corregir transcripción de recetas por audio",
+      "status": "review_pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.5.0",
+      "dependencies": [
+        "sprint-7-url-recipe-import-jobs"
+      ],
+      "objective": "Entregar al servicio Whisper el audio ya extraído por el worker, sin rutas locales inaccesibles ni una segunda descarga del enlace social.",
+      "user_stories": [
+        {
+          "id": "HU-W1",
+          "story": "Como usuario quiero importar una receta de un vídeo de Instagram cuyo texto no basta, sin recibir WHISPER_REJECTED por un fallo de integración."
+        },
+        {
+          "id": "HU-W2",
+          "story": "Como usuario quiero importar un archivo de audio o vídeo compartido mediante el mismo flujo de transcripción."
+        }
+      ],
+      "deliverable": "El worker envía audio procesado a /transcribe de forma autenticada; Whisper transcribe los bytes, y el job continúa hasta extracción o devuelve un error específico y recuperable.",
+      "acceptance": [
+        "El worker invoca /transcribe con el audio producido por ffmpeg y no envía una ruta de su filesystem ni obliga a Whisper a descargar de nuevo la URL social.",
+        "Whisper acepta audio en un contrato binario privado, valida formato y tamaño, limpia temporales y devuelve texto e idioma sin conservar el audio.",
+        "La llamada entre Cloud Run usa un secreto interno inyectado en runtime; el endpoint binario rechaza peticiones sin autenticación y no registra secretos, URLs privadas, audio ni transcripciones.",
+        "Un vídeo social con metadatos insuficientes y un archivo subido recorren download, ffmpeg, transcripción, extracción y validación; texto suficiente sigue omitiendo Whisper.",
+        "Los fallos de autenticación, formato, tamaño, timeout, servicio caído y ausencia de voz producen códigos seguros y una política de retry definida; ningún fallo guarda una receta inválida ni duplica cuota.",
+        "Pruebas de contrato y de integración verifican URL, método, headers, bytes, límites, limpieza, clasificación de errores y regresión del 404/400 observado.",
+        "El despliegue actualiza ambos servicios de forma compatible, verifica un smoke real con medios de prueba y documenta rollback y tratamiento de jobs fallidos existentes."
+      ],
+      "scope": [
+        "services/media-worker/**",
+        "whats-in-my-fridge-backend/whisper_api.py",
+        "whats-in-my-fridge-backend/Dockerfile.whisper",
+        "whats-in-my-fridge-backend/cloudbuild.whisper.yaml",
+        "whats-in-my-fridge-backend/tests/**",
+        "infrastructure/gcp/cloud-run/**",
+        "docs/**",
+        "spec/**",
+        "progress/**",
+        "spec.json"
+      ],
+      "spec_approved": true,
+      "approved_by": "peorr",
+      "approved_at": "2026-09-27T22:30:50.498Z",
+      "answers_hash": "sha256:469e1395f3b53c23e5747ce33b06dc453fc19211de0fd1014d4215948a716f06"
     }
   ],
   "spec_revision": {

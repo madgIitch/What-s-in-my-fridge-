@@ -1,16 +1,16 @@
 # Sesión actual
 
-Feature: **sprint-13-ui-parity-responsive-and-accessibility** — spec aprobado; implementación en curso.
+Feature: **fix-whisper-audio-handoff** — `review_pending`; implementación verificada y activa en Cloud Run.
 
-La propuesta aprobada está en `docs/design/SPRINT13_PROPOSAL.md`. La navegación persistente se sustituyó por las tres acciones flotantes del cliente Expo y `/app/settings` sigue siendo el hub para favoritos, compra, importación y Pro. El Sprint 12 figura `done` por cierre administrativo, con ensayo de staging pendiente y límites registrados en su review; Sprint 13 prueba la interfaz con fixtures sintéticos.
+El worker entrega audio MP3 por multipart autenticado a `/transcribe`. Whisper valida audio/tamaño/duración y limpia temporales. La entrada por URL previa permanece compatible. La evidencia está en `progress/review_fix-whisper-audio-handoff.md`.
 
 ## Verificación
 
-- Dependencia Sprint 12 marcada `done` administrativamente.
-- Se inventariaron 20 pantallas legado y rutas web existentes; varios detalles/editores requieren URL o sustituto accesible.
-- Pruebas de navegación (2), typecheck y lint aprobados.
-- Mantenimiento de Sprint 5: el parser de tickets se corrigió para cantidades sin `x`, precios en la línea siguiente, cabeceras administrativas e importes aislados; se añadieron casos sintéticos sin datos personales y una acción para reinterpretar el último draft pendiente sin otra llamada OCR.
+- 20 tests del worker y 8 tests Python pasan.
+- Gates del harness pasan: typecheck, lint, 129 tests web y diff-scope.
+- Smoke social y file aislados completan la receta validada; el smoke file verifica cleanup con GCS controlado.
+- El Sprint 13 conserva su revisión visual humana pendiente y los límites de migración del Sprint 12 siguen registrados en su review.
 
 ## Siguiente acción
 
-- Verificar con sesión autenticada en navegador la disposición de los tres botones flotantes y el regreso desde rutas secundarias. La compilación, typecheck, lint y pruebas unitarias pasan; el Supabase local no está disponible en este host porque Docker Desktop no está iniciado.
+- Smoke humano del import en la PWA. Los jobs históricos fallidos no se reencolan sin acción explícita.
