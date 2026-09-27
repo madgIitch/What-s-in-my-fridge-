@@ -1,5 +1,7 @@
 # Sesión actual
 
+Spec preparada: **improve-recipe-import-quality** (`spec_ready`, `spec_approved:false`). Auditoría de lectura del job real y recorrido completo documentada en `docs/RECIPE_IMPORT_QUALITY_AUDIT.md`. Requisitos, diseño y tareas en `spec/improve-recipe-import-quality-Recipe import quality/`. Pendiente aprobación humana antes de implementar; primer paso autorizado posterior sería reproducción aislada/anotación, no reproceso del job de producción.
+
 Corrección actual: Sprint 7, recuperación del resultado importado — `review_pending`. Cada importación completada enlaza a su pantalla de ingredientes y pasos. Ver `progress/review_imported-recipe-access.md`; pendiente smoke humano en producción.
 
 Feature: **fix-whisper-audio-handoff** — `review_pending`; implementación verificada y activa en Cloud Run.

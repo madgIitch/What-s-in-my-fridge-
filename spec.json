@@ -1499,6 +1499,90 @@
       "approved_by": "peorr",
       "approved_at": "2026-09-27T22:30:50.498Z",
       "answers_hash": "sha256:469e1395f3b53c23e5747ce33b06dc453fc19211de0fd1014d4215948a716f06"
+    },
+    {
+      "id": "improve-recipe-import-quality",
+      "name": "Recipe import quality",
+      "title": "Calidad y fidelidad de recetas importadas",
+      "description": "Mejorar de extremo a extremo la fidelidad de transcripción y extracción a partir del caso Instagram observado, evitando cantidades inventadas y pasos incoherentes.",
+      "objective": "Recetas fundamentadas en sus fuentes, incertidumbre visible y revisión recuperable.",
+      "status": "spec_ready",
+      "sdd": true,
+      "priority": "P0",
+      "dependencies": [
+        "sprint-7-url-recipe-import-jobs",
+        "fix-whisper-audio-handoff"
+      ],
+      "acceptance": [
+        "Reproducir el reel del job observado en un runner aislado, sin consumo de cuota, escrituras de producción ni modificación del resultado original. Registrar comparación por etapa: caption/subtítulos, audio/transcripción, JSON y representación. Escuchar la fuente y anotar ingredientes, cantidades explícitas, operaciones y frases ajenas a la receta; no usar la salida actual como referencia correcta.",
+        "Crear corpus de 12 casos con referencias humanas: 6 sociales en español (incluido el reel, voz con música, habla rápida y cantidades omitidas), 2 sociales en otros idiomas, 2 blogs/JSON-LD, 1 texto manual y 1 upload. Separar 8 de desarrollo y 4 de evaluación; fijar split y hashes antes de ajustar prompts. Medios privados locales y temporales; fixtures del repo sintéticos o autorizados.",
+        "Evaluar la suficiencia por cobertura de ingredientes/instrucciones, no solo longitud. Caption largo promocional no evita ASR; JSON-LD Recipe completo sí. Recuperar subtítulos disponibles y conservar fuentes separadas. Si falta texto, combinar caption pertinente y ASR; conflictos se señalan, no se resuelven inventando datos.",
+        "Comparar base actual y al menos un candidato ASR compatible con CPU, usando el mismo audio y referencias. Medir WER, errores en términos culinarios/números, latencia y memoria. Evaluar también audio actual frente a variante con menor pérdida; no cambiar producción por suposición. Idioma explícito solo cuando provenga de una elección o metadata fiable; autodetección en los demás casos.",
+        "Whisper devuelve contrato versionado con texto, idioma, timestamps y señales disponibles de calidad. El worker las conserva en memoria para evaluación/fusión, sin interpretarlas como probabilidades de exactitud. Usar umbrales calibrados en el corpus; cualquier segundo pase está acotado a uno y comparte presupuesto de tiempo.",
+        "Extracción usa schema y prompt versionados, generación reproducible y un máximo de un repair. Cada ingrediente y operación candidata incluye referencia interna a evidencia identificada de caption/subtítulo/segmento. Texto fuente se delimita como datos no confiables; instrucciones insertadas en el caption no cambian el sistema. El modelo/configuración elegidos deben pasar evaluación, no se presupone que un modelo mayor resuelva el problema.",
+        "Cantidad ausente: omitir amount/unit y mostrar «Cantidad no indicada». «Al gusto» es nota cualitativa solo si está en la fuente. No convertir «por casa», «alguno» o «un poco» en valores numéricos/unidades inventados. Deduplicar ingredientes y evitar «un poco cantidad suficiente». Conservar cantidades explícitas, unidades y rangos sin alteración silenciosa.",
+        "Pasos en español claro y orden de la fuente; eliminar muletillas/promoción/bromas. No inventar relleno, ingredientes, tiempos, temperaturas o técnicas para hacer una receta parecer completa. Operaciones sin evidencia o contradicciones provocan revisión; reformular gramática no autoriza cambios de significado.",
+        "Antes de completar, validar estructura estricta, medidas, cobertura y evidencia. Las validaciones automáticas detectan señales y limitaciones; no se presenta un score LLM como garantía. Resultado legible pero dudoso usa `quality.status=review_required` dentro de provenance y aviso «Revisa esta receta»; sin receta recuperable falla con `RECIPE_QUALITY_INSUFFICIENT`, sin retry automático repetitivo. Mantener estados de job existentes.",
+        "UI muestra fuente original (solo URL http/https validada), cantidades desconocidas, advertencias y distingue «Lista para revisar» de «Lista». El detalle permite corregir ingredientes/pasos como revisión propia, con validación de tamaño y sesión/ownership, sin alterar el resultado fuente ni otros usuarios. Recetas históricas siguen legibles y no reciben etiqueta de calidad nueva por defecto.",
+        "Evaluación de los 4 casos reservados: precisión de ingredientes >=90%, recall >=85%; fidelidad de cantidades explícitas >=95% agregada (denominadores publicados); cero cantidades/tiempos/temperaturas sin soporte y cero frases no culinarias en pasos aceptados como ready. Casos inciertos deben quedar review_required. Publicar por caso y agregado; no ocultar un fallo con el promedio. El reel pasa con cantidades desconocidas correctamente omitidas y sin las frases incoherentes observadas salvo evidencia humana que demuestre su contenido y pertinencia.",
+        "Para clips <=90 s, objetivo de aceptación: p95 warm <=180 s en mínimo 20 ejecuciones del corpus, sin OOM y usando <=80% del límite de memoria elegido. Registrar cold start por separado. Deadline global worker <=540 s dentro de tareas/leases configurados; máximo dos llamadas de extracción y dos de ASR, sin multiplicar retries internos. No subir recursos o activar GPU sin evidencia de la evaluación y presupuesto documentado.",
+        "Metadata mínima persistida: versiones de pipeline/prompt/schema/modelos, configuración relevante, duraciones por etapa, fuente usada y códigos de revisión. Transcripciones, audio, captions completos y razonamientos no se guardan ni loguean en producción. Evidencia temporal de evaluación accesible solo al ejecutor, se limpia al terminar; reportes contienen métricas, no secretos o contenido privado.",
+        "Reprocesar recetas históricas solo mediante acción explícita del propietario, sin nueva cuota de importación para el mismo job. Un lease y una clave por `(jobId,pipelineVersion)` impiden trabajos paralelos/duplicados. Guardar revisión candidata aparte; conservar versión previa hasta aceptación del usuario. Fallo o rollback no sustituye el original. No reencolar todos los jobs automáticamente.",
+        "Gates: typecheck, lint, tests y build web; tests worker/Python; integración de contrato ASR/LLM; RLS de lectura/edición/reproceso; idempotencia/redelivery; Playwright móvil de review, edición y rollback. Deploy primero contratos compatibles, después worker y UI con flag apagado; canary y evaluación antes de activar. Mantener rollback por versión/digest sin borrar datos históricos."
+      ],
+      "scope": [
+        "services/media-worker/**",
+        "whats-in-my-fridge-backend/whisper_api.py",
+        "whats-in-my-fridge-backend/Dockerfile.whisper",
+        "whats-in-my-fridge-backend/cloudbuild.whisper.yaml",
+        "whats-in-my-fridge-backend/tests/**",
+        "apps/web/src/app/(auth)/app/recipes/import/**",
+        "apps/web/src/app/api/recipe-jobs/**",
+        "apps/web/src/components/recipe-import/**",
+        "apps/web/src/lib/recipe-import/**",
+        "apps/web/src/types/database.generated.ts",
+        "packages/domain/src/recipe-jobs/**",
+        "packages/domain/src/recipes/**",
+        "supabase/migrations/**",
+        "supabase/tests/**",
+        "infrastructure/gcp/cloud-run/**",
+        "tests/recipe-import-quality/**",
+        "apps/web/tests/e2e/recipe-import-flow.spec.ts",
+        "docs/**",
+        "spec/**",
+        "progress/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "user_stories": [
+        {
+          "id": "QUALITY.1",
+          "story": "Como usuario quiero ingredientes y pasos fieles a la receta original."
+        },
+        {
+          "id": "QUALITY.2",
+          "story": "Como usuario quiero conocer datos inciertos y corregirlos."
+        },
+        {
+          "id": "QUALITY.3",
+          "story": "Como usuario quiero reprocesar sin perder mi receta ni consumir otra importación."
+        }
+      ],
+      "tasks": [
+        "Aprobar spec antes de cambios funcionales.",
+        "Reproducir reel aisladamente y anotar referencia humana; crear corpus/split y baseline.",
+        "Evaluar ASR/audio/idioma y recursos; documentar selección y versiones.",
+        "Implementar subtítulos, cobertura y fusión de fuentes sin pérdida de caption.",
+        "Ampliar contrato ASR compatible y conservar señales en memoria.",
+        "Implementar extracción con schema, evidencia y reglas de cantidades/pasos.",
+        "Implementar quality gate, revisión requerida y presupuesto global de retries.",
+        "Migración aditiva/RLS de revisiones; edición propia y reproceso explícito idempotente sin cuota adicional.",
+        "Mostrar fuente, avisos, cantidades desconocidas y revisión en UI móvil.",
+        "Ejecutar benchmark ciego, gates/build, worker/Python, RLS y Playwright.",
+        "Canary con flag apagado, activar solo al pasar criterios; smoke humano y rollback documentados."
+      ],
+      "spec_prepared_at": "2026-09-27T23:50:23.677Z",
+      "answers_hash": "sha256:ce3314873d28c998c00ee2899a5f21b506829db4052640dd7f55c46aac8a7df1"
     }
   ],
   "spec_revision": {
