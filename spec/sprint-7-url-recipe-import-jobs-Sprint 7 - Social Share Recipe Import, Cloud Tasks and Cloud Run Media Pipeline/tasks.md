@@ -23,3 +23,8 @@ Checklist de implementación. El agente marca [x] al completar; los gates verifi
 - [x] (T19) Tests cubren share target, paste, file, caption sin Whisper, fallback Whisper, schema inválido, retry/redelivery, doble submit, concurrencia, recuperación, SSRF y cleanup.  ↔ R19
 - [ ] (T20) Typecheck, lint, unit/integration, build, worker container tests, pgTAP/RLS y Playwright móvil pasan con código 0.  ↔ R20
 - [ ] Tests que cubran los criterios de aceptación
+
+## Corrección de recuperación del resultado (HU7.3)
+- [x] Enlazar cada importación completada a su receta persistida.
+- [x] Mostrar ingredientes y pasos con sesión y ownership comprobados.
+- [ ] Smoke humano de apertura desde importaciones recientes.

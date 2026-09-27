@@ -1,5 +1,7 @@
 # Sesión actual
 
+Corrección actual: Sprint 7, recuperación del resultado importado — `review_pending`. Cada importación completada enlaza a su pantalla de ingredientes y pasos. Ver `progress/review_imported-recipe-access.md`; pendiente smoke humano en producción.
+
 Feature: **fix-whisper-audio-handoff** — `review_pending`; implementación verificada y activa en Cloud Run.
 
 El worker entrega audio MP3 por multipart autenticado a `/transcribe`. Whisper valida audio/tamaño/duración y limpia temporales. La entrada por URL previa permanece compatible. La evidencia está en `progress/review_fix-whisper-audio-handoff.md`.
