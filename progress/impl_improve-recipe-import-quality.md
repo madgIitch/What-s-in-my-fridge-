@@ -19,6 +19,10 @@ Spec aprobada por peorr. Implementación detrás de flags apagados, no certifica
 
 ## Pendiente antes de activar o cerrar
 
+### Incidencia de la prueba en producción (28 septiembre)
+
+El job `5d058b36-2bdb-4492-86f8-49cfd61981af` terminó en un intento sin error del worker, pero la pantalla mostraba «No pudimos leer la receta». El resultado `recipe-v1` tenía 4 ingredientes y 5 pasos válidos; los campos opcionales `amount` y `unit` llegaron como JSON `null`. El validador web solo aceptaba `undefined` o texto. Se admite `null` como medida desconocida y se añade regresión. No se modifica el job original ni se declara validada la fidelidad del contenido.
+
 1. Referencia humana del reel y resto del corpus; pregunta enviada al usuario. No tratar resultados del modelo como etiquetas humanas.
 2. Evaluar candidato ASR small y variante de audio; benchmarks sobre recursos Cloud Run, 20 ejecuciones, métricas de memoria y p95/cold separado.
 3. Calibrar verificación semántica/contradicciones, unidades, cantidades escritas y avisos sobre segmentos inciertos. Las reglas implementadas detectan señales, no prueban fidelidad completa.

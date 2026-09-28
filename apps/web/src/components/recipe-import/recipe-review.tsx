@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./recipe-import.module.css";
 
-type Recipe = { title: string; ingredients: { name: string; amount?: string; unit?: string }[]; steps: string[] };
+type Recipe = { title: string; ingredients: { name: string; amount?: string | null; unit?: string | null }[]; steps: string[] };
 export function RecipeReview({ jobId, version, recipe, canReprocess, candidate = false }: { jobId: string; version: number; recipe: Recipe; canReprocess: boolean; candidate?: boolean }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);

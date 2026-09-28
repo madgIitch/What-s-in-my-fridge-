@@ -13,6 +13,7 @@ describe("imported recipe display validation", () => {
   it("accepts a stored recipe and optional ingredient measures", () => {
     expect(validateImportedRecipe(recipe)).toBe(true);
     expect(validateImportedRecipe({ ...recipe, ingredients: [{ name: "Sal" }] })).toBe(true);
+    expect(validateImportedRecipe({ ...recipe, ingredients: [{ name: "Sal", amount: null, unit: null }] })).toBe(true);
   });
   it("rejects missing results, empty steps and unsafe ingredient values", () => {
     expect(validateImportedRecipe(null)).toBe(false);
