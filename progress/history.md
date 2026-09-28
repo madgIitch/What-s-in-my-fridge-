@@ -30,3 +30,7 @@
 - CI `35606578423` aprobó web, reconstrucción completa de base, lint SQL, pgTAP/RLS, tipos generados y despliegue de migraciones a staging.
 - Worker media/IA: build y 13 tests aprobados localmente; incluye idempotencia, captions-first, fallback Whisper, validación estructurada, SSRF y cleanup.
 - Pendiente para `done`: smoke humano móvil autenticado y verificación end-to-end con Cloud Tasks, Cloud Run y proveedores reales.
+# 2026-09-28 · Sprint R0 → done
+
+- Cierre por aceptación explícita del usuario tras la revisión visual en localhost.
+- Implementación `ba1fe34`; cierre del harness `7ef592f`. Producción sin cambios.

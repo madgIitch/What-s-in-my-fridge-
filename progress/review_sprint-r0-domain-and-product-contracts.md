@@ -1,6 +1,6 @@
 # Revisión Sprint R0
 
-Implementación terminada para revisión humana. Activación limitada a localhost; no hay despliegue ni cambio de flag de producción.
+Implementación aceptada y spec cerrado en `done` por petición explícita del usuario («cierra spec») el 28 de septiembre de 2026, tras la revisión en localhost. Activación limitada a localhost; no hay despliegue ni cambio de flag de producción.
 
 ## Entrega
 
@@ -23,4 +23,4 @@ La suite histórica de Sprint 13 falló por esperar el copy anterior «guardaron
 
 ## Revisión humana
 
-Comprobar shell y navegación en localhost; aceptar la base visual y los contratos. R1 y R2 implementarán las superficies de las referencias en sus specs propios. La migración y flag necesitan su despliegue autorizado cuando corresponda.
+Aceptación del usuario registrada tras la entrega y revisión en localhost. R1 y R2 implementarán las superficies de las referencias en sus specs propios. La migración y flag necesitan su despliegue autorizado cuando corresponda.
