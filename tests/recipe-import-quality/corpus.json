@@ -1,0 +1,20 @@
+{
+  "version": "recipe-quality-corpus-v1",
+  "status": "awaiting_human_annotation",
+  "splitFrozen": true,
+  "privateMediaInRepository": false,
+  "cases": [
+    { "id": "es-instagram-tortilla", "split": "development", "source": "instagram", "language": "es", "focus": "reported regression; missing quantities", "reference": null },
+    { "id": "es-social-music", "split": "development", "source": "social", "language": "es", "focus": "speech with music", "reference": null },
+    { "id": "es-social-fast", "split": "development", "source": "social", "language": "es", "focus": "fast speech", "reference": null },
+    { "id": "es-social-promotion", "split": "development", "source": "social", "language": "es", "focus": "promotional caption", "reference": null },
+    { "id": "en-social-subtitles", "split": "development", "source": "social", "language": "en", "focus": "subtitles", "reference": null },
+    { "id": "blog-jsonld", "split": "development", "source": "blog", "focus": "complete structured recipe", "reference": null },
+    { "id": "manual-explicit", "split": "development", "source": "manual", "focus": "explicit measures", "reference": null },
+    { "id": "upload-speech", "split": "development", "source": "file", "focus": "audio upload", "reference": null },
+    { "id": "es-social-reserved-a", "split": "evaluation", "source": "social", "language": "es", "reference": null },
+    { "id": "es-social-reserved-b", "split": "evaluation", "source": "social", "language": "es", "reference": null },
+    { "id": "other-social-reserved", "split": "evaluation", "source": "social", "language": "other", "reference": null },
+    { "id": "blog-reserved", "split": "evaluation", "source": "blog", "reference": null }
+  ]
+}

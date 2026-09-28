@@ -1,6 +1,6 @@
 # Mejora de calidad de importación de recetas
 
-Estado: `spec_ready`; `spec_approved:false`. Requiere aprobación antes de implementar según HARNESS.md.
+Estado: `approved`; `spec_approved:true`. Aprobado por el usuario; implementación en curso.
 
 ## Objetivo
 

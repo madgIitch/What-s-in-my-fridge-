@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { validateImportedRecipe } from "./result";
+import { recipeNeedsReview, recipeSourceUrl, validateImportedRecipe } from "./result";
 
 const recipe = { schemaVersion: "recipe-v1", title: "Tortilla", ingredients: [{ name: "Huevo", amount: "2", unit: "unidades" }], steps: ["Batir los huevos."] };
 
 describe("imported recipe display validation", () => {
+  it("keeps old recipes readable without inventing quality and only links web sources", () => {
+    expect(recipeNeedsReview(recipe)).toBe(false);
+    expect(recipeNeedsReview({ ...recipe, provenance: { quality: { status: "review_required" } } })).toBe(true);
+    expect(recipeSourceUrl({ source: { url: "javascript:alert(1)" } })).toBeNull();
+    expect(recipeSourceUrl({ source: { url: "https://example.com/recipe" } })).toBe("https://example.com/recipe");
+  });
   it("accepts a stored recipe and optional ingredient measures", () => {
     expect(validateImportedRecipe(recipe)).toBe(true);
     expect(validateImportedRecipe({ ...recipe, ingredients: [{ name: "Sal" }] })).toBe(true);

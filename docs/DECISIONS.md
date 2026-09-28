@@ -246,3 +246,16 @@ Decisiones registradas:
 - **tests:** Contrato, integración, seguridad y smoke.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+<!-- harness:improve-recipe-import-quality -->
+## 2026-09-27 · improve-recipe-import-quality aprobado
+
+Contexto: se aprobó el spec `improve-recipe-import-quality` (Calidad y fidelidad de recetas importadas).
+
+Decisiones registradas:
+
+- **auth_secrets:** RLS ownership, Bearer interno, no contenido ni secretos en logs, evidencia temporal privada.
+- **rollback_compat:** Flag apagado hasta benchmark/canary, lector recipe-v1, revisiones históricas conservadas, rollback por digest.
+- **tests:** 12 casos anotados, split 8/4, métricas explícitas, 20 ejecuciones warm, gates/build/RLS/Playwright y proveedores reales.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.

@@ -1,6 +1,8 @@
 # Sesión actual
 
-Spec preparada: **improve-recipe-import-quality** (`spec_ready`, `spec_approved:false`). Auditoría de lectura del job real y recorrido completo documentada en `docs/RECIPE_IMPORT_QUALITY_AUDIT.md`. Requisitos, diseño y tareas en `spec/improve-recipe-import-quality-Recipe import quality/`. Pendiente aprobación humana antes de implementar; primer paso autorizado posterior sería reproducción aislada/anotación, no reproceso del job de producción.
+Feature activa: **improve-recipe-import-quality**, spec aprobada e implementación en curso. Ver `progress/impl_improve-recipe-import-quality.md` para código, reproducción real y pendientes. Flags de calidad/revisión/reproceso apagados por defecto; no activar ni declarar terminado sin referencias humanas y benchmark aprobado.
+
+Auditoría del job real y recorrido completo documentada en `docs/RECIPE_IMPORT_QUALITY_AUDIT.md`. Requisitos, diseño y tareas aprobados en `spec/improve-recipe-import-quality-Recipe import quality/`. La reproducción aislada está realizada; queda la anotación humana para medir fidelidad.
 
 Corrección actual: Sprint 7, recuperación del resultado importado — `review_pending`. Cada importación completada enlaza a su pantalla de ingredientes y pasos. Ver `progress/review_imported-recipe-access.md`; pendiente smoke humano en producción.
 

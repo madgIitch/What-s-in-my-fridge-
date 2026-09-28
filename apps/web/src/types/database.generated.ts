@@ -1049,6 +1049,83 @@ export type Database = {
         }
         Relationships: []
       }
+      recipe_import_reprocesses: {
+        Row: {
+          child_job_id: string
+          created_at: string
+          id: string
+          job_id: string
+          pipeline_version: string
+          user_id: string
+        }
+        Insert: {
+          child_job_id: string
+          created_at?: string
+          id?: string
+          job_id: string
+          pipeline_version: string
+          user_id: string
+        }
+        Update: {
+          child_job_id?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+          pipeline_version?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_import_reprocesses_child_job_id_fkey"
+            columns: ["child_job_id"]
+            isOneToOne: true
+            referencedRelation: "recipe_import_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_import_reprocesses_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "recipe_import_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_import_revisions: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          result: Json
+          user_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          result: Json
+          user_id: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          result?: Json
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_import_revisions_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "recipe_import_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recipe_import_usage: {
         Row: {
           consumed: number
@@ -1652,6 +1729,10 @@ export type Database = {
         Returns: string
       }
       release_receipt_ocr: { Args: { p_draft_id: string }; Returns: undefined }
+      request_recipe_import_reprocess: {
+        Args: { p_job_id: string }
+        Returns: Json
+      }
       reserve_receipt_ocr: {
         Args: {
           p_draft_id: string
@@ -1664,6 +1745,15 @@ export type Database = {
       revoke_push_subscription: {
         Args: { p_endpoint_hash: string }
         Returns: boolean
+      }
+      save_recipe_import_revision: {
+        Args: {
+          p_expected_version: number
+          p_job_id: string
+          p_restore?: boolean
+          p_result: Json
+        }
+        Returns: Json
       }
       set_billing_override: {
         Args: {

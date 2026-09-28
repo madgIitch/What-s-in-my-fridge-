@@ -25,7 +25,10 @@ def audio_too_large(_error):
 
 # Cargar modelo al iniciar (ya descargado durante build)
 logger.info("🔄 Cargando modelo Whisper...")
-model = WhisperModel("base", device="cpu", compute_type="int8")
+MODEL_NAME = os.environ.get('WHISPER_MODEL', 'base')
+if MODEL_NAME not in ('base', 'small'):
+    raise RuntimeError('WHISPER_MODEL_INVALID')
+model = WhisperModel(MODEL_NAME, device="cpu", compute_type="int8")
 logger.info("✅ Modelo Whisper cargado")
 
 DIRECT_AUDIO_EXTENSIONS = (".mp3", ".m4a", ".aac", ".wav", ".ogg", ".flac", ".webm")
@@ -96,7 +99,7 @@ def _download_audio_with_ytdlp(url: str, temp_dir: str) -> str:
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({"status": "healthy", "model": "whisper-base"}), 200
+    return jsonify({"status": "healthy", "model": f"whisper-{MODEL_NAME}"}), 200
 
 @app.route('/transcribe', methods=['POST'])
 def transcribe():
@@ -203,6 +206,9 @@ def transcribe():
             logger.info(f"✅ Transcripción completada ({len(segments_list)} segmentos, idioma: {detected_language})")
 
             return jsonify({
+                "contract": "transcription-v2",
+                "model": MODEL_NAME,
+                "configuration": {"compute_type": "int8", "beam_size": 5, "vad_filter": True},
                 "text": full_text.strip(),
                 "language": detected_language,
                 "audio_source": audio_source,
@@ -210,7 +216,10 @@ def transcribe():
                     {
                         "text": segment.text,
                         "start": segment.start,
-                        "end": segment.end
+                        "end": segment.end,
+                        "avg_logprob": getattr(segment, 'avg_logprob', None),
+                        "no_speech_prob": getattr(segment, 'no_speech_prob', None),
+                        "compression_ratio": getattr(segment, 'compression_ratio', None)
                     }
                     for segment in segments_list
                 ]

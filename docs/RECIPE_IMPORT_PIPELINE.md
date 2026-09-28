@@ -1,5 +1,9 @@
 # Pipeline de importación de recetas
 
+Calidad v1 (implementación en evaluación): `RECIPE_IMPORT_QUALITY_ENABLED=true` en el worker conserva fuentes separadas, recupera VTT y usa extracción con evidencia; los resultados quedan `review_required` mientras falta benchmark. Por defecto está desactivada. Whisper mantiene texto legacy y añade contrato v2/modelo/segmentos; `WHISPER_MODEL=base|small` debe coincidir con el modelo precargado por el build. No seleccionar small para producción sin evaluación.
+
+Revisión web: flags `RECIPE_IMPORT_REVIEW_ENABLED` y `RECIPE_IMPORT_REPROCESS_ENABLED` están desactivados por defecto. Activar solo después de la migración `20260928000200_recipe_quality_revisions.sql` y el rollout del worker de calidad. Las revisiones son aditivas con control de versión; el job original no se modifica. Reprocesar crea un candidato separado sin consumo de importación, idempotente por job/pipeline y limitado a 3 operaciones nuevas por usuario/hora. El candidato se acepta explícitamente. No activar reproceso contra un worker que tenga el flag de calidad apagado. Los uploads ya limpiados no son reprocesables.
+
 La PWA normaliza paste, Web Share Target, texto y referencias de upload en `createRecipeImportJob`. El RPC de Supabase crea el job y consume cuota en una sola transacción; Vercel solo envía `{jobId}` a Cloud Tasks y responde. El worker privado de Cloud Run reclama un lease, intenta texto estructurado/HTML antes de media, usa ffmpeg y `whisper-service` solo si el texto es insuficiente, llama a `ollama-service` para structured output y completa el job únicamente después de validar `recipe-v1`.
 
 La fuente de verdad es `recipe_import_jobs`; Realtime puede acelerar la UI, pero GET/polling recupera cualquier estado tras recargar. Un redelivery observa `completed`, un lease vigente o reclama un job expirado. Los errores almacenan códigos seguros, nunca contenido ni tokens.

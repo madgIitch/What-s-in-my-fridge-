@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
+import { recipeNeedsReview } from "@/lib/recipe-import/result";
 import { useCallback, useEffect, useState } from "react";
 import styles from "./recipe-import.module.css";
 
-type Job = { id: string; state: string; source_type: string; result?: { title?: string }; error_code?: string; retryable?: boolean };
+type Job = { id: string; state: string; source_type: string; result?: { title?: string; provenance?: { quality?: { status?: string } } }; error_code?: string; retryable?: boolean };
 export function RecipeImport({ initialUrl = "", initialText = "" }: { initialUrl?: string; initialText?: string }) {
   const [mode, setMode] = useState(initialText && !initialUrl ? "text" : "url"); const [url, setUrl] = useState(initialUrl); const [text, setText] = useState(initialText);
   const [file, setFile] = useState<File | null>(null);
@@ -20,6 +21,6 @@ export function RecipeImport({ initialUrl = "", initialText = "" }: { initialUrl
   return <main className={styles.shell}><p className={styles.eyebrow}>RECETAS · IMPORTAR</p><h1>Trae una receta de cualquier sitio</h1><p>Pega un enlace de YouTube, Instagram, TikTok o un blog. También puedes escribir la receta.</p>
     <div className={styles.tabs}><button type="button" aria-pressed={mode === "url"} onClick={() => setMode("url")}>Pegar enlace</button><button type="button" aria-pressed={mode === "text"} onClick={() => setMode("text")}>Texto manual</button><button type="button" aria-pressed={mode === "file"} onClick={() => setMode("file")}>Archivo</button></div>
     <form onSubmit={submit}>{mode === "url" ? <label>Enlace<input type="url" required value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" /></label> : mode === "text" ? <label>Receta<textarea required minLength={20} value={text} onChange={(e) => setText(e.target.value)} rows={8} /></label> : <label>Audio o vídeo<input type="file" required accept="video/mp4,video/webm,audio/mpeg,audio/mp4,audio/webm" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></label>}<button className={styles.primary} disabled={busy}>{busy ? "Enviando…" : "Importar receta"}</button></form>
-    <p role="status" aria-live="polite">{message}</p><section><h2>Importaciones recientes</h2>{jobs.length === 0 ? <p>Aún no has importado ninguna receta.</p> : <ul>{jobs.map((job) => <li key={job.id}><strong>{job.result?.title ?? job.source_type}</strong>{job.state === "completed" ? <Link className={styles.openRecipe} href={`/app/recipes/import/${job.id}`}>Ver receta →</Link> : <span>{job.state === "failed" ? `Falló (${job.error_code ?? "error"})` : "Procesando"}</span>}</li>)}</ul>}</section>
+    <p role="status" aria-live="polite">{message}</p><section><h2>Importaciones recientes</h2>{jobs.length === 0 ? <p>Aún no has importado ninguna receta.</p> : <ul>{jobs.map((job) => <li key={job.id}><strong>{job.result?.title ?? job.source_type}</strong>{job.state === "completed" ? <Link className={styles.openRecipe} href={`/app/recipes/import/${job.id}`}>{recipeNeedsReview(job.result) ? "Lista para revisar →" : "Ver receta →"}</Link> : <span>{job.state === "failed" ? `Falló (${job.error_code ?? "error"})` : "Procesando"}</span>}</li>)}</ul>}</section>
   </main>;
 }

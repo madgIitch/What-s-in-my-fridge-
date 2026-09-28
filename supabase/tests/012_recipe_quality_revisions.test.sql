@@ -1,0 +1,22 @@
+begin; select plan(14);
+select has_table('public','recipe_import_revisions','immutable revision history exists');
+select has_table('public','recipe_import_reprocesses','reprocessing operations exist');
+insert into auth.users(id,email) values('00000000-0000-4000-8000-000000000901','quality-owner@example.test'),('00000000-0000-4000-8000-000000000902','quality-other@example.test');
+insert into public.recipe_import_jobs(id,user_id,idempotency_key,source_type,manual_text,state,result,provenance)
+values('00000000-0000-4000-8000-000000000903','00000000-0000-4000-8000-000000000901','quality-original-001','manual','2 huevos. Batir los huevos.','completed','{"schemaVersion":"recipe-v1","title":"Tortilla","ingredients":[{"name":"Huevo"}],"steps":["Batir los huevos."],"source":{"type":"manual"},"provenance":{}}','{}');
+set local role authenticated;
+set local request.jwt.claim.sub='00000000-0000-4000-8000-000000000901';
+select is((public.save_recipe_import_revision('00000000-0000-4000-8000-000000000903',0,'{"schemaVersion":"recipe-v1","title":"Mi tortilla","ingredients":[{"name":"Huevo","amount":"2"}],"steps":["Batir los huevos."]}')->>'version'),'1','owner saves first revision');
+select is((public.save_recipe_import_revision('00000000-0000-4000-8000-000000000903',0,'{}')->>'error'),'VERSION_CONFLICT','stale edit rejected');
+select is((select result->>'title' from public.recipe_import_jobs where id='00000000-0000-4000-8000-000000000903'),'Tortilla','source result never overwritten');
+select is((public.save_recipe_import_revision('00000000-0000-4000-8000-000000000903',1,null,true)->>'version'),'2','restore appends original without deleting history');
+select is((select result->>'title' from public.recipe_import_revisions where job_id='00000000-0000-4000-8000-000000000903' and version=2),'Tortilla','restored content is original');
+select is((public.save_recipe_import_revision('00000000-0000-4000-8000-000000000903',2,'{"schemaVersion":"recipe-v1","title":"Bad","ingredients":[{"name":42}],"steps":["Batir."]}')->>'error'),'INVALID_RESULT','RPC rejects invalid ingredient types even without UI validation');
+select is((public.request_recipe_import_reprocess('00000000-0000-4000-8000-000000000903')->>'replay'),'false','first reprocess creates candidate job');
+select is((public.request_recipe_import_reprocess('00000000-0000-4000-8000-000000000903')->>'replay'),'true','same job and pipeline replay idempotent');
+select is((select count(*)::integer from public.recipe_import_usage where user_id='00000000-0000-4000-8000-000000000901'),0,'reprocessing consumes no import quota');
+set local request.jwt.claim.sub='00000000-0000-4000-8000-000000000902';
+select is((select count(*)::integer from public.recipe_import_revisions),0,'foreign revisions hidden by RLS');
+select is((public.request_recipe_import_reprocess('00000000-0000-4000-8000-000000000903')->>'error'),'NOT_FOUND','foreign reprocessing rejected');
+select is((public.save_recipe_import_revision('00000000-0000-4000-8000-000000000903',2,null,true)->>'error'),'NOT_FOUND','foreign editing rejected');
+select finish(); rollback;

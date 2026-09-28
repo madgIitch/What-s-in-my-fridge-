@@ -450,3 +450,39 @@ Objetivo no negociable: preservar los contratos funcionales y los datos del prod
 - **external_contracts:** Multipart binario en POST /transcribe.
 - **edge_cases:** Social, upload, silencio, formato, tamaño, duración y abortos.
 - **ui_states:** Estados actuales y reintento manual.
+
+<!-- harness:improve-recipe-import-quality -->
+## improve-recipe-import-quality · Calidad y fidelidad de recetas importadas
+
+Mejorar de extremo a extremo la fidelidad de transcripción y extracción a partir del caso Instagram observado, evitando cantidades inventadas y pasos incoherentes.
+
+### Scope aprobado
+
+  - `services/media-worker/**`
+  - `whats-in-my-fridge-backend/whisper_api.py`
+  - `whats-in-my-fridge-backend/Dockerfile.whisper`
+  - `whats-in-my-fridge-backend/cloudbuild.whisper.yaml`
+  - `whats-in-my-fridge-backend/tests/**`
+  - `apps/web/src/app/(auth)/app/recipes/import/**`
+  - `apps/web/src/app/api/recipe-jobs/**`
+  - `apps/web/src/components/recipe-import/**`
+  - `apps/web/src/lib/recipe-import/**`
+  - `apps/web/src/types/database.generated.ts`
+  - `packages/domain/src/recipe-jobs/**`
+  - `packages/domain/src/recipes/**`
+  - `supabase/migrations/**`
+  - `supabase/tests/**`
+  - `infrastructure/gcp/cloud-run/**`
+  - `tests/recipe-import-quality/**`
+  - `apps/web/tests/e2e/recipe-import-flow.spec.ts`
+  - `docs/**`
+  - `spec/**`
+  - `progress/**`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** recipe-v1 compatible, quality en provenance, revisiones aditivas originales/candidatas/editadas con CAS.
+- **external_contracts:** ASR v2 compatible, extracción schema/evidencia, POST reprocess idempotente, modelos elegidos por benchmark.
+- **edge_cases:** Cantidad desconocida, contradicción, promoción, música, idioma, source unavailable, texto insuficiente y concurrencia.
+- **ui_states:** Lista para revisar, fuente, cantidades desconocidas, edición validada, versión original recuperable.

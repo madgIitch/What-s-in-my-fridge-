@@ -22,6 +22,7 @@ spec:
             - { name: SUPABASE_URL, value: "https://your-project.supabase.co" }
             - { name: RECIPE_IMPORT_WHISPER_ENABLED, value: "true" }
             - { name: RECIPE_IMPORT_EXTRACTION_ENABLED, value: "true" }
+            - { name: RECIPE_IMPORT_QUALITY_ENABLED, value: "false" }
             - { name: SUPABASE_SERVICE_ROLE_KEY, valueFrom: { secretKeyRef: { name: supabase-service-role-key, key: latest } } }
             - { name: INTERNAL_SERVICE_TOKEN, valueFrom: { secretKeyRef: { name: whisper-internal-service-token, key: "1" } } }
   traffic: [{ percent: 100, latestRevision: true }]

@@ -1553,7 +1553,7 @@
         "progress/**",
         "spec.json"
       ],
-      "spec_approved": false,
+      "spec_approved": true,
       "user_stories": [
         {
           "id": "QUALITY.1",
@@ -1582,7 +1582,9 @@
         "Canary con flag apagado, activar solo al pasar criterios; smoke humano y rollback documentados."
       ],
       "spec_prepared_at": "2026-09-27T23:50:23.677Z",
-      "answers_hash": "sha256:ce3314873d28c998c00ee2899a5f21b506829db4052640dd7f55c46aac8a7df1"
+      "answers_hash": "sha256:00c240833d82f005ec41077598cd19b851d6c052c8174a5a6d50a8ae7562dede",
+      "approved_by": "peorr",
+      "approved_at": "2026-09-27T23:52:35.884Z"
     }
   ],
   "spec_revision": {

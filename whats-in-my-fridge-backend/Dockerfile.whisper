@@ -17,7 +17,9 @@ RUN pip install --no-cache-dir \
     requests==2.31.0
 
 # Descargar modelo Whisper durante el build (~2-3 minutos)
-RUN python3 -c "from faster_whisper import WhisperModel; print('📥 Descargando modelo Whisper base...'); model = WhisperModel('base', device='cpu', compute_type='int8'); print('✅ Modelo descargado exitosamente')"
+ARG WHISPER_MODEL=base
+ENV WHISPER_MODEL=${WHISPER_MODEL}
+RUN python3 -c "import os; from faster_whisper import WhisperModel; model = WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8')"
 
 # Copiar API Flask
 COPY whisper_api.py /app/whisper_api.py

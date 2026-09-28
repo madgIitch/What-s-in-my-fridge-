@@ -78,3 +78,19 @@ test("provider timeouts allow cold starts for both services", () => {
   assert.equal(providerTimeout("OLLAMA"), 300_000);
   assert.equal(providerTimeout("WHISPER"), 300_000);
 });
+
+test("quality extraction constrains the schema and deterministic generation", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (_url, init) => {
+    const body = JSON.parse(String(init?.body));
+    assert.equal(body.format.type, "object");
+    assert.deepEqual(body.options, { temperature: 0, seed: 42, num_predict: 4096 });
+    assert.match(body.prompt, /evidenceIds/);
+    assert.match(body.prompt, /omite amount y unit/);
+    return Response.json({ response: JSON.stringify({ title: "Tortilla", ingredients: [{ name: "Huevos", evidenceIds: ["s"] }], steps: [{ text: "Batir los huevos", evidenceIds: ["s"] }] }) });
+  };
+  try {
+    const result = await new OllamaRecipeProvider("https://ollama.example").extract("2 huevos", { sourceType: "manual", evidence: [{ id: "s", kind: "manual", text: "2 huevos. Batir los huevos." }] });
+    assert.equal((result as { title: string }).title, "Tortilla");
+  } finally { globalThis.fetch = originalFetch; }
+});

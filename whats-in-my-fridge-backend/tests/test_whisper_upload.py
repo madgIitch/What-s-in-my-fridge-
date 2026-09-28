@@ -49,6 +49,10 @@ class WhisperUploadTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json["text"], "Añade tomate")
         self.assertEqual(response.json["language"], "es")
+        self.assertEqual(response.json["contract"], "transcription-v2")
+        self.assertEqual(response.json["model"], "base")
+        self.assertEqual(response.json["segments"][0]["start"], 0)
+        self.assertIsNone(response.json["segments"][0]["avg_logprob"])
         self.assertFalse(os.path.exists(whisper_api.model.last_path))
 
     def test_upload_requires_authentication(self):
