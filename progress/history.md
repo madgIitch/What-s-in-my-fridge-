@@ -1,5 +1,9 @@
 # Historial de sesiones
 
+## 2026-09-28 — improve-recipe-import-quality → done administrativo; R0 iniciado
+- Cierre administrativo solicitado por el usuario. Los gates de la PWA pasaron al repetir la suite completa (132 tests); el benchmark humano, canary y validación de fidelidad siguen pendientes y constan en `progress/review_improve-recipe-import-quality.md`.
+- `sprint-r0-domain-and-product-contracts` recibió aprobación de spec y comenzó con ADR y contratos puros de conocimiento de despensa. R1 sigue pendiente de aprobación.
+
 ## 2026-09-25 — sprint-12-firebase-data-migration-and-reconciliation → done administrativo
 - Cierre del spec solicitado por el usuario. Nueve pruebas sintéticas aprobadas; ensayo real de Firebase y Supabase staging pendiente por credenciales, bucket y mapping Auth. El review conserva los criterios sin verificar; no implica cutover ni migración completada.
 
