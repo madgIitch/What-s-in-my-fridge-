@@ -193,6 +193,53 @@ export type Database = {
         }
         Relationships: []
       }
+      commercial_products: {
+        Row: {
+          barcode: string | null
+          created_at: string
+          display_name: string
+          fetched_at: string | null
+          food_concept_id: string | null
+          id: string
+          retailer: string
+          retailer_product_id: string | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          barcode?: string | null
+          created_at?: string
+          display_name: string
+          fetched_at?: string | null
+          food_concept_id?: string | null
+          id?: string
+          retailer: string
+          retailer_product_id?: string | null
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string | null
+          created_at?: string
+          display_name?: string
+          fetched_at?: string | null
+          food_concept_id?: string | null
+          id?: string
+          retailer?: string
+          retailer_product_id?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_products_food_concept_id_fkey"
+            columns: ["food_concept_id"]
+            isOneToOne: false
+            referencedRelation: "food_concepts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cooking_mutations: {
         Row: {
           client_mutation_id: string
@@ -328,6 +375,33 @@ export type Database = {
           updated_at?: string
           user_id?: string
           version?: number
+        }
+        Relationships: []
+      }
+      food_concepts: {
+        Row: {
+          category: string | null
+          created_at: string
+          display_name: string
+          id: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -476,60 +550,123 @@ export type Database = {
       }
       inventory_items: {
         Row: {
+          acquired_on: string | null
+          acquired_on_source: string | null
           added_at: string
           category: string | null
+          commercial_product_id: string | null
           created_at: string
           deleted_at: string | null
           expiry_date: string
+          expiry_date_exact: string | null
+          food_concept_id: string | null
+          freshness_estimated_days: number | null
+          freshness_precision: string
+          freshness_source: string | null
           id: string
+          knowledge_provenance: string
           legacy_id: string | null
           name: string
+          normalization_source: string | null
+          normalization_status: string
           normalized_name: string | null
           notes: string | null
           quantity: number
+          quantity_exact: number | null
+          quantity_precision: string
+          quantity_unit: string | null
           source: string
+          stock_mode: string
+          stock_state: string | null
           unit: string
           updated_at: string
           user_id: string
           version: number
         }
         Insert: {
+          acquired_on?: string | null
+          acquired_on_source?: string | null
           added_at: string
           category?: string | null
+          commercial_product_id?: string | null
           created_at?: string
           deleted_at?: string | null
           expiry_date: string
+          expiry_date_exact?: string | null
+          food_concept_id?: string | null
+          freshness_estimated_days?: number | null
+          freshness_precision?: string
+          freshness_source?: string | null
           id?: string
+          knowledge_provenance?: string
           legacy_id?: string | null
           name: string
+          normalization_source?: string | null
+          normalization_status?: string
           normalized_name?: string | null
           notes?: string | null
           quantity: number
+          quantity_exact?: number | null
+          quantity_precision?: string
+          quantity_unit?: string | null
           source?: string
+          stock_mode?: string
+          stock_state?: string | null
           unit: string
           updated_at?: string
           user_id: string
           version?: number
         }
         Update: {
+          acquired_on?: string | null
+          acquired_on_source?: string | null
           added_at?: string
           category?: string | null
+          commercial_product_id?: string | null
           created_at?: string
           deleted_at?: string | null
           expiry_date?: string
+          expiry_date_exact?: string | null
+          food_concept_id?: string | null
+          freshness_estimated_days?: number | null
+          freshness_precision?: string
+          freshness_source?: string | null
           id?: string
+          knowledge_provenance?: string
           legacy_id?: string | null
           name?: string
+          normalization_source?: string | null
+          normalization_status?: string
           normalized_name?: string | null
           notes?: string | null
           quantity?: number
+          quantity_exact?: number | null
+          quantity_precision?: string
+          quantity_unit?: string | null
           source?: string
+          stock_mode?: string
+          stock_state?: string | null
           unit?: string
           updated_at?: string
           user_id?: string
           version?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_commercial_product_id_fkey"
+            columns: ["commercial_product_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_items_food_concept_id_fkey"
+            columns: ["food_concept_id"]
+            isOneToOne: false
+            referencedRelation: "food_concepts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       legacy_id_map: {
         Row: {
@@ -1147,6 +1284,7 @@ export type Database = {
       recipe_ingredients: {
         Row: {
           category: string | null
+          food_concept_id: string | null
           id: string
           ingredient_id: string | null
           measure: string | null
@@ -1157,6 +1295,7 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          food_concept_id?: string | null
           id?: string
           ingredient_id?: string | null
           measure?: string | null
@@ -1167,6 +1306,7 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          food_concept_id?: string | null
           id?: string
           ingredient_id?: string | null
           measure?: string | null
@@ -1176,6 +1316,13 @@ export type Database = {
           recipe_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "recipe_ingredients_food_concept_id_fkey"
+            columns: ["food_concept_id"]
+            isOneToOne: false
+            referencedRelation: "food_concepts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "recipe_ingredients_ingredient_id_fkey"
             columns: ["ingredient_id"]

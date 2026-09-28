@@ -1589,7 +1589,7 @@
     {
       "id": "sprint-r0-domain-and-product-contracts",
       "name": "Sprint R0 - Decision-First Domain & Product Contracts",
-      "status": "spec_ready",
+      "status": "review_pending",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.10.0",

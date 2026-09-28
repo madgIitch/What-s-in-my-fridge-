@@ -1,5 +1,9 @@
 # Arquitectura
 
+## R0 · conocimiento de despensa y shell v3
+
+La migración `20260928000300_product_v3_knowledge.sql` añade conceptos culinarios y productos comerciales como catálogos de lectura autenticada. Inventario conserva su RLS por usuario y todas las columnas legacy. Cantidad y frescura v3 tienen valores independientes: una fila antigua mantiene precisión desconocida, sin promover la cantidad ni la fecha legacy a evidencia exacta. La shell se activa en servidor con `PRODUCT_V3=true`; la flag ausente o apagada conserva v2. Recetas y favoritos redirigen únicamente sus colecciones, preservando los detalles existentes.
+
 > El agente lo lee antes de implementar. Mantén aquí el contexto que no cabe en una feature concreta.
 
 ## Visión general
@@ -512,4 +516,3 @@ Fijar la nueva semántica de producto y extender el dominio de forma aditiva par
 - **external_contracts:** R0 no introduce proveedor externo. Conserva contratos de inventario, receta, auth y rutas legacy; cambios SQL y TypeScript son aditivos.
 - **edge_cases:** Presencia sin cantidad, estado cualitativo, fecha civil, procedencia ausente, ingrediente sin correspondencia y deep links legacy están cubiertos por acceptance.
 - **ui_states:** Shell móvil Hoy/Despensa/+/Cocinar/Compra bajo flag y flujo v2 cuando está apagada. No se exponen porcentajes de ranking como copy principal.
-

@@ -18,6 +18,12 @@ Neverita ayuda a decidir qué cocinar hoy a partir de lo que la persona sabe que
 
 La shell v3 móvil muestra **Hoy**, **Despensa**, **+**, **Cocinar** y **Compra**. `+` abre entradas de compra y alta. Favoritos e importaciones viven dentro de Cocinar; el calendario legacy conserva un acceso profundo compatible hasta que la planificación semanal tenga spec aprobado. Las rutas existentes conservan parámetros seguros de enlace profundo durante la transición.
 
+### Dirección visual de la shell R0
+
+- **Tesis visual:** rosa cálido y crema como superficies de trabajo, texto ciruela y una sola acción coral destacada; la menta indica estado útil.
+- **Plan de contenido:** encabezado breve para orientación, área central de trabajo, navegación de cinco destinos siempre reconocible.
+- **Interacción:** elevación breve del destino al enfocar, entrada discreta del contenido y respuesta clara del botón central; todo se desactiva con movimiento reducido.
+
 ## Compatibilidad y activación
 
 `PRODUCT_V3` activa la nueva shell para un canary. Con la flag apagada, siguen disponibles las rutas y contratos v2. Las tablas y columnas nuevas son aditivas; no se reinterpreta el valor legacy como evidencia nueva. R1–R8 implementan sus flujos únicamente tras aprobar sus specs.

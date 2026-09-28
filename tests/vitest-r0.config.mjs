@@ -1,6 +1,9 @@
+import { fileURLToPath } from "node:url";
+
 export default {
+  oxc: { tsconfig: fileURLToPath(new URL("../packages/domain/tsconfig.json", import.meta.url)) },
   test: {
     environment: "node",
-    include: ["packages/domain/src/pantry/**/*.test.ts"],
+    include: ["src/pantry/**/*.test.ts", "src/recommendations/**/*.test.ts"],
   },
 };

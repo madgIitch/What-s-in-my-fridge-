@@ -1,5 +1,9 @@
 # Historial de sesiones
 
+## 2026-09-28 — Sprint R0 → review_pending
+- Dominio de conocimiento, catálogos separados, migraciones aditivas y shell PRODUCT_V3 implementados. Typecheck, lint, 135 tests web, 20 tests de dominio, build, db lint y 211 pruebas SQL pasan.
+- Smoke Playwright local con flag activada/desactivada; revisión visual continua de localhost contra referencias 08 y 10, evidencia en docs/design/neverita-v3/qa. Producción sin cambios.
+
 ## 2026-09-28 — improve-recipe-import-quality → done administrativo; R0 iniciado
 - Cierre administrativo solicitado por el usuario. Los gates de la PWA pasaron al repetir la suite completa (132 tests); el benchmark humano, canary y validación de fidelidad siguen pendientes y constan en `progress/review_improve-recipe-import-quality.md`.
 - `sprint-r0-domain-and-product-contracts` recibió aprobación de spec y comenzó con ADR y contratos puros de conocimiento de despensa. R1 sigue pendiente de aprobación.

@@ -1,5 +1,9 @@
 # Decisiones (ADR)
 
+## 2026-09-28 · R0 implementado detrás de PRODUCT_V3
+
+Los campos legacy no se reutilizan como campos exactos v3. Los nuevos campos de cantidad/frescura se validan con constraints; los defaults son desconocidos. Los catálogos de conceptos/productos admiten lectura autenticada y escritura exclusivamente privilegiada. El rollback usa la flag, conservando datos aditivos. R0 establece shell y ranking interno; las superficies de Despensa/Hoy completas se reservan para R1/R2 aprobados. La comparación visual continua se realiza en localhost con cuenta sintética y evidencia en `docs/design/neverita-v3/qa/`.
+
 Formato por entrada: **fecha · título** — contexto, decisión y consecuencias.
 El harness añade entradas cuando se aprueba un spec; el agente también debe añadir entradas cuando toma
 una decisión de arquitectura relevante durante implementación.
