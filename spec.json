@@ -1506,7 +1506,7 @@
       "title": "Calidad y fidelidad de recetas importadas",
       "description": "Mejorar de extremo a extremo la fidelidad de transcripción y extracción a partir del caso Instagram observado, evitando cantidades inventadas y pasos incoherentes.",
       "objective": "Recetas fundamentadas en sus fuentes, incertidumbre visible y revisión recuperable.",
-      "status": "spec_ready",
+      "status": "done",
       "sdd": true,
       "priority": "P0",
       "dependencies": [
@@ -1585,6 +1585,666 @@
       "answers_hash": "sha256:00c240833d82f005ec41077598cd19b851d6c052c8174a5a6d50a8ae7562dede",
       "approved_by": "peorr",
       "approved_at": "2026-09-27T23:52:35.884Z"
+    },
+    {
+      "id": "sprint-r0-domain-and-product-contracts",
+      "name": "Sprint R0 - Decision-First Domain & Product Contracts",
+      "status": "spec_ready",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.10.0",
+      "dependencies": [],
+      "objective": "Fijar la nueva semántica de producto y extender el dominio de forma aditiva para representar lo que Neverita sabe, estima o desconoce sin rehacer la infraestructura ya terminada.",
+      "user_stories": [
+        {
+          "id": "R0.1",
+          "story": "Como usuario quiero que Neverita admita que no sabe una cantidad o fecha en lugar de mostrar una precisión inventada."
+        },
+        {
+          "id": "R0.2",
+          "story": "Como mantenedor quiero que producto comercial, alimento culinario, stock y frescura sean conceptos separados para que ticket, recetas y compra compartan un mismo lenguaje."
+        },
+        {
+          "id": "R0.3",
+          "story": "Como diseñador quiero una navegación y tokens de Neverita v3 estables antes de rehacer pantallas."
+        }
+      ],
+      "tasks": [
+        "Crear ADR PRODUCT_REORIENTATION_V3.md con tesis, loop, principios e IA de navegación.",
+        "Añadir migraciones aditivas para food_concepts, commercial_products y campos v3 de inventory_items/recipe_ingredients.",
+        "Crear enums/constraints para stock_mode, stock_state, quantity_precision, freshness_precision, normalization_status y provenance.",
+        "Crear adaptadores de compatibilidad que proyecten inventory_items legacy al modelo v3 sin perder datos.",
+        "Marcar expiry_date legacy como legacy/unknown provenance salvo evidencia explícita; no borrar el campo en esta fase.",
+        "Crear contratos TypeScript puros para PantryItemKnowledge, FreshnessKnowledge, IngredientAvailability y RecipeAvailability.",
+        "Definir ranking-v2 interno sin exponer porcentaje como copy principal.",
+        "Crear tokens visuales v3 a partir del theme actual: rosa, crema, ciruela, coral, menta, ámbar, radios y sombras.",
+        "Crear AppShell con navegación Hoy/Despensa/+/Cocinar/Compra y redirects desde rutas legacy.",
+        "Crear feature flag PRODUCT_V3 para permitir canary y rollback."
+      ],
+      "deliverable": "Dominio v3 y shell de navegación listos para construir los nuevos flujos sin fingir exactitud y sin romper datos existentes.",
+      "acceptance": [
+        "Todas las migraciones son aditivas y una versión anterior de la PWA puede seguir leyendo las columnas legacy necesarias.",
+        "Un pantry item puede representar: solo presencia; estado cualitativo; cantidad exacta; o combinación válida sin campos contradictorios.",
+        "quantity_precision=unknown impide afirmar suficiencia cuantitativa en el dominio.",
+        "freshness_precision=estimated exige freshness_source y nunca rellena expiry_date_exact.",
+        "expiry_date_exact solo acepta una fecha civil y provenance explícita package/user/retailer fiable.",
+        "Las filas legacy se proyectan sin inventar stock_state ni freshness exacta; lo desconocido queda unknown.",
+        "RecipeAvailability diferencia have_enough, have_presence_unknown_amount, missing y unknown.",
+        "La navegación móvil muestra exactamente Hoy, Despensa, +, Cocinar y Compra; no muestra Calendar/Favorites como tabs.",
+        "Los redirects legacy conservan deep links y query params allowlisted.",
+        "PRODUCT_V3=false conserva el flujo v2; PRODUCT_V3=true activa shell/contratos v3 sin migración destructiva.",
+        "Tests unitarios cubren todas las combinaciones de precisión, conversiones legacy y estados de receta.",
+        "RLS sigue aislando todas las nuevas relaciones por usuario o por catálogo público según corresponda."
+      ],
+      "scope": [
+        "supabase/migrations/**",
+        "packages/domain/**",
+        "packages/ui/**",
+        "apps/web/src/app/(auth)/app/**",
+        "apps/web/src/components/navigation/**",
+        "apps/web/src/styles/**",
+        "apps/web/src/types/database.generated.ts",
+        "tests/**",
+        "docs/design/**",
+        "docs/product/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "approved_by": null,
+      "approved_at": null,
+      "visual_references": [
+        "docs/design/neverita-v3/01-pantry-edit-and-system-states.png",
+        "docs/design/neverita-v3/02-pro-and-import-limit.png",
+        "docs/design/neverita-v3/03-weekly-planning.png",
+        "docs/design/neverita-v3/04-shopping-list.png",
+        "docs/design/neverita-v3/05-recipe-import-and-availability.png",
+        "docs/design/neverita-v3/06-onboarding-and-empty-home.png",
+        "docs/design/neverita-v3/07-cooking-library.png",
+        "docs/design/neverita-v3/08-pantry.png",
+        "docs/design/neverita-v3/09-cooking-and-reconciliation.png",
+        "docs/design/neverita-v3/10-today-decision.png"
+      ]
+    },
+    {
+      "id": "sprint-r1-purchase-intake-and-pantry-normalization",
+      "name": "Sprint R1 - Purchase Intake, Normalization & Pantry Knowledge",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.11.0",
+      "dependencies": [
+        "sprint-r0-domain-and-product-contracts"
+      ],
+      "objective": "Convertir la compra en datos culinarios útiles con el mínimo trabajo manual: ticket primero, catálogos/aliases después y revisión solo de lo incierto.",
+      "user_stories": [
+        {
+          "id": "R1.1",
+          "story": "Como usuario quiero escanear mi ticket y revisar solo las líneas dudosas, no rellenar un formulario por cada producto."
+        },
+        {
+          "id": "R1.2",
+          "story": "Como usuario quiero que 'HUEVOS CAMPEROS ...' se convierta en un alimento humano como 'Huevos' sin perder la referencia al producto comprado."
+        },
+        {
+          "id": "R1.3",
+          "story": "Como usuario quiero que Neverita sepa cuándo compré algo y, si estima conservación, me diga que es una estimación."
+        }
+      ],
+      "tasks": [
+        "Reutilizar pipeline OCR existente y añadir fase normalizeReceiptLinesV2.",
+        "Crear ingestion versionada de catálogos de Mercadona, DIA, Lidl, Carrefour y Eroski desde datasets ya recopilados.",
+        "Implementar resolución raw ticket line -> commercial_product -> food_concept con adapters por retailer.",
+        "Usar barcode/product code cuando exista antes que fuzzy name matching.",
+        "Persistir raw_name y provenance aunque se muestre display_name normalizado.",
+        "Crear review de ticket con tres estados: resuelto, dudoso, omitir; no exponer scores internos.",
+        "Para líneas dudosas, ofrecer opciones mínimas como Pasta/Otro/Omitir o conceptos plausibles.",
+        "Inferir acquired_on desde purchase_date del ticket cuando exista; usar fecha de confirmación si no existe y marcar source.",
+        "Asignar ventanas de shelf life solo como estimated y solo cuando exista food_concept con default; nunca crear expiry_date_exact por default.",
+        "Añadir entradas alternativas Código de barras, Voz y Manual bajo el botón central +.",
+        "Actualizar Despensa para agrupar por Nevera/Armario/Congelador y mostrar cantidad exacta o estado cualitativo según stock_mode.",
+        "Crear banner 'Revisa N del último ticket' para pendientes de normalización."
+      ],
+      "deliverable": "El usuario puede convertir una compra real en una despensa útil con revisión mínima y datos explícitamente exactos/estimados/desconocidos.",
+      "acceptance": [
+        "Confirmar un ticket crea exactamente una fila por línea aceptada, idempotente por draft/line id.",
+        "Una línea resuelta conserva raw_text/raw_name y muestra un nombre humano normalizado.",
+        "Una corrección de usuario crea/actualiza un mapping con mayor precedencia para ese usuario y no se sobreescribe automáticamente después.",
+        "Una línea no resuelta puede confirmarse como unknown o excluirse; el sistema no inventa food_concept.",
+        "El catálogo de un retailer ausente o fallido no bloquea OCR ni review.",
+        "Los datasets de catálogo tienen source, fetched_at/checksum y se cargan idempotentemente.",
+        "Una cantidad de ticket solo se guarda como exact si su semántica es inequívoca; '1 unidad' de un pack no se convierte a contenido interno sin evidencia del producto.",
+        "acquired_on se presenta como 'Comprado el sábado' o equivalente local, sin convertirlo en caducidad.",
+        "Una ventana estimada se muestra como 'unos N días/semanas' con copy que la identifica como estimación.",
+        "La UI de Despensa no muestra synced, 'sincronizar' ni cuota; solo avisa si hay un problema real.",
+        "Offline: items ya confirmados se leen desde IndexedDB y cambios cualitativos se encolan.",
+        "Playwright cubre ticket limpio, 3 dudosos, corrección, omisión, retailer desconocido, offline y viewport 320 px."
+      ],
+      "scope": [
+        "apps/web/src/app/(auth)/app/add-purchase/**",
+        "apps/web/src/app/(auth)/app/pantry/**",
+        "apps/web/src/components/purchase/**",
+        "apps/web/src/components/pantry/**",
+        "apps/web/src/lib/receipt/**",
+        "apps/web/src/lib/normalization/**",
+        "apps/web/src/lib/inventory/**",
+        "packages/domain/src/pantry/**",
+        "packages/domain/src/normalization/**",
+        "scripts/catalogs/**",
+        "supabase/migrations/**",
+        "supabase/tests/**",
+        "tests/**",
+        "docs/catalogs/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "approved_by": null,
+      "approved_at": null,
+      "visual_references": [
+        "docs/design/neverita-v3/01-pantry-edit-and-system-states.png",
+        "docs/design/neverita-v3/06-onboarding-and-empty-home.png",
+        "docs/design/neverita-v3/08-pantry.png"
+      ]
+    },
+    {
+      "id": "sprint-r2-today-decision-engine",
+      "name": "Sprint R2 - Hoy & Decision Engine",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.12.0",
+      "dependencies": [
+        "sprint-r1-purchase-intake-and-pantry-normalization"
+      ],
+      "objective": "Hacer de '¿Qué cenamos?' el momento central del producto: recomendaciones accionables en la primera pantalla, semánticas y sin cuota.",
+      "user_stories": [
+        {
+          "id": "R2.1",
+          "story": "Como usuario quiero abrir Neverita y ver inmediatamente qué puedo cocinar con lo que tengo."
+        },
+        {
+          "id": "R2.2",
+          "story": "Como usuario quiero entender por qué me recomienda una receta sin interpretar porcentajes."
+        },
+        {
+          "id": "R2.3",
+          "story": "Como usuario nuevo quiero una salida clara si Neverita todavía no sabe qué tengo."
+        }
+      ],
+      "tasks": [
+        "Crear ruta Hoy en /app como destino por defecto autenticado.",
+        "Implementar recommendation-engine-v2 determinista sobre pantry knowledge + recipe availability.",
+        "Ordenar primero ready, después missing_one y luego missing_many; dentro del grupo usar señales fiables de use_soon, preferencia/recencia y desempate estable.",
+        "No utilizar freshness estimada de baja confianza para afirmar 'caduca' ni para una recomendación categórica.",
+        "Crear cards semánticas: Tienes todo, Te falta 1, Te faltan N, Cantidad por comprobar.",
+        "Mostrar 2-3 decisiones principales antes de cualquier bloque secundario.",
+        "Crear CTA Cocinar esto para ready y Añadir a la compra para missing.",
+        "Crear bloque secundario 'También podrías aprovechar' solo cuando exista una señal de frescura útil y honestamente etiquetada.",
+        "Crear empty state de Hoy: 'Aún no sabemos qué tienes' + Añadir compra + 'Trae una receta que te guste'.",
+        "Crear onboarding de primera apertura: 'Sabe lo que tienes y te dice qué cenar' con Escanear un ticket, escribir unas pocas cosas y ver un ejemplo.",
+        "Eliminar consumo de quota de suggestions y adaptar endpoint/cache.",
+        "Instrumentar eventos TTMD sin guardar contenido sensible de inventario/recetas."
+      ],
+      "deliverable": "Hoy responde a la pregunta central del producto en la primera pantalla y el core de recomendación deja de estar detrás de una cuota.",
+      "acceptance": [
+        "Abrir /app con despensa utilizable no requiere pulsar 'Actualizar sugerencias'.",
+        "La respuesta visible principal contiene como máximo tres opciones antes del scroll secundario en viewport 393x852.",
+        "La UI no muestra matchPercentage ni scores numéricos.",
+        "Una receta ready solo se etiqueta 'Tienes todo' si no hay ingredientes missing; si existen cantidades desconocidas pero presencia suficiente para no afirmar cantidad, la UI añade copy de cantidad no comprobada cuando sea relevante.",
+        "Una receta missing_one/missing_many muestra el número real de conceptos faltantes deduplicados.",
+        "Las razones de ranking son explicables por reglas estables y no dependen de un LLM.",
+        "Freshness low-confidence puede influir como señal débil pero la UI nunca dice 'Gasta primero' salvo regla explícita de confianza; por defecto usa 'Buena opción para aprovechar X'.",
+        "El endpoint de Hoy no llama a consume_usage(recipe_suggestions) y un usuario Free puede refrescar/reabrir sin límite.",
+        "El matcher/cache continúa siendo determinista por pantry hash + catalogVersion + matcherVersion/recommendationVersion.",
+        "Empty state permite llegar a ticket o import de receta en un toque.",
+        "Onboarding solo se muestra cuando corresponde y se puede saltar; no bloquea cuentas migradas con datos.",
+        "Métrica TTMD se emite con timestamps/event ids, no con nombres privados de productos.",
+        "Playwright cubre ready, missing_one, missing_many, empty, unknown amount, freshness estimated y free unlimited."
+      ],
+      "scope": [
+        "apps/web/src/app/(auth)/app/page.tsx",
+        "apps/web/src/components/today/**",
+        "apps/web/src/lib/recommendations/**",
+        "apps/web/src/app/api/recommendations/**",
+        "packages/domain/src/recommendations/**",
+        "packages/domain/src/recipes/**",
+        "supabase/migrations/**",
+        "tests/**",
+        "docs/product/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "approved_by": null,
+      "approved_at": null,
+      "visual_references": [
+        "docs/design/neverita-v3/06-onboarding-and-empty-home.png",
+        "docs/design/neverita-v3/10-today-decision.png"
+      ]
+    },
+    {
+      "id": "sprint-r3-cook-library-and-import-bridge",
+      "name": "Sprint R3 - Cocinar, Importaciones & Recipe Availability",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.13.0",
+      "dependencies": [
+        "sprint-r2-today-decision-engine"
+      ],
+      "objective": "Unificar catálogo, guardadas e importadas en Cocinar y convertir cada receta importada en una comparación inmediata contra la despensa.",
+      "user_stories": [
+        {
+          "id": "R3.1",
+          "story": "Como usuario quiero traer una receta desde redes o un blog y saber al terminar qué tengo y qué me falta."
+        },
+        {
+          "id": "R3.2",
+          "story": "Como usuario quiero explorar recetas para hoy, guardadas e importadas sin que cada una sea un módulo distinto."
+        },
+        {
+          "id": "R3.3",
+          "story": "Como usuario quiero que una cantidad ausente se muestre como desconocida y no como un dato inventado."
+        }
+      ],
+      "tasks": [
+        "Cerrar carryover del pipeline de imports y fix de handoff a Whisper antes de activar v3.",
+        "Mantener criterios de improve-recipe-import-quality: evidencia, cantidades ausentes, review_required y fidelidad.",
+        "Crear /app/cook con tabs Para hoy, Guardadas e Importadas.",
+        "Añadir CTA Traer receta y reutilizar Enlace/Texto/Archivo.",
+        "Tras completed, resolver cada recipe_ingredient contra food_concepts/pantry y producir RecipeAvailability.",
+        "Crear pantalla de resultado con Tienes N de M, filas La tienes/Lo tienes/Te falta y aviso de cantidades desconocidas.",
+        "Añadir acciones Añadir N a la compra, Guardar en Cocinar y Ver receta original.",
+        "Transformar fallos técnicos como WHISPER_REJECTED en copy recuperable con acción Pegar la receta como texto/Reintentar cuando proceda.",
+        "En Cocinar, agrupar 'Puedes hacerlo ahora', 'Te falta poco' y 'Tus guardadas'.",
+        "Mantener provenance de imported recipe y source URL validada.",
+        "Crear deep links Today -> recipe, import result -> shop y saved recipe -> weekly planning."
+      ],
+      "deliverable": "Cocinar se convierte en la biblioteca accionable del producto y cada import conecta inspiración con la despensa y la compra.",
+      "acceptance": [
+        "Una receta importada completed siempre valida Recipe schema y sus ingredientes tienen amount_status explícito.",
+        "No se persiste amount_value=1 como fallback cuando la fuente no aporta cantidad.",
+        "La UI muestra 'Cantidad no indicada' o equivalente cuando corresponda.",
+        "El resultado de importación compara food_concepts, no strings comerciales crudos.",
+        "Añadir N a la compra crea/deduplica shopping_items con source=recipe_missing y source_ref de la receta.",
+        "Guardar en Cocinar es idempotente y no crea favoritos duplicados.",
+        "Un import failed muestra código seguro traducido a mensaje de usuario y al menos una salida recuperable si existe.",
+        "Recetas ready y near-ready se ordenan por el mismo availability contract de Hoy.",
+        "Un cambio de despensa invalida availability cache sin mutar el snapshot de receta guardada.",
+        "La calidad de importación no empeora respecto a los acceptance criteria del spec v2 improve-recipe-import-quality.",
+        "Playwright cubre import URL, manual, result 2/4, cantidades unknown, añadir a compra, guardar y fallo recoverable."
+      ],
+      "scope": [
+        "apps/web/src/app/(auth)/app/cook/**",
+        "apps/web/src/app/(auth)/app/recipes/import/**",
+        "apps/web/src/components/cook/**",
+        "apps/web/src/components/recipe-import/**",
+        "apps/web/src/lib/recipe-import/**",
+        "apps/web/src/lib/recipes/**",
+        "packages/domain/src/recipes/**",
+        "packages/domain/src/recipe-jobs/**",
+        "services/media-worker/**",
+        "supabase/**",
+        "tests/**",
+        "docs/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "approved_by": null,
+      "approved_at": null,
+      "visual_references": [
+        "docs/design/neverita-v3/05-recipe-import-and-availability.png",
+        "docs/design/neverita-v3/07-cooking-library.png"
+      ]
+    },
+    {
+      "id": "sprint-r4-cooking-mode-and-pantry-reconciliation",
+      "name": "Sprint R4 - Cooking Mode & Pantry Reconciliation",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.14.0",
+      "dependencies": [
+        "sprint-r3-cook-library-and-import-bridge"
+      ],
+      "objective": "Cerrar el loop receta -> cocinar -> despensa sin obligar a registrar cada consumo y sin descontar cantidades desconocidas como si fueran exactas.",
+      "user_stories": [
+        {
+          "id": "R4.1",
+          "story": "Como usuario quiero seguir pasos de cocina de forma legible y confirmar al final con un toque."
+        },
+        {
+          "id": "R4.2",
+          "story": "Como usuario quiero que los huevos pasen de 16 a 12 si la receta usa 4 y ambos datos son fiables."
+        },
+        {
+          "id": "R4.3",
+          "story": "Como usuario quiero poder decir 'queda poco' para una cebolla sin introducir gramos."
+        }
+      ],
+      "tasks": [
+        "Crear modo Cocinando con título, ingredientes que se usarán, pasos y CTA Ya está.",
+        "Crear cooking-plan que clasifique cada consumo como exact, qualitative o unresolved.",
+        "Exacto: restar solo cuando receta e inventario tengan cantidades compatibles y fiables.",
+        "Cualitativo: proponer transición plenty->low, low->empty o dejar igual, siempre confirmable.",
+        "Unresolved: preguntar una acción mínima como Queda bastante/Queda poco/Se acabó o no tocar.",
+        "Crear pantalla post-cocinado '¿Lo has cocinado?' con preview 'Así quedaría tu despensa'.",
+        "Mantener Ajustar cantidades como acción secundaria.",
+        "Aplicar actualización en una transacción idempotente server-side y outbox cuando sea seguro offline.",
+        "Registrar cooking event/provenance sin convertirlo en requisito de calendario.",
+        "Permitir Undo inmediato de una actualización aplicada."
+      ],
+      "deliverable": "El usuario cocina y mantiene la despensa razonablemente actualizada con un toque, utilizando exactitud solo donde realmente existe.",
+      "acceptance": [
+        "Un consumo exacto nunca deja cantidad negativa y conserva idempotencia por client_mutation_id.",
+        "Si amount_status de receta o quantity_precision de pantry es unknown, no se ejecuta una resta numérica automática.",
+        "La pantalla preview distingue 16 -> 12 de 'Queda poco' y permite corregir antes de confirmar.",
+        "Una corrección cualitativa no necesita unidad ni cantidad.",
+        "Cocinar offline puede guardar una intención pendiente; la UI no la presenta como confirmada hasta resolver el servidor cuando existe impacto exacto.",
+        "Una receta con solo cantidades desconocidas sigue siendo cocinable y el post-cooking usa estados cualitativos.",
+        "Undo crea una mutación compensatoria segura e idempotente, no borra auditoría.",
+        "La UI de modo cocina mantiene target táctil, tipografía legible y evita que la navegación accidental pierda progreso.",
+        "Playwright cubre exact 16->12, qualitative low, unknown/no arithmetic, adjust, replay y undo."
+      ],
+      "scope": [
+        "apps/web/src/app/(auth)/app/cook/**",
+        "apps/web/src/components/cooking/**",
+        "apps/web/src/lib/cooking/**",
+        "packages/domain/src/cooking/**",
+        "packages/domain/src/pantry/**",
+        "supabase/migrations/**",
+        "supabase/tests/**",
+        "tests/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "approved_by": null,
+      "approved_at": null,
+      "visual_references": [
+        "docs/design/neverita-v3/09-cooking-and-reconciliation.png"
+      ]
+    },
+    {
+      "id": "sprint-r5-shopping-loop",
+      "name": "Sprint R5 - Compra & Loop Closure",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P1",
+      "milestone": "0.15.0",
+      "dependencies": [
+        "sprint-r4-cooking-mode-and-pantry-reconciliation"
+      ],
+      "objective": "Convertir Compra en la salida accionable de recetas y despensa, manteniendo claro por qué aparece cada cosa y cerrando el ciclo al terminar en el supermercado.",
+      "user_stories": [
+        {
+          "id": "R5.1",
+          "story": "Como usuario quiero ver juntos los ingredientes que faltan para recetas, mis propios items y sugerencias de reposición."
+        },
+        {
+          "id": "R5.2",
+          "story": "Como usuario quiero distinguir una sugerencia de 'queda poco' de algo que realmente decidí comprar."
+        },
+        {
+          "id": "R5.3",
+          "story": "Como usuario quiero terminar la compra y escanear el ticket sin acordarme de actualizar la despensa manualmente."
+        }
+      ],
+      "tasks": [
+        "Crear /app/shop con secciones Para tus recetas, Sugerencias por poco stock y Añadido por ti.",
+        "Persistir shopping_items con source/source_ref y selected/suggested separados.",
+        "Deduplicar por food_concept y agregar cantidades solo con unidades compatibles.",
+        "No añadir low_stock_suggestion a la lista seleccionada sin confirmación.",
+        "Permitir checkbox offline y resolver purchased localmente.",
+        "Crear input rápido de items manuales.",
+        "Crear CTA 'He terminado, añadir ticket' que abre /app/add-purchase/ticket preservando contexto de shopping session.",
+        "Al confirmar ticket, reconciliar items comprados con la lista por food_concept/commercial_product cuando sea seguro y dejar ambiguos sin autocerrar.",
+        "Mantener copy offline: 'Sin conexión, tu lista sigue funcionando.'",
+        "Añadir explicación contextual por receta/stock en el detalle de cada item."
+      ],
+      "deliverable": "Compra se convierte en una lista explicable y conectada a recetas/despensa que termina de nuevo en el flujo de ticket.",
+      "acceptance": [
+        "Un item recipe_missing conserva la receta origen y puede navegar de vuelta a ella.",
+        "Un item low_stock_suggestion aparece inicialmente como suggested=true, selected=false.",
+        "Marcar/desmarcar un item manual no altera pantry.",
+        "Terminar compra no crea pantry items hasta confirmar ticket o alta equivalente.",
+        "Ticket confirmation puede marcar como purchased solo los shopping_items resueltos con suficiente confianza; el resto queda pendiente.",
+        "La lista funciona offline para lectura, checks y altas manuales con outbox.",
+        "Deduplicación no combina '2 unidades' con '500 g' sin conversión canónica demostrada.",
+        "No se pierde provenance al fusionar fuentes; un item puede referenciar varias recetas.",
+        "Playwright cubre receta missing->shop, sugerencia low stock, manual, offline, finish->ticket y reconciliación."
+      ],
+      "scope": [
+        "apps/web/src/app/(auth)/app/shop/**",
+        "apps/web/src/components/shop/**",
+        "apps/web/src/lib/shopping-list/**",
+        "packages/domain/src/shopping-list/**",
+        "supabase/migrations/**",
+        "supabase/tests/**",
+        "tests/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "approved_by": null,
+      "approved_at": null,
+      "visual_references": [
+        "docs/design/neverita-v3/04-shopping-list.png"
+      ]
+    },
+    {
+      "id": "sprint-r6-weekly-planning-layer",
+      "name": "Sprint R6 - Lightweight Weekly Planning",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P1",
+      "milestone": "0.16.0",
+      "dependencies": [
+        "sprint-r5-shopping-loop"
+      ],
+      "objective": "Mantener la planificación como una capa ligera sobre recetas, no como un calendario principal, y convertir el plan semanal en necesidades de compra.",
+      "user_stories": [
+        {
+          "id": "R6.1",
+          "story": "Como usuario quiero decidir cuándo cocinar una receta con Hoy, Mañana u Otro día."
+        },
+        {
+          "id": "R6.2",
+          "story": "Como usuario quiero ver una semana sencilla con huecos sin decidir y días en los que ceno fuera."
+        },
+        {
+          "id": "R6.3",
+          "story": "Como usuario quiero añadir a Compra lo que falta para lo que ya he elegido."
+        }
+      ],
+      "tasks": [
+        "Crear /app/cook/week con vista semanal vertical de 7 días.",
+        "Desde cualquier receta, añadir selector ¿Cuándo la cocinas? Hoy/Mañana/Otro día.",
+        "Permitir Sin decidir y Cenar fuera sin crear recetas falsas.",
+        "Reutilizar meal_entries existentes como storage cuando encajen, ocultando complejidad de meal types no necesaria para la vista.",
+        "Calcular faltantes agregados del plan con el mismo availability contract.",
+        "Crear CTA Añadir N a la compra con source=plan_missing.",
+        "Mantener ruta /app/calendar como redirect a /app/cook/week.",
+        "No introducir navegación mensual en 1.0; conservar datos históricos legacy legibles."
+      ],
+      "deliverable": "Planificación semanal simple integrada en Cocinar, con una salida directa hacia Compra.",
+      "acceptance": [
+        "Programar una receta desde su detalle requiere como máximo dos toques tras abrir el selector.",
+        "Hoy y Mañana se calculan en la zona local del usuario y se persisten como fecha civil YYYY-MM-DD.",
+        "Otro día abre selector de fecha accesible.",
+        "Cenar fuera no genera ingredient requirements.",
+        "Faltantes del plan deduplican conceptos/unidades compatibles y conservan referencias a todas las recetas que los requieren.",
+        "Datos legacy de meal_entries siguen accesibles aunque la UI v3 no exponga el calendario mensual.",
+        "La vista de semana cabe a 320 px sin scroll horizontal.",
+        "Playwright cubre schedule from recipe, week view, outside, add missing to shop y timezone/DST."
+      ],
+      "scope": [
+        "apps/web/src/app/(auth)/app/cook/week/**",
+        "apps/web/src/components/planning/**",
+        "apps/web/src/lib/meal-calendar/**",
+        "packages/domain/src/meals/**",
+        "packages/domain/src/planning/**",
+        "supabase/migrations/**",
+        "tests/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "approved_by": null,
+      "approved_at": null,
+      "visual_references": [
+        "docs/design/neverita-v3/03-weekly-planning.png"
+      ]
+    },
+    {
+      "id": "sprint-r7-pro-and-usage-realignment",
+      "name": "Sprint R7 - Pro & Usage Realignment",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "0.17.0",
+      "dependencies": [
+        "sprint-r3-cook-library-and-import-bridge",
+        "sprint-r2-today-decision-engine"
+      ],
+      "objective": "Alinear monetización con la nueva filosofía: el core de decisión es gratis y Pro elimina límites de procesamiento costoso.",
+      "user_stories": [
+        {
+          "id": "R7.1",
+          "story": "Como usuario Free quiero poder decidir qué cocinar todos los días sin gastar una cuota de sugerencias."
+        },
+        {
+          "id": "R7.2",
+          "story": "Como usuario quiero entender exactamente qué límites tengo este mes en tickets e importaciones."
+        },
+        {
+          "id": "R7.3",
+          "story": "Como usuario que llega al límite quiero conservar mis recetas y poder seguir usando el core."
+        }
+      ],
+      "tasks": [
+        "Retirar recipe_suggestions de consume_usage y de cualquier copy/paywall.",
+        "Mantener/configurar cuotas server-side iniciales de receipt_ocr=5 y recipe_import=10 al mes UTC.",
+        "Actualizar /app/pro con copy 'Saber qué cenar es gratis. Pro quita los límites de lo que cuesta más.'",
+        "Mostrar uso real del mes solo para features metered.",
+        "Actualizar paywall de límite de importación: recetas guardadas siguen aquí, opción Ver Pro y Más tarde.",
+        "No bloquear lectura, matching, cocina, shop ni planning por estado Free.",
+        "Mantener Stripe como autoridad y pricing desde configuración server-side.",
+        "Crear analytics de conversion sin registrar URLs de receta, ticket text ni inventario."
+      ],
+      "deliverable": "Monetización compatible con la propuesta de valor: el usuario siempre puede resolver qué comer y paga por automatización costosa adicional.",
+      "acceptance": [
+        "Un usuario Free con usage histórico recipe_suggestions >=5 sigue usando Hoy sin 429.",
+        "No se crean nuevas reservations de usage para recipe_suggestions.",
+        "OCR e import siguen aplicando server-side los límites configurados con idempotencia y concurrencia segura.",
+        "Llegar a 10 imports no elimina ni oculta recetas ya importadas.",
+        "Más tarde cierra el paywall y vuelve al flujo sin cambiar entitlement.",
+        "Un usuario Pro activo omite límites metered según los contratos Stripe existentes.",
+        "Los precios mostrados proceden de configuración/Stripe y no quedan hard-coded en componentes.",
+        "Playwright cubre free unlimited Today, OCR limit, import limit, upgrade y downgrade."
+      ],
+      "scope": [
+        "apps/web/src/app/(auth)/app/pro/**",
+        "apps/web/src/app/api/usage/**",
+        "apps/web/src/lib/billing/**",
+        "apps/web/src/components/billing/**",
+        "packages/domain/src/billing/**",
+        "supabase/migrations/**",
+        "tests/**",
+        "docs/product/**",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "approved_by": null,
+      "approved_at": null,
+      "visual_references": [
+        "docs/design/neverita-v3/02-pro-and-import-limit.png"
+      ]
+    },
+    {
+      "id": "sprint-r8-kawaii-system-states-hardening-and-release",
+      "name": "Sprint R8 - Kawaii UI System, System States, Hardening & 1.0 Release",
+      "status": "pending",
+      "sdd": true,
+      "priority": "P0",
+      "milestone": "1.0.0",
+      "dependencies": [
+        "sprint-r6-weekly-planning-layer",
+        "sprint-r7-pro-and-usage-realignment"
+      ],
+      "objective": "Unificar la experiencia visual Neverita v3, cubrir estados de sistema y cerrar seguridad, rendimiento, migración y release sin perder la identidad kawaii.",
+      "user_stories": [
+        {
+          "id": "R8.1",
+          "story": "Como usuario quiero que todas las pantallas se sientan parte de la misma app y que los errores hablen en lenguaje humano."
+        },
+        {
+          "id": "R8.2",
+          "story": "Como usuario quiero seguir trabajando offline y entender qué se guardará al volver."
+        },
+        {
+          "id": "R8.3",
+          "story": "Como operador quiero lanzar 1.0 con datos reconciliados, seguridad auditada y rollback."
+        }
+      ],
+      "tasks": [
+        "Aplicar tokens v3 a Hoy, Despensa, +, Cocinar, Compra, onboarding, Pro y planificación.",
+        "Crear set coherente de componentes: card, pill, status chip, CTA, segmented control, empty state, warning, snackbar y mascot slot.",
+        "Mantener ilustraciones kawaii sutiles y optimizadas; lazy-load donde proceda.",
+        "Crear estados del sistema: Sin conexión; No se pudo guardar/Reintentar; Undo tras acción; Error al leer ticket con Repetir foto/Escribir.",
+        "Revisar copy para eliminar términos técnicos internos y garantizar consistencia de tú/imperativos.",
+        "Auditar accesibilidad, foco, teclado, reduced motion, contraste y targets 44 px.",
+        "Auditar responsive 320/375/393/430/768/1024/1440 sin convertir desktop en producto distinto.",
+        "Auditar RLS, Storage, SSRF, billing, rate limits, CSP, secrets y logs usando los gates del v2.",
+        "Añadir observabilidad de recommendation engine, OCR, imports, cooking mutations y shopping loop sin PII de contenido.",
+        "Benchmark de Today y Pantry; eliminar N+1 y precalcular/cachar cuando corresponda.",
+        "Ejecutar migración/backfill v3 sobre staging: food_concepts, pantry precision y legacy redirects.",
+        "Ejecutar E2E del loop completo onboarding -> ticket -> Hoy -> recipe -> cocinar -> shop -> ticket.",
+        "Canary PRODUCT_V3 para cohorte interna, comparar TTMD y errores con v2, luego rollout progresivo.",
+        "Preparar cutover/rollback final y archivar rutas/components v2 solo después de estabilidad."
+      ],
+      "deliverable": "Neverita 1.0 sale como producto decision-first, visualmente coherente con su identidad kawaii y operativamente endurecido para producción.",
+      "acceptance": [
+        "Todas las superficies v3 usan los mismos tokens y componentes base; no quedan pantallas dark/wireframe ni estilos paralelos.",
+        "La estética sigue siendo pastel/kawaii, pero ninguna ilustración oculta texto, CTA o estado crítico.",
+        "Offline muestra 'Tus cambios se guardan y se envían al volver' solo cuando existe outbox real y nunca fabrica éxito.",
+        "Errores OCR/import se expresan con mensajes humanos y acciones recuperables; códigos internos quedan en diagnostics.",
+        "Undo de borrado/acción funciona de forma idempotente.",
+        "No hay overflow horizontal en viewports objetivo y no hay axe critical/serious en flujos críticos.",
+        "RLS de dos usuarios cubre todas las tablas privadas nuevas y heredadas tocadas por v3.",
+        "Secret scan no encuentra service role, Stripe, Vision, VAPID, Cloud Run internal secret ni URLs firmadas.",
+        "Today p95 server response y render budgets quedan documentados con dataset sintético reproducible; no hay llamada a LLM en el core.",
+        "El backfill no convierte expiry legacy desconocida en exacta ni quantity legacy ambigua en exacta.",
+        "El E2E completo puede ejecutarse con providers mock y con un smoke staging real de OCR/import.",
+        "PRODUCT_V3 puede desactivarse sin borrar datos y las columnas/tables v3 permanecen legibles.",
+        "Cutover final no requiere dual-write Firebase/Supabase y conserva el procedimiento de reconciliación v2.",
+        "Release checklist, changelog y runbooks pasan todos los quality gates.",
+        "La métrica TTMD se compara en canary; cualquier regresión severa o aumento de errores bloquea rollout."
+      ],
+      "scope": [
+        "apps/web/**",
+        "packages/**",
+        "supabase/**",
+        "services/**",
+        "infrastructure/**",
+        "tests/**",
+        "scripts/migration/**",
+        ".github/workflows/**",
+        "docs/**",
+        "vercel.json",
+        ".env.example",
+        "spec.json"
+      ],
+      "spec_approved": false,
+      "approved_by": null,
+      "approved_at": null,
+      "visual_references": [
+        "docs/design/neverita-v3/01-pantry-edit-and-system-states.png",
+        "docs/design/neverita-v3/02-pro-and-import-limit.png",
+        "docs/design/neverita-v3/03-weekly-planning.png",
+        "docs/design/neverita-v3/04-shopping-list.png",
+        "docs/design/neverita-v3/05-recipe-import-and-availability.png",
+        "docs/design/neverita-v3/06-onboarding-and-empty-home.png",
+        "docs/design/neverita-v3/07-cooking-library.png",
+        "docs/design/neverita-v3/08-pantry.png",
+        "docs/design/neverita-v3/09-cooking-and-reconciliation.png",
+        "docs/design/neverita-v3/10-today-decision.png"
+      ]
     }
   ],
   "spec_revision": {
@@ -1592,5 +2252,6 @@
     "revised_at": "2026-09-17",
     "reason": "Architecture review: keep Google Cloud as specialized media/AI plane; use Cloud Tasks -> Cloud Run; captions/transcripts before Whisper; structured Recipe JSON; Web Share Target + paste fallback.",
     "supersedes": "spec-whats-in-my-fridge-pwa.json"
-  }
+  },
+  "visual_reference_guide": "docs/design/neverita-v3/README.md"
 }
