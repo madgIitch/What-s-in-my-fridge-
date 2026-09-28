@@ -1649,9 +1649,9 @@
         "docs/product/**",
         "spec.json"
       ],
-      "spec_approved": false,
-      "approved_by": null,
-      "approved_at": null,
+      "spec_approved": true,
+      "approved_by": "peorr",
+      "approved_at": "2026-09-28T03:32:14.601Z",
       "visual_references": [
         "docs/design/neverita-v3/01-pantry-edit-and-system-states.png",
         "docs/design/neverita-v3/02-pro-and-import-limit.png",
@@ -1663,7 +1663,10 @@
         "docs/design/neverita-v3/08-pantry.png",
         "docs/design/neverita-v3/09-cooking-and-reconciliation.png",
         "docs/design/neverita-v3/10-today-decision.png"
-      ]
+      ],
+      "title": "Sprint R0 - Decision-First Domain & Product Contracts",
+      "description": "Fijar la nueva semántica de producto y extender el dominio de forma aditiva para representar lo que Neverita sabe, estima o desconoce sin rehacer la infraestructura ya terminada.",
+      "answers_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
     },
     {
       "id": "sprint-r1-purchase-intake-and-pantry-normalization",

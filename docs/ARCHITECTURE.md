@@ -486,3 +486,30 @@ Mejorar de extremo a extremo la fidelidad de transcripción y extracción a part
 - **external_contracts:** ASR v2 compatible, extracción schema/evidencia, POST reprocess idempotente, modelos elegidos por benchmark.
 - **edge_cases:** Cantidad desconocida, contradicción, promoción, música, idioma, source unavailable, texto insuficiente y concurrencia.
 - **ui_states:** Lista para revisar, fuente, cantidades desconocidas, edición validada, versión original recuperable.
+
+<!-- harness:sprint-r0-domain-and-product-contracts -->
+## sprint-r0-domain-and-product-contracts · Sprint R0 - Decision-First Domain & Product Contracts
+
+Fijar la nueva semántica de producto y extender el dominio de forma aditiva para representar lo que Neverita sabe, estima o desconoce sin rehacer la infraestructura ya terminada.
+
+### Scope aprobado
+
+  - `supabase/migrations/**`
+  - `packages/domain/**`
+  - `packages/ui/**`
+  - `apps/web/src/app/(auth)/app/**`
+  - `apps/web/src/components/navigation/**`
+  - `apps/web/src/styles/**`
+  - `apps/web/src/types/database.generated.ts`
+  - `tests/**`
+  - `docs/design/**`
+  - `docs/product/**`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** Separar food_concept, commercial_product, item de despensa y conocimiento de cantidad/frescura con precisión y procedencia explícitas. Los campos legacy siguen legibles.
+- **external_contracts:** R0 no introduce proveedor externo. Conserva contratos de inventario, receta, auth y rutas legacy; cambios SQL y TypeScript son aditivos.
+- **edge_cases:** Presencia sin cantidad, estado cualitativo, fecha civil, procedencia ausente, ingrediente sin correspondencia y deep links legacy están cubiertos por acceptance.
+- **ui_states:** Shell móvil Hoy/Despensa/+/Cocinar/Compra bajo flag y flujo v2 cuando está apagada. No se exponen porcentajes de ranking como copy principal.
+

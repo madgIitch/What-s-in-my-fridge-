@@ -259,3 +259,16 @@ Decisiones registradas:
 - **tests:** 12 casos anotados, split 8/4, métricas explícitas, 20 ejecuciones warm, gates/build/RLS/Playwright y proveedores reales.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+<!-- harness:sprint-r0-domain-and-product-contracts -->
+## 2026-09-28 · sprint-r0-domain-and-product-contracts aprobado
+
+Contexto: se aprobó el spec `sprint-r0-domain-and-product-contracts` (Sprint R0 - Decision-First Domain & Product Contracts).
+
+Decisiones registradas:
+
+- **auth_secrets:** RLS aísla datos privados por propietario; catálogo público solo admite lectura de cliente. La flag PRODUCT_V3 se evalúa en servidor y no transporta secretos.
+- **rollback_compat:** Desactivar PRODUCT_V3 restaura navegación v2. Migraciones aditivas mantienen datos y columnas legacy sin down migration destructiva.
+- **tests:** Unitarios de precisión/proyección/disponibilidad, RLS de relaciones nuevas, navegación/deep links y los gates del repositorio.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
