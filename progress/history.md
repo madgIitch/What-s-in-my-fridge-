@@ -34,3 +34,8 @@
 
 - Cierre por aceptación explícita del usuario tras la revisión visual en localhost.
 - Implementación `ba1fe34`; cierre del harness `7ef592f`. Producción sin cambios.
+# 2026-09-28 · Sprint R1 → spec_ready
+
+- Preparación manual de las ocho dimensiones; el CLI actual del harness no incluye `prepare`. Sin aprobación ni implementación.
+- 28 criterios: review de ticket, normalización conservadora, edición de Despensa, compatibilidad, offline y comparación visual en localhost.
+- Datasets encontrados en Descargas conservados en `docs/catalogs/data/` con Git LFS y manifest SHA-256. Eroski parcial con 23.172 productos; Aldi con 2.123. Cuatro retailers sin exports localizados.

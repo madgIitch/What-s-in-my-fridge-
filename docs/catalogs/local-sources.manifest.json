@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "description": "Frozen local exports. captured_at is the copy time; fetched_at is unknown. Not a production import.",
+  "sources": [
+    {
+      "file": "data/eroski_checkpoint.json",
+      "retailer": "eroski",
+      "source_file": "C:/Users/peorr/Downloads/eroski_checkpoint.json",
+      "captured_at": "2026-09-28T04:24:39.864Z",
+      "fetched_at": null,
+      "sha256": "768ea10937ad01a038606c33af7d095954f1b1eba999274b33c6c144bc046c2b",
+      "bytes": 42837212,
+      "product_count": 23172,
+      "completeness": "partial",
+      "format": "retailer-export",
+      "in_r1_scope": true
+    },
+    {
+      "file": "data/eroski_products.json",
+      "retailer": "eroski",
+      "source_file": "C:/Users/peorr/Downloads/eroski_products.json",
+      "captured_at": "2026-09-28T04:24:39.872Z",
+      "fetched_at": null,
+      "sha256": "ff72c86ec4ad20ad74ac7b5e084b6a0480afc24879634a5c6eb12d5a1d5ebe57",
+      "bytes": 3067,
+      "product_count": 0,
+      "completeness": "empty",
+      "format": "retailer-export",
+      "in_r1_scope": true
+    },
+    {
+      "file": "data/eroski_products_raw.json",
+      "retailer": "eroski",
+      "source_file": "C:/Users/peorr/Downloads/eroski_products_raw.json",
+      "captured_at": "2026-09-28T04:24:39.876Z",
+      "fetched_at": null,
+      "sha256": "5d30564d8dd8c6b187d52562fa6b29a8496d3c2b92518766da536666773cd7ba",
+      "bytes": 3083,
+      "product_count": 0,
+      "completeness": "empty",
+      "format": "retailer-export",
+      "in_r1_scope": true
+    },
+    {
+      "file": "data/aldi_products.json",
+      "retailer": "aldi",
+      "source_file": "C:/Users/peorr/Downloads/aldi_products.json",
+      "captured_at": "2026-09-28T04:24:39.941Z",
+      "fetched_at": null,
+      "sha256": "2b77f3b2923f8d0256ba821916270e5c5f4438dd286a5e8016f6717c5327efd3",
+      "bytes": 3408244,
+      "product_count": 2123,
+      "completeness": "unverified",
+      "format": "retailer-export",
+      "in_r1_scope": false
+    },
+    {
+      "file": "data/aldi_products_raw.json",
+      "retailer": "aldi",
+      "source_file": "C:/Users/peorr/Downloads/aldi_products_raw.json",
+      "captured_at": "2026-09-28T04:24:40.021Z",
+      "fetched_at": null,
+      "sha256": "f85a6f8d23230f9f1d38c60dd9390ba922597afa0164e684abc0552d8a8086f3",
+      "bytes": 5418152,
+      "product_count": 2123,
+      "completeness": "unverified",
+      "format": "retailer-export",
+      "in_r1_scope": false
+    }
+  ],
+  "not_found": [
+    "mercadona",
+    "dia",
+    "lidl",
+    "carrefour"
+  ]
+}

@@ -1671,7 +1671,7 @@
     {
       "id": "sprint-r1-purchase-intake-and-pantry-normalization",
       "name": "Sprint R1 - Purchase Intake, Normalization & Pantry Knowledge",
-      "status": "pending",
+      "status": "spec_ready",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.11.0",
@@ -1720,7 +1720,23 @@
         "Una ventana estimada se muestra como 'unos N días/semanas' con copy que la identifica como estimación.",
         "La UI de Despensa no muestra synced, 'sincronizar' ni cuota; solo avisa si hay un problema real.",
         "Offline: items ya confirmados se leen desde IndexedDB y cambios cualitativos se encolan.",
-        "Playwright cubre ticket limpio, 3 dudosos, corrección, omisión, retailer desconocido, offline y viewport 320 px."
+        "Playwright cubre ticket limpio, 3 dudosos, corrección, omisión, retailer desconocido, offline y viewport 320 px.",
+        "PRODUCT_V3=true: + abre /app/add-purchase con Escanear ticket, Código de barras, Voz y Manual; ticket es la acción principal. Barcode permite introducir el código si no hay cámara/detector. Voz permite dictado iniciado por usuario cuando el navegador lo soporte y escritura cuando no; el texto se revisa antes de guardar. No se guardan productos por reconocer un código o una frase sin confirmación.",
+        "La revisión muestra resuelto/dudoso/omitir; resueltas aceptadas por defecto, dudosas nunca autoaceptadas por fuzzy. Hay como máximo tres conceptos candidatos ordenados deterministamente y acciones Otro (buscar concepto o nombre libre unknown) y Omitir. Mantener como desconocido permite confirmar sin inventar concepto. Cero líneas aceptadas no confirma ni crea items.",
+        "Precedencia: mapping confirmado del usuario para retailer+raw_name normalizado, barcode/product code exacto y coherente, alias exacto único con food_concept, después hasta tres candidatos fuzzy. Normalizar caso/acentos/espacios; candidatos con al menos un token alfanumérico común, ordenados por Jaccard de tokens descendente y food_concept slug ascendente, deduplicados por concepto. Conflicto entre identificadores o empate exacto es dudoso. Fuzzy solo propone candidatos; no existe umbral de score que confirme automáticamente. Sin candidatos queda unknown.",
+        "POST /api/ocr/v2/normalize recibe {draftId}; el servidor carga el draft propio y devuelve {draftId,normalizerVersion,lines} con lineId,rawName,displayName,resolution,candidates y conocimiento de cantidad/compra/frescura. GET /api/ocr/v2/drafts/[draftId] recupera esa revisión y sus decisiones persistidas. No devolver confidence ni scores al usuario.",
+        "POST /api/ocr/v2/confirm recibe {draftId,normalizerVersion,lines:[{lineId,decision:accept|unknown|omit,foodConceptId?,displayName?,location?}],purchaseDate?}. IDs, candidatos, nombres (1–120 caracteres) y evidencia se validan sobre el draft almacenado. Devuelve {draftId,status:confirmed,itemIds,pendingCount}. Commit atómico por draft: replay idéntico devuelve mismos IDs, payload cambiado tras confirmar devuelve 409 DRAFT_STATE_CONFLICT. Rechazar IDs repetidos, ajenos y ownership inyectado.",
+        "PATCH /api/ocr/v2/drafts/[draftId]/lines/[lineId] recibe {clientMutationId,expectedVersion,decision:resolve|omit,foodConceptId?,displayName?} para pendientes ya confirmados. Resolve actualiza el item existente y mapping privado; omit aplica tombstone. Replay es idempotente, versión desfasada devuelve 409 SYNC_CONFLICT; no sobrescribe cambios concurrentes. Solo afecta líneas pendientes del propietario.",
+        "El banner cuenta líneas unknown de la última compra confirmada que aún tienen item activo; abre solo sus pendientes, desaparece al resolver/omitir todas y no se oculta mientras un catálogo nuevo siga sin confirmar esos items. Corrección posterior actualiza el item original, nunca lo duplica.",
+        "El 1/unit sintético del parser v1 o un precio no constituyen evidencia de cantidad. Guardar presencia con quantity_precision=unknown salvo cantidad/unidad explícitas y coherentes. Un pack puede registrar 1 pack exacto solo con evidencia de compra; registrar 12 huevos exige evidencia del contenido. Edición por usuario puede fijar cantidad y unidad exactas sin imponer una fecha de caducidad.",
+        "Despensa agrupa en Nevera, Armario, Congelador y Por ubicar para ubicación desconocida; ubicación sugerida del concepto se identifica como propuesta hasta confirmación. Buscador ignora caso y acentos sobre display_name/raw_name. Contador excluye tombstones; Se acabó sigue visible como estado vacío, sin eliminar el item ni contarlo como disponible.",
+        "En /app/pantry/[itemId] se puede cambiar ubicación, nombre/concepto, nota, cantidad exacta o estados Bastante/Poco/Se acabó, y fecha exacta opcional declarada por usuario. Pasar de exacto a cualitativo elimina cantidad_exact/unit autoritativas del estado actual sin alterar evidencia original del ticket. Eliminar es tombstone; Deshacer disponible 8 segundos en primer plano restaura con nueva mutación y detecta conflicto.",
+        "Fecha de compra usa civil YYYY-MM-DD validada, no conversión UTC de medianoche. Si ticket no da fecha fiable, registrar fecha local de confirmación con source=user y copy que no la atribuye al ticket. La estimación muestra ventana y origen: Conservación estimada: unos N días/semanas desde la compra; nunca se presenta bajo Caduca ni se convierte en expiry_date_exact. Sin default documentado queda desconocida.",
+        "Manifest por retailer con schema_version,source,fetched_at,sha256 y registros identificados por retailer_product_id o barcode. Validar hash/esquema antes de escribir, staging transaccional y upsert estable; un fallo no sustituye el catálogo anterior. Importadores para Mercadona,DIA,Lidl,Carrefour,Eroski permiten dry-run y reporte importado/rechazado/ausente. Fixtures sintéticas no se reportan como integración de datos reales.",
+        "Validar un snapshot congelado de eroski_checkpoint.json real: products es array, id->retailer_product_id, name->display_name; marcas/categorías conservan provenance. Manifest distingue captured_at de fetched_at (nullable si no existe evidencia) y completeness=partial. metrics_item.quantity es analítica comercial y nunca cantidad comprada, pack ni stock. Exports vacíos no sustituyen catálogo útil. Los cuatro exports no encontrados se reportan ausentes; la prueba real de Eroski debe pasar y las cinco formas de entrada canónica tienen fixtures. Aldi no se ingesta en R1.",
+        "Offline conserva cache por usuario y encola edición cualitativa/ubicación/nota con clientMutationId y expectedVersion. Reconexión aplica una vez; conflicto conserva ambos valores para elección explícita. No mostrar sincronizar/synced/cuota en Despensa; mostrar solo aviso offline o cambios fallidos con Reintentar. Logout/cambio de cuenta no revela datos ni envía outbox del otro usuario.",
+        "Flag apagada conserva confirmación, rutas y comportamiento v2, sin aplicar normalización v3 ni actualizar precisión legacy. Actualizar tipos generados desde DB local y comprobar que migraciones son aditivas. No modificar límites OCR, proveedores de receta, recomendaciones de Hoy, cocina guiada, planificación, monetización ni lista de compra en R1.",
+        "Capturas reales de localhost en 320px y un ancho móvil representativo documentan comparación con referencias 01/06/08: jerarquía, buscador, banner pendiente, agrupaciones, estado cualitativo, editor y CTA de compra. Sin overflow horizontal; controles >=44px, navegación por teclado, foco al cerrar menú y respeto por movimiento reducido. Ilustraciones auxiliares no sustituyen información ni retrasan legibilidad."
       ],
       "scope": [
         "apps/web/src/app/(auth)/app/add-purchase/**",
@@ -1737,7 +1753,15 @@
         "supabase/tests/**",
         "tests/**",
         "docs/catalogs/**",
-        "spec.json"
+        "spec.json",
+        "apps/web/src/app/api/ocr/**",
+        "apps/web/src/app/(auth)/app/scan/**",
+        "apps/web/src/components/receipt/**",
+        "apps/web/src/components/navigation/product-v3-nav*",
+        "apps/web/src/styles/product-v3.css",
+        "apps/web/src/types/database.generated.ts",
+        "packages/domain/src/receipt/**",
+        "packages/domain/src/index.ts"
       ],
       "spec_approved": false,
       "approved_by": null,
@@ -1746,7 +1770,9 @@
         "docs/design/neverita-v3/01-pantry-edit-and-system-states.png",
         "docs/design/neverita-v3/06-onboarding-and-empty-home.png",
         "docs/design/neverita-v3/08-pantry.png"
-      ]
+      ],
+      "title": "Sprint R1 - Purchase Intake, Normalization & Pantry Knowledge",
+      "description": "Convertir la compra en datos culinarios útiles con el mínimo trabajo manual: ticket primero, catálogos/aliases después y revisión solo de lo incierto."
     },
     {
       "id": "sprint-r2-today-decision-engine",
