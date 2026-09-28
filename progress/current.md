@@ -1,6 +1,6 @@
 # Sesión actual
 
-Feature activa: **improve-recipe-import-quality**, spec aprobada e implementación en curso. Ver `progress/impl_improve-recipe-import-quality.md` para código, reproducción real y pendientes. Flags de calidad/revisión/reproceso apagados por defecto; no activar ni declarar terminado sin referencias humanas y benchmark aprobado.
+Feature activa: **improve-recipe-import-quality**, spec aprobada e implementación en curso. Ver `progress/impl_improve-recipe-import-quality.md` para código, reproducción real y pendientes. Por petición explícita del usuario, Whisper y worker nuevos están desplegados con calidad activa para probar; las flags web de revisión/reproceso siguen apagadas. No declarar terminada la feature ni validada su fidelidad sin referencias humanas y benchmark.
 
 Auditoría del job real y recorrido completo documentada en `docs/RECIPE_IMPORT_QUALITY_AUDIT.md`. Requisitos, diseño y tareas aprobados en `spec/improve-recipe-import-quality-Recipe import quality/`. La reproducción aislada está realizada; queda la anotación humana para medir fidelidad.
 

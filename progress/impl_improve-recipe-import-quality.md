@@ -23,6 +23,12 @@ Spec aprobada por peorr. Implementación detrás de flags apagados, no certifica
 
 El job `5d058b36-2bdb-4492-86f8-49cfd61981af` terminó en un intento sin error del worker, pero la pantalla mostraba «No pudimos leer la receta». El resultado `recipe-v1` tenía 4 ingredientes y 5 pasos válidos; los campos opcionales `amount` y `unit` llegaron como JSON `null`. El validador web solo aceptaba `undefined` o texto. Se admite `null` como medida desconocida y se añade regresión. No se modifica el job original ni se declara validada la fidelidad del contenido.
 
+### Despliegue de prueba solicitado por el usuario (28 septiembre)
+
+El usuario pidió desplegar la extracción nueva para probarla. Whisper `whisper-service-00008-mcp` sirve el 100 % con digest `sha256:3f672802b3c689eb9d5f6e415cf4e559b662dd6faea793e620ec6b6fd08ca487`; smoke con el reel: `transcription-v2`, modelo `base`, idioma `es`, 7 segmentos, sin error. El worker `neverita-media-worker-00009-win` sirve el 100 % con digest `sha256:ad402ccd8607a030040442bba5d7bab6c526172649f3732f0454b84cee3c444b` y `RECIPE_IMPORT_QUALITY_ENABLED=true`. Una tarea OIDC firmada hacia la revisión etiquetada devolvió 204 sobre un job ya completado, sin modificarlo. La migración de revisiones está aplicada. Las flags web de edición/reproceso siguen sin activar; el conector de Vercel devuelve 403 para el scope del proyecto. Primer job nuevo y fidelidad aún pendientes de observar.
+
+Este despliegue es una prueba dirigida por el usuario, no aceptación del benchmark ni cierre del spec. Los resultados nuevos se marcan `review_required`. Rollback de tráfico: worker `neverita-media-worker-00007-zaw`; Whisper `whisper-service-00006-nem`. No borrar datos históricos.
+
 1. Referencia humana del reel y resto del corpus; pregunta enviada al usuario. No tratar resultados del modelo como etiquetas humanas.
 2. Evaluar candidato ASR small y variante de audio; benchmarks sobre recursos Cloud Run, 20 ejecuciones, métricas de memoria y p95/cold separado.
 3. Calibrar verificación semántica/contradicciones, unidades, cantidades escritas y avisos sobre segmentos inciertos. Las reglas implementadas detectan señales, no prueban fidelidad completa.
