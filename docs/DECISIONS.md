@@ -1,5 +1,11 @@
 # Decisiones (ADR)
 
+## 2026-10-02 · Recuperación del dictado de compra
+
+El dictado R1 usa SpeechRecognition del navegador, sin incorporar proveedor nuevo de transcripción. La presencia del constructor no garantiza que su servicio esté operativo. Los errores de permisos, captura, red, ausencia de voz e idioma/servicio se presentan con acciones específicas; se permite reintentar sin perder texto y usar escritura o dictado del teclado móvil. El idioma es español (`es-ES`), consistente con la UI. Capturamos errores síncronos y descartamos callbacks al cerrar/cambiar de modalidad; no se guarda nada sin revisión explícita.
+
+Diez pruebas de componente reproducen los fallos, la recuperación y el resultado final al detener el micrófono. No acreditan reconocimiento de audio físico en Brave ni en otros dispositivos. Su soporte WebSpeech está en desarrollo: https://github.com/brave/brave-browser/issues/56487. No se puede habilitar desde la web un servicio que el navegador no ofrece.
+
 ## 2026-10-02 · Acceso directo desde +
 
 Por petición explícita del usuario, el botón central de navegación v3 pasa a ser un enlace a `/app/add-purchase`, sin menú intermedio. Las modalidades de entrada se eligen en esa pantalla. Se conserva el aspecto circular, el acceso por teclado y los cinco destinos; no se modifican los flujos de ticket, barcode, voz o manual.
