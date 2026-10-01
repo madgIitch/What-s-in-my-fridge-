@@ -50,3 +50,9 @@
 
 - Cierre explícito solicitado tras el push de la implementación `6ce5b59`.
 - No se aportó evidencia nueva del smoke con ticket real/cámara/voz; continúa pendiente en el review. Producción sin cambios.
+
+# 2026-10-01 · Sprint R2 → spec_ready
+
+- Preparación solicitada por el usuario; ocho dimensiones cubiertas, 32 criterios y QA manual de contratos/casos límite.
+- Hoy automático y sin cuota, cantidades/frescura conservadoras, compra explícita/idempotente y onboarding. Límites de catálogo, offline y rollback v2 definidos.
+- Propuesta guardada, `spec_approved: false`; sin implementación ni despliegue.

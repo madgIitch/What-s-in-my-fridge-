@@ -10,4 +10,6 @@ El 1 de octubre de 2026 el ejecutor hizo por error supabase db reset --local, au
 
 ## Siguiente acción
 
-R1 cerrado. El siguiente sprint es R2; preparar su spec antes de solicitar aprobación e implementar. Mantener registrado el smoke R1 pendiente con ticket real y cámara/voz. No activar producción automáticamente.
+**sprint-r2-today-decision-engine** preparado en `spec_ready`, con `spec_approved: false`. Propuesta, requisitos, diseño, checklist y QA en `spec/sprint-r2-today-decision-engine-Sprint R2 - Hoy & Decision Engine/`. Ocho dimensiones cubiertas y 32 criterios. Preparación manual porque este checkout no incluye el comando `prepare` mencionado en HARNESS.md.
+
+Siguiente acción: aprobación humana del spec R2 antes de implementar. El spec propone Hoy automático, ranking conservador sin cuota, CTAs sobre rutas reales, compra idempotente y onboarding aislado. No se implementó código de producto. Mantener registrado el smoke R1 pendiente con ticket real y cámara/voz. No activar producción automáticamente.
