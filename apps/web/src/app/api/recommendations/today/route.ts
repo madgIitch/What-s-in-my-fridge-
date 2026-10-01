@@ -32,6 +32,9 @@ export async function GET(request: Request) {
     return Response.json(result, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     if (error instanceof Error && error.message === "CATALOG_NOT_READY") return recommendationError("CATALOG_NOT_READY", "El catálogo todavía no está disponible", 409, true);
+    const cause = error instanceof Error ? error.cause : undefined;
+    console.error("[today] calculation failed", error instanceof Error ? error.message : "unknown",
+      typeof cause === "string" ? cause : cause && typeof cause === "object" ? { code: (cause as { code?: unknown }).code, message: (cause as { message?: unknown }).message } : undefined);
     return recommendationError("TODAY_UNAVAILABLE", "No pudimos calcular Hoy", 503, true);
   }
 }

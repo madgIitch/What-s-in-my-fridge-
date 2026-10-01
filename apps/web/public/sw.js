@@ -44,7 +44,10 @@ self.addEventListener("fetch", (event) => {
   }
   if (!isPublicAsset(request)) return;
   event.respondWith(caches.match(request).then((cached) => cached || fetch(request).then((response) => {
-    if (canStore(request, response)) void caches.open(SHELL_CACHE).then((cache) => cache.put(request, response.clone()));
+    if (canStore(request, response)) {
+      const copy = response.clone();
+      event.waitUntil(caches.open(SHELL_CACHE).then((cache) => cache.put(request, copy)).catch(() => undefined));
+    }
     return response;
   })));
 });

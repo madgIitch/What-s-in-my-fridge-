@@ -69,28 +69,28 @@ async function storeResult(input: { userId: string; cacheKey: string; date: stri
     p_snapshot_key: input.response.snapshotKey,
     p_result: { response: input.response, authorizedRecipeIds: input.authorizedRecipeIds },
   });
-  if (error || !data) throw new Error("TODAY_CACHE_WRITE_FAILED");
+  if (error || !data) throw new Error("TODAY_CACHE_WRITE_FAILED", { cause: error ?? "store:empty" });
   const stored = data as { action?: string; result?: { response?: TodayResponse } };
   if (stored.action === "stale") return null;
-  if (stored.action !== "stored" || !stored.result?.response) throw new Error("TODAY_CACHE_WRITE_FAILED");
+  if (stored.action !== "stored" || !stored.result?.response) throw new Error("TODAY_CACHE_WRITE_FAILED", { cause: `store:${stored.action}` });
   return stored.result.response;
 }
 
 async function calculateTodayAttempt(db: TodayDb, userId: string, date: string): Promise<TodayResponse | null> {
   const catalogResult = await db.from("catalog_versions").select("id,matcher_version").eq("active", true).limit(1);
-  if (catalogResult.error) throw new Error("TODAY_READ_FAILED");
+  if (catalogResult.error) throw new Error("TODAY_READ_FAILED", { cause: catalogResult.error });
   const catalog = ((catalogResult.data ?? []) as CatalogRow[])[0];
   if (!catalog) throw new Error("CATALOG_NOT_READY");
   const keyResult = await db.rpc("read_today_cache_v1", { p_date: date, p_matcher_version: catalog.matcher_version, p_recommendation_version: TODAY_RECOMMENDATION_VERSION });
-  if (keyResult.error || !keyResult.data) throw new Error("TODAY_READ_FAILED");
+  if (keyResult.error || !keyResult.data) throw new Error("TODAY_READ_FAILED", { cause: keyResult.error ?? "read_cache:empty" });
   const cache = keyResult.data as { action?: string; cacheKey?: string; result?: { response?: TodayResponse } };
   if (cache.action === "catalog_missing") throw new Error("CATALOG_NOT_READY");
   if (cache.action === "hit" && cache.result?.response) return cache.result.response;
-  if (cache.action !== "miss" || !cache.cacheKey) throw new Error("TODAY_READ_FAILED");
+  if (cache.action !== "miss" || !cache.cacheKey) throw new Error("TODAY_READ_FAILED", { cause: `read_cache:${cache.action}` });
   const cacheKey = cache.cacheKey;
 
   const pantryResult = await db.from("inventory_items").select("id,name,food_concept_id,commercial_product_id,deleted_at,normalization_status,stock_mode,stock_state,quantity_precision,quantity_exact,quantity_unit,freshness_precision,freshness_source,acquired_on,freshness_estimated_days,expiry_date_exact,knowledge_provenance").eq("user_id", userId).order("id");
-  if (pantryResult.error) throw new Error("TODAY_READ_FAILED");
+  if (pantryResult.error) throw new Error("TODAY_READ_FAILED", { cause: pantryResult.error });
   const pantryRows = (pantryResult.data ?? []) as PantryRow[];
   const activeRows = pantryRows.filter(activePantry);
   const usableRows = activeRows.filter((row) => row.normalization_status === "confirmed" && row.food_concept_id
@@ -102,7 +102,7 @@ async function calculateTodayAttempt(db: TodayDb, userId: string, date: string):
 
   if (state === "ready") {
     const candidateResult = await db.rpc("find_today_recipe_candidates_v1", { p_limit: 250 });
-    if (candidateResult.error) throw new Error("TODAY_READ_FAILED");
+    if (candidateResult.error) throw new Error("TODAY_READ_FAILED", { cause: candidateResult.error });
     const candidateIds = ((candidateResult.data ?? []) as Array<{ recipe_id: string }>).map((row) => row.recipe_id).slice(0, 250);
     if (candidateIds.length === 0) state = "no_candidates";
     else {
@@ -111,7 +111,7 @@ async function calculateTodayAttempt(db: TodayDb, userId: string, date: string):
         db.from("food_concepts").select("id,display_name,food_concept_aliases(normalized_alias)").order("id"),
         db.from("favorite_recipes").select("recipe_id").eq("user_id", userId).is("deleted_at", null).in("recipe_id", candidateIds).order("recipe_id"),
       ]);
-      if (recipesResult.error || conceptsResult.error || favoritesResult.error) throw new Error("TODAY_READ_FAILED");
+      if (recipesResult.error || conceptsResult.error || favoritesResult.error) throw new Error("TODAY_READ_FAILED", { cause: recipesResult.error ?? conceptsResult.error ?? favoritesResult.error });
       const concepts: FoodConceptInput[] = ((conceptsResult.data ?? []) as ConceptRow[]).map((row) => ({ id: row.id, displayName: row.display_name, aliases: row.food_concept_aliases.map((alias) => alias.normalized_alias) }));
       const favorites = new Set(((favoritesResult.data ?? []) as Array<{ recipe_id: string }>).map((row) => row.recipe_id));
       const pantry = pantryRows.map(pantryKnowledge);
