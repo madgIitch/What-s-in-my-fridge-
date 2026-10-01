@@ -1766,6 +1766,88 @@ export type Database = {
         }
         Relationships: []
       }
+      today_recommendation_cache: {
+        Row: {
+          cache_key: string
+          catalog_version_id: string
+          civil_date: string
+          created_at: string
+          expires_at: string
+          matcher_version: string
+          recommendation_version: string
+          result: Json
+          snapshot_key: string
+          user_id: string
+        }
+        Insert: {
+          cache_key: string
+          catalog_version_id: string
+          civil_date: string
+          created_at?: string
+          expires_at: string
+          matcher_version: string
+          recommendation_version: string
+          result: Json
+          snapshot_key: string
+          user_id: string
+        }
+        Update: {
+          cache_key?: string
+          catalog_version_id?: string
+          civil_date?: string
+          created_at?: string
+          expires_at?: string
+          matcher_version?: string
+          recommendation_version?: string
+          result?: Json
+          snapshot_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "today_recommendation_cache_catalog_version_id_fkey"
+            columns: ["catalog_version_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      today_shopping_mutations: {
+        Row: {
+          client_mutation_id: string
+          created_at: string
+          item_ids: string[]
+          recipe_id: string
+          snapshot_key: string
+          user_id: string
+        }
+        Insert: {
+          client_mutation_id: string
+          created_at?: string
+          item_ids?: string[]
+          recipe_id: string
+          snapshot_key: string
+          user_id: string
+        }
+        Update: {
+          client_mutation_id?: string
+          created_at?: string
+          item_ids?: string[]
+          recipe_id?: string
+          snapshot_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "today_shopping_mutations_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_counters: {
         Row: {
           feature: string
@@ -1963,6 +2045,14 @@ export type Database = {
         }
         Returns: Json
       }
+      apply_today_shopping_v1: {
+        Args: {
+          p_client_mutation_id: string
+          p_recipe_id: string
+          p_snapshot_key: string
+        }
+        Returns: Json
+      }
       attach_receipt_image: {
         Args: { p_draft_id: string; p_image_path: string }
         Returns: undefined
@@ -2051,6 +2141,14 @@ export type Database = {
           recipe_id: string
         }[]
       }
+      find_today_recipe_candidates_v1: {
+        Args: { p_limit?: number }
+        Returns: {
+          overlap_count: number
+          recipe_id: string
+          source_rank: number
+        }[]
+      }
       finish_push_delivery: {
         Args: {
           p_delivery_id: string
@@ -2103,6 +2201,14 @@ export type Database = {
         Returns: Json
       }
       r1_normalize_text: { Args: { value: string }; Returns: string }
+      read_today_cache_v1: {
+        Args: {
+          p_date: string
+          p_matcher_version: string
+          p_recommendation_version: string
+        }
+        Returns: Json
+      }
       reconcile_subscription: {
         Args: {
           p_cancel_at_period_end: boolean
@@ -2186,6 +2292,43 @@ export type Database = {
       set_recipe_import_stage: {
         Args: { p_job_id: string; p_stage: string; p_worker_id: string }
         Returns: boolean
+      }
+      store_today_cache_v1: {
+        Args: {
+          p_cache_key: string
+          p_date: string
+          p_matcher_version: string
+          p_recommendation_version: string
+          p_result: Json
+          p_snapshot_key: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      today_lock_snapshot_v1: { Args: never; Returns: undefined }
+      today_parse_measure_v1: {
+        Args: { value: string }
+        Returns: {
+          quantity: number
+          unit: string
+        }[]
+      }
+      today_state_key_for_user_v1: {
+        Args: {
+          p_date: string
+          p_matcher_version: string
+          p_recommendation_version: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      today_state_key_v1: {
+        Args: {
+          p_date: string
+          p_matcher_version: string
+          p_recommendation_version: string
+        }
+        Returns: string
       }
       valid_meal_consumed: { Args: { value: Json }; Returns: boolean }
     }

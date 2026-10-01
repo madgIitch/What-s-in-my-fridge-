@@ -565,6 +565,22 @@ Convertir la compra en datos culinarios útiles con el mínimo trabajo manual: t
 <!-- harness:sprint-r2-today-decision-engine -->
 ## sprint-r2-today-decision-engine · Sprint R2 - Hoy & Decision Engine
 
+Implementación R2: `/app` usa `TodayApp` con PRODUCT_V3 y mantiene InventoryApp
+cuando el flag está desactivado. El motor puro vive en
+`packages/domain/src/recommendations/today.ts`. Turbopack resuelve la raíz del
+monorepo para importar ese motor desde web.
+
+GET calcula sobre hasta 250 candidatos seleccionados en DB y publica una caché
+privada solo mediante un RPC privilegiado que revalida los inputs. POST compra
+recalcula los faltantes bajo bloqueos de snapshot, comprueba ownership y resuelve
+primero el replay de una mutación aplicada. La sesión vuelve a comprobarse antes
+de responder. No intervienen los RPC de cuota legacy.
+
+Las nuevas tablas son `today_recommendation_cache` y `today_shopping_mutations`.
+El cliente autenticado solo puede leer sus filas; no puede publicar una caché
+falsa. Las migraciones son aditivas. Evidencia y límites de contención en
+`docs/design/neverita-v3/qa/R2_COMPARISON.md`.
+
 Hacer de '¿Qué cenamos?' el momento central del producto: recomendaciones accionables en la primera pantalla, semánticas y sin cuota.
 
 ### Scope aprobado
@@ -591,4 +607,3 @@ Hacer de '¿Qué cenamos?' el momento central del producto: recomendaciones acci
 - **external_contracts:** GET /api/recommendations/today?date=YYYY-MM-DD devuelve contrato today-v2 con main<=3, secondary<=3, availability/reasons/missing/unknown, snapshotKey opaca, versiones y estados explícitos. date sirve solo para fecha civil; no ownership. POST /api/recommendations/shopping {recipeId,snapshotKey,clientMutationId} recalcula faltantes de servidor; snapshot cambiado=409, replay devuelve mismos IDs. Nunca invocar begin_recipe_suggestion/consume_usage de v1. CTA Cocinar esto abre detalle existente, sin consumir stock ni iniciar sesión de cocina R4.
 - **edge_cases:** Eliminar tombstones/empty/quantity=0 de disponibilidad; legacy conserva precisión desconocida. Agrupar ingredientes por concepto y sumar requerimientos exactos compatibles antes de comparar; sumar existencias exactas compatibles una sola vez. g/kg y ml/l convertibles; pack/unit/volumen/peso no se mezclan. Ingredientes ambiguos permanecen unknown; nunca contar un desconocido como faltante demostrado. No presumir sal/aceite básicos ni sustituir alimentos. Fecha civil local y cantidades de receta sin escalado de raciones.
 - **ui_states:** PRODUCT_V3=true convierte /app en Hoy automático. Referencias 06/10, tokens R0/R1. Máximo tres decisiones principales compactas: primera tarjeta y CTA visibles a 393x852 antes de bloques secundarios; no exigir que tres tarjetas completas quepan. Onboarding saltables solo en cuenta sin items activos y no visto por ese usuario/dispositivo. Ejemplo explícito aislado sin datos escritos. Empty enlaza a /app/add-purchase y /app/recipes/import. Error/offline honestos; teclado, 44px, foco, reduced motion y sin overflow a320.
-

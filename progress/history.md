@@ -56,3 +56,10 @@
 - Preparación solicitada por el usuario; ocho dimensiones cubiertas, 32 criterios y QA manual de contratos/casos límite.
 - Hoy automático y sin cuota, cantidades/frescura conservadoras, compra explícita/idempotente y onboarding. Límites de catálogo, offline y rollback v2 definidos.
 - Propuesta guardada, `spec_approved: false`; sin implementación ni despliegue.
+
+# 2026-10-02 · Sprint R2 → review_pending
+
+- Hoy automático sin cuota, ranking conservador, caché privada y compra confirmada con recálculo, snapshot y replay.
+- Gates, build, domain typecheck/37 tests, db lint/252 SQL y concurrencia PASS. Playwright true: 4 PASS; rollback false: 1 PASS.
+- Capturas localhost 320/393, comparación 06/10 y benchmark reproducible guardados. Migración aditiva aplicada solo en local; sin reset ni despliegue.
+- Pendiente revisión humana; no se cierra automáticamente. Smoke real R1 permanece pendiente.

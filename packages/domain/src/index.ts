@@ -3,6 +3,7 @@ export type EntityId = string;
 export * from "./pantry/knowledge";
 export * from "./normalization";
 export * from "./recommendations/ranking-v2";
+export * from "./recommendations/today";
 
 export type LegacyReference = Readonly<{
   source: "FIREBASE";

@@ -34,6 +34,15 @@ Reglas de diseño/API:
 
 Reglas de tests:
 
+- Los fixtures SQL con catálogo activo desactivan el existente únicamente dentro
+  de su transacción de prueba y hacen rollback; no requieren una DB vacía ni reset.
+- Las pruebas R2 de navegador verifican explícitamente un hostname local antes
+  de crear fixtures. Capturas de evidencia usan respuestas reales de la API;
+  estados interceptados se identifican como pruebas de presentación.
+- Un error de red en compra conserva `clientMutationId`; un conflicto obliga a
+  actualizar Hoy y revisar otra confirmación. TTMD usa IDs efímeros sin identidad
+  de cuenta, receta, despensa ni hash del snapshot.
+
 - Cada vertical incluye unit tests y, para recorridos críticos, Playwright mobile-first.
 - Los adaptadores externos deben poder sustituirse por mocks.
 

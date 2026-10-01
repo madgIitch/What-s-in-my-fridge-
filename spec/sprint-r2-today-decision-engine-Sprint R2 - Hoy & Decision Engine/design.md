@@ -2,6 +2,9 @@
 
 ## Scope (archivos que puede tocar)
 
+- `apps/web/next.config.ts` — ajuste de raíz del monorepo necesario para resolver
+  el motor aprobado de `packages/domain`; evidencia en `progress/r2-build-scope.md`.
+
 - `apps/web/src/app/(auth)/app/page.tsx`
 - `apps/web/src/components/today/**`
 - `apps/web/src/lib/recommendations/**`
@@ -35,4 +38,3 @@
 - **ui_states:** PRODUCT_V3=true convierte /app en Hoy automático. Referencias 06/10, tokens R0/R1. Máximo tres decisiones principales compactas: primera tarjeta y CTA visibles a 393x852 antes de bloques secundarios; no exigir que tres tarjetas completas quepan. Onboarding saltables solo en cuenta sin items activos y no visto por ese usuario/dispositivo. Ejemplo explícito aislado sin datos escritos. Empty enlaza a /app/add-purchase y /app/recipes/import. Error/offline honestos; teclado, 44px, foco, reduced motion y sin overflow a320.
 - **rollback_compat:** Flag ausente/false conserva /app InventoryApp, endpoint y cuota legacy v1 y navegación v2. API v3 responde404 con flagfalse. Sin cambios OCR, import, billing, cooking, planificación, proveedores, Pro ni R3-R8. No despliegue/activación ni reset/backfill destructivo. Compras reutilizan semántica actual; procedencia y agrupación avanzada quedan R5.
 - **tests:** Unit domain para presencia/cantidad/unidades/dedup/ranking/frescura/cache; web para contrato, errores, onboarding y métricas; SQL/RLS dos usuarios, compra atómica/replay, permisos, cache y usage invariable. Playwright con DB local: ready/quantity_to_check/missing_one/missing_many/unknown/empty, estimates, Free agotado, compras, dos usuarios y flagfalse. Capturas reales320/393 y comparación06/10. Gates harness, domain typecheck/tests, build, DB lint/pgTAP, instalación frozen si cambia lockfile. Smoke real pendiente R1 no se presenta como completado.
-

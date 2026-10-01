@@ -1,15 +1,13 @@
 # Sesión actual
 
-**sprint-r1-purchase-intake-and-pantry-normalization** cerrado en `done` por petición explícita del usuario el 1 de octubre de 2026. Implementación `6ce5b59` subida a origin/main. Evidencia y límites en progress/review_sprint-r1-purchase-intake-and-pantry-normalization.md. El cierre no acredita el smoke real aún pendiente.
+**sprint-r2-today-decision-engine** implementado y en `review_pending`, con `spec_approved: true`. Hoy automático, ranking conservador sin cuota, cantidades inciertas y compra confirmada con snapshot vigente y replay. Onboarding aislado, offline honesto y TTMD sin datos privados.
 
-Compra por ticket/barcode/voz/manual con revisión explícita; normalización conservadora y corrección de pendientes; editor de Despensa; outbox por usuario y compatibilidad v2. Migraciones y tipos locales actualizados. Producción sin cambios. R2 queda fuera del alcance.
+Gates harness PASS; build PASS; 37 pruebas de dominio y typecheck PASS; 252 aserciones SQL y db lint PASS. Playwright: cuatro recorridos R2 con flag true y rollback false por separado. Concurrencia local PASS. Evidencia: progress/review_sprint-r2-today-decision-engine.md y docs/design/neverita-v3/qa/R2_COMPARISON.md.
 
-## Incidencia de ejecución
+Pendiente: revisión humana y cierre explícito del spec. La migración se aplicó solo en local. No despliegue, push ni cambios R3–R8. Se preservan los arreglos R1 del botón + y del dictado.
 
-El 1 de octubre de 2026 el ejecutor hizo por error supabase db reset --local, aunque el diseño aprobado lo prohíbe. Afectó solo a Supabase local, no al proyecto remoto. Se comunicó al usuario y se detuvo el ejecutor. Desde entonces solo se aplicaron migraciones aditivas y fixtures de pruebas; no se repitió el reset.
+## R1 y antecedente de ejecución
 
-## Siguiente acción
+R1 cerrado por petición explícita del usuario el 1 de octubre de 2026. Implementación 6ce5b59, navegación 6afe708 y dictado c85a6cf subidos a origin/main. Smoke con ticket/cámara/voz reales pendiente.
 
-**sprint-r2-today-decision-engine** preparado en `spec_ready`, con `spec_approved: false`. Propuesta, requisitos, diseño, checklist y QA en `spec/sprint-r2-today-decision-engine-Sprint R2 - Hoy & Decision Engine/`. Ocho dimensiones cubiertas y 32 criterios. Preparación manual porque este checkout no incluye el comando `prepare` mencionado en HARNESS.md.
-
-Siguiente acción: aprobación humana del spec R2 antes de implementar. El spec propone Hoy automático, ranking conservador sin cuota, CTAs sobre rutas reales, compra idempotente y onboarding aislado. No se implementó código de producto. Mantener registrado el smoke R1 pendiente con ticket real y cámara/voz. No activar producción automáticamente.
+En R1 un ejecutor hizo por error supabase db reset --local, prohibido por el spec. Se comunicó al usuario; no afectó al remoto. R2 no repitió el reset: solo migración aditiva y fixtures locales, con rollback en pruebas SQL.

@@ -1778,7 +1778,7 @@
     {
       "id": "sprint-r2-today-decision-engine",
       "name": "Sprint R2 - Hoy & Decision Engine",
-      "status": "spec_ready",
+      "status": "review_pending",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.12.0",
@@ -1864,7 +1864,8 @@
         "supabase/tests/**",
         "tests/**",
         "docs/**",
-        "spec.json"
+        "spec.json",
+        "apps/web/next.config.ts"
       ],
       "spec_approved": true,
       "approved_by": "peorr",

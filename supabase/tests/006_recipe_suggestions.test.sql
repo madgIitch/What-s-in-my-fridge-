@@ -1,4 +1,6 @@
 begin;
+-- Isolate the active-catalog fixture inside this rollback-only transaction.
+update public.catalog_versions set active = false where active;
 select plan(17);
 insert into auth.users(id,email) values('60000000-0000-0000-0000-000000000001','recipes-a@example.test'),('60000000-0000-0000-0000-000000000002','recipes-b@example.test');
 insert into public.catalog_versions(id,checksum,source_version,matcher_version,active,recipe_count,ingredient_count)

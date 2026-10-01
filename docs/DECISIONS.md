@@ -311,6 +311,22 @@ Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
 <!-- harness:sprint-r2-today-decision-engine -->
 ## 2026-10-01 · sprint-r2-today-decision-engine aprobado
 
+Implementación verificada el 2 de octubre de 2026: caché con TTL máximo de 60
+minutos y publicación «leer, calcular, revalidar»; una generación concurrente
+conserva el primer snapshot vigente. El hash se calcula dentro de DB incluyendo
+datos de recetas para invalidar también ediciones sin cambio de versión.
+
+Se usan bloqueos de tablas para impedir cambios concurrentes durante compra y
+publicación. Es una decisión conservadora de consistencia; serializa la caché y
+requiere medir contención antes de optimizar. Solo el servicio publica resultados;
+el RPC de compra no acepta cantidades del cliente. Un replay aplicado se devuelve
+antes de validar el estado actual. La suma decimal del dominio evita falsos
+déficits por redondeo binario.
+
+La raíz de Turbopack se amplía al monorepo para resolver el motor compartido:
+ajuste técnico documentado en `progress/r2-build-scope.md`. R2 queda pendiente
+de revisión humana y no se activa ni despliega automáticamente.
+
 Contexto: se aprobó el spec `sprint-r2-today-decision-engine` (Sprint R2 - Hoy & Decision Engine).
 
 Decisiones registradas:
