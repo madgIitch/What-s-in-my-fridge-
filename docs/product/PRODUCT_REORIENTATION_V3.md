@@ -16,7 +16,7 @@ Neverita ayuda a decidir qué cocinar hoy a partir de lo que la persona sabe que
 
 ## Navegación
 
-La shell v3 móvil muestra **Hoy**, **Despensa**, **+**, **Cocinar** y **Compra**. `+` abre entradas de compra y alta. Favoritos e importaciones viven dentro de Cocinar; el calendario legacy conserva un acceso profundo compatible hasta que la planificación semanal tenga spec aprobado. Las rutas existentes conservan parámetros seguros de enlace profundo durante la transición.
+La shell v3 móvil muestra **Hoy**, **Despensa**, **+**, **Cocinar** y **Compra**. `+` lleva directamente a `/app/add-purchase`; ticket, código de barras, voz y manual se eligen allí. Se elimina el menú intermedio por petición del usuario el 2 de octubre de 2026. Favoritos e importaciones viven dentro de Cocinar; el calendario legacy conserva un acceso profundo compatible hasta que la planificación semanal tenga spec aprobado. Las rutas existentes conservan parámetros seguros de enlace profundo durante la transición.
 
 ### Dirección visual de la shell R0
 

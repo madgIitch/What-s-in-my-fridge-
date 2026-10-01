@@ -40,18 +40,18 @@ test.describe("R1 purchase intake, review and pantry", () => {
     await page.setViewportSize({ width: 320, height: 720 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/app/add-purchase");
-    const undersized = await page.locator(".purchase-methods button, .purchase-primary, .product-v3-nav > a, .product-v3-add > button").evaluateAll(elements => elements.filter(element => {
+    const undersized = await page.locator(".purchase-methods button, .purchase-primary, .product-v3-nav > a, .product-v3-add > a").evaluateAll(elements => elements.filter(element => {
       const bounds = element.getBoundingClientRect();
       return bounds.width < 44 || bounds.height < 44;
     }).map(element => element.textContent));
     expect(undersized).toEqual([]);
     expect(await page.locator(".product-v3-content").evaluate(element => getComputedStyle(element).animationName)).toBe("none");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    await page.getByRole("button", { name: "Añadir", exact: true }).focus();
+    await page.goto("/app/pantry");
+    await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Añadir compra", exact: true }).focus();
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("link", { name: "Añadir compra", exact: true })).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("button", { name: "Añadir", exact: true })).toBeFocused();
+    await expect(page).toHaveURL(/\/app\/add-purchase$/);
+    await expect(page.getByRole("heading", { name: "¿Cómo quieres añadirla?" })).toBeVisible();
   });
 
   test("manual, voice fallback and unknown barcode require review and explicit confirmation", async ({ page }) => {

@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -22,28 +21,12 @@ function NavigationIcon({ href }: { href: string }) {
 
 export function ProductV3Nav() {
   const pathname = usePathname();
-  const [addOpen, setAddOpen] = useState(false);
-  const addButton = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (!addOpen) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { setAddOpen(false); addButton.current?.focus(); }
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [addOpen]);
   return <nav className="product-v3-nav" aria-label="Navegación principal">
     {destinations.slice(0, 2).map((item) => <Link key={item.href} href={item.href} aria-current={pathname === item.href ? "page" : undefined}>
       <NavigationIcon href={item.href} /><span>{item.label}</span>
     </Link>)}
     <div className="product-v3-add">
-      <button ref={addButton} type="button" aria-label="Añadir" aria-expanded={addOpen} aria-controls="product-v3-add-menu" onClick={() => setAddOpen((open) => !open)}>+</button>
-      {addOpen && <div id="product-v3-add-menu" className="product-v3-add-menu">
-        <Link href="/app/add-purchase" onClick={() => setAddOpen(false)}>Añadir compra</Link>
-        <Link href="/app/scan" onClick={() => setAddOpen(false)}>Escanear ticket</Link>
-        <Link href="/app/add-purchase" onClick={() => setAddOpen(false)}>Código de barras</Link>
-        <Link href="/app/add-purchase" onClick={() => setAddOpen(false)}>Voz o manual</Link>
-      </div>}
+      <Link href="/app/add-purchase" aria-label="Añadir compra" aria-current={pathname.startsWith("/app/add-purchase") ? "page" : undefined}>+</Link>
     </div>
     {destinations.slice(2).map((item) => <Link key={item.href} href={item.href} aria-current={pathname === item.href || (item.href === "/app/cook" && ["/app/recipes", "/app/favorites"].includes(pathname)) ? "page" : undefined}>
       <NavigationIcon href={item.href} /><span>{item.label}</span>

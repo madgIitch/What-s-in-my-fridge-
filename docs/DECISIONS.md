@@ -1,5 +1,9 @@
 # Decisiones (ADR)
 
+## 2026-10-02 · Acceso directo desde +
+
+Por petición explícita del usuario, el botón central de navegación v3 pasa a ser un enlace a `/app/add-purchase`, sin menú intermedio. Las modalidades de entrada se eligen en esa pantalla. Se conserva el aspecto circular, el acceso por teclado y los cinco destinos; no se modifican los flujos de ticket, barcode, voz o manual.
+
 ## 2026-09-28 · R0 implementado detrás de PRODUCT_V3
 
 Los campos legacy no se reutilizan como campos exactos v3. Los nuevos campos de cantidad/frescura se validan con constraints; los defaults son desconocidos. Los catálogos de conceptos/productos admiten lectura autenticada y escritura exclusivamente privilegiada. El rollback usa la flag, conservando datos aditivos. R0 establece shell y ranking interno; las superficies de Despensa/Hoy completas se reservan para R1/R2 aprobados. La comparación visual continua se realiza en localhost con cuenta sintética y evidencia en `docs/design/neverita-v3/qa/`.
