@@ -1763,16 +1763,17 @@
         "packages/domain/src/receipt/**",
         "packages/domain/src/index.ts"
       ],
-      "spec_approved": false,
-      "approved_by": null,
-      "approved_at": null,
+      "spec_approved": true,
+      "approved_by": "peorr",
+      "approved_at": "2026-10-01T12:00:06.430Z",
       "visual_references": [
         "docs/design/neverita-v3/01-pantry-edit-and-system-states.png",
         "docs/design/neverita-v3/06-onboarding-and-empty-home.png",
         "docs/design/neverita-v3/08-pantry.png"
       ],
       "title": "Sprint R1 - Purchase Intake, Normalization & Pantry Knowledge",
-      "description": "Convertir la compra en datos culinarios útiles con el mínimo trabajo manual: ticket primero, catálogos/aliases después y revisión solo de lo incierto."
+      "description": "Convertir la compra en datos culinarios útiles con el mínimo trabajo manual: ticket primero, catálogos/aliases después y revisión solo de lo incierto.",
+      "answers_hash": "sha256:14f63ebe06010ebafa0d4fb6e54f01f023b18986fca27df7aafa9b0f36303bf3"
     },
     {
       "id": "sprint-r2-today-decision-engine",

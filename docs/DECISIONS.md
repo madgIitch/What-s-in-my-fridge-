@@ -276,3 +276,16 @@ Decisiones registradas:
 - **tests:** Unitarios de precisión/proyección/disponibilidad, RLS de relaciones nuevas, navegación/deep links y los gates del repositorio.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+<!-- harness:sprint-r1-purchase-intake-and-pantry-normalization -->
+## 2026-10-01 · sprint-r1-purchase-intake-and-pantry-normalization aprobado
+
+Contexto: se aprobó el spec `sprint-r1-purchase-intake-and-pantry-normalization` (Sprint R1 - Purchase Intake, Normalization & Pantry Knowledge).
+
+Decisiones registradas:
+
+- **auth_secrets:** Todas las operaciones privadas se autorizan por sesión y RLS. No confiar en userId enviado ni en raw/provenance/concept/stock suministrados sin validación. Catálogos globales se escriben solo con tooling privilegiado fuera del cliente. Mantener bucket privado y secretos server-only; no registrar PII del ticket. Voz/cámara solo tras acción del usuario; sin proveedor nuevo de audio.
+- **rollback_compat:** Flag server-only PRODUCT_V3 false conserva rutas, confirmación OCR y UI v2. Rutas /app/scan y /app/items/* siguen disponibles. RPC v3 separadas preservan el payload de v2; IndexedDB evoluciona aditivamente, cache/outbox separados por usuario. No reinterpretar expiry_date ni quantity legacy; no borrar datos, resetear DB, activar producción ni hacer backfill automático.
+- **tests:** Unit tests de normalización/cantidades/fechas/importadores, pgTAP para aislamiento, integridad, replay/concurrencia y precedencia. Playwright con Vision mock y DB local: ticket limpio, tres dudosos, correction/unknown/omit, catálogo ausente, barcode y voz no disponibles, offline con reconexión/conflicto, dos usuarios, flag false, 320px. Comparación visual real en localhost frente a 01/06/08, capturas y diferencias documentadas. Harness gates más domain typecheck/tests, db lint y SQL; humo real con catálogo/ticket cuando estén disponibles.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
