@@ -19,7 +19,7 @@ Mercadona, DIA, Lidl y Carrefour: documentación y carpetas decompiladas encontr
 - `captured_at` indica cuándo se copió; no prueba cuándo el retailer publicó o se descargó cada producto. `fetched_at` permanece null sin evidencia.
 - Los JSON de `data/` usan Git LFS mediante atributos locales a esa carpeta. El manifest permanece texto normal.
 
-## Contrato de ingesta propuesto
+## Contrato de ingesta implementado
 
 Eroski expone `products` como array, con `id`, `name`, `brand`, `price`, `currency`, `url`, `image_url`, `category`, `source_page` y `metrics_item`. Se observan IDs y nombres presentes y únicos en el snapshot inspeccionado. `id` sirve como identificador del retailer; `name` como nombre comercial. No hay campo barcode a nivel de producto en el snapshot inspeccionado.
 
@@ -29,6 +29,10 @@ Aldi expone `products` como array con ID, nombre, marca, imágenes, precios y un
 
 Importar Eroski requiere dry-run, validación de esquema/hash, upsert por retailer+ID y conservación de provenance. Los exports vacíos no sustituyen un catálogo útil. Para los otros cuatro retailers se valida el contrato canónico con fixtures y se informa fuente ausente hasta disponer de exports reales.
 
+## Defaults culinarios
+
+La ubicación y la conservación solo se proponen cuando el `food_concept` contiene un default documentado. Una ubicación de catálogo se persiste con `location_confirmed=false` y la UI la rotula «Ubicación propuesta». `shelf_life_days` produce exclusivamente una ventana `estimated` con origen `catalog`; nunca crea `expiry_date_exact`. Si falta cualquiera de esos defaults, el conocimiento correspondiente permanece `unknown`/`Por ubicar`.
+
 ## Estado
 
-Los archivos están conservados. La normalización, los adapters y la ingesta de producción todavía no están implementados ni aprobados: forman parte del spec R1 pendiente de aprobación.
+R1 está aprobado y su implementación usa adaptadores para las cinco formas canónicas, validación de manifest/checksum/cardinalidad, dry-run y una RPC transaccional exclusiva de `service_role`. El snapshot congelado de Eroski valida 23.172 productos; Mercadona, DIA, Lidl y Carrefour se reportan honestamente como ausentes. No se ha ejecutado una ingesta remota ni se presenta una fixture sintética como integración real.

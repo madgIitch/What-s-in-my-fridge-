@@ -1671,7 +1671,7 @@
     {
       "id": "sprint-r1-purchase-intake-and-pantry-normalization",
       "name": "Sprint R1 - Purchase Intake, Normalization & Pantry Knowledge",
-      "status": "spec_ready",
+      "status": "review_pending",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.11.0",

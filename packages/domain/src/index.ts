@@ -1,6 +1,7 @@
 /** Shared domain primitives. Business behavior moves here only as its sprint is approved. */
 export type EntityId = string;
 export * from "./pantry/knowledge";
+export * from "./normalization";
 export * from "./recommendations/ranking-v2";
 
 export type LegacyReference = Readonly<{

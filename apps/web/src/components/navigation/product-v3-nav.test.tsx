@@ -18,8 +18,9 @@ describe("product v3 navigation", () => {
   it("opens the central add choices", () => {
     render(<ProductV3Nav />);
     fireEvent.click(screen.getByRole("button", { name: "Añadir" }));
+    expect(screen.getByRole("link", { name: "Añadir compra" })).toHaveAttribute("href", "/app/add-purchase");
     expect(screen.getByRole("link", { name: "Escanear ticket" })).toHaveAttribute("href", "/app/scan");
-    expect(screen.getByRole("link", { name: "Añadir alimento" })).toHaveAttribute("href", "/app/items/new");
+    expect(screen.getByRole("link", { name: "Código de barras" })).toHaveAttribute("href", "/app/add-purchase");
     fireEvent.keyDown(window, { key: "Escape" });
     expect(screen.queryByRole("link", { name: "Escanear ticket" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Añadir" })).toHaveFocus();

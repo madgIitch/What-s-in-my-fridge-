@@ -52,6 +52,14 @@ Decisión: implementar según el spec aprobado.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
 
+## 2026-10-01 · Autoridad de evidencia y causalidad offline en R1
+
+La evidencia autoritativa de una compra es la línea original almacenada por el parser, no la proyección de normalización ni datos reenviados por el cliente. `confirm_receipt_draft_v2` valida todas las líneas antes de la primera escritura, calcula el hash efectivo dentro de PostgreSQL y conserva la evidencia de cantidad. La fecha local ausente no se inventa en servidor: la UI envía un `YYYY-MM-DD` civil y el API rechaza fechas futuras respecto a ese día del cliente.
+
+Las mutaciones offline declaran explícitamente su contrato (`legacy`, `pantry`, `restore`). Solo se compactan cambios pantry que nunca se intentaron; una entrega iniciada conserva payload e identificador y la siguiente mutación recibe la versión canónica resultante. El worker comprueba la sesión antes y después de cada respuesta remota y filtra el pull por propietario, evitando que un logout o cambio de cuenta procese o muestre datos del usuario anterior.
+
+Las RPC de catálogo son exclusivas de `service_role`; las RPC de usuario no se conceden a `anon`. Todas las correcciones posteriores a la migración inicial se aplican como migraciones aditivas, sin reset ni down migration.
+
 ## 2026-09-22 · Sprint 10 — autoridad económica y cuota única
 
 - Stripe se integra exclusivamente desde módulos server-only y se fija `Stripe-Version: 2024-06-20`; Checkout recibe el precio configurado en servidor y el webhook valida la firma sobre el cuerpo crudo antes de cualquier acceso a datos.

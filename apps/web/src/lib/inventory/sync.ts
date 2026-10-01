@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { applyCanonical, claimLease, getItem, getMeta, listOutbox, putItems, setMeta, updateMutation } from "./db";
+import { applyCanonical, claimLease, getItem, getMeta, listOutbox, putItems, removeMutation, setMeta, updateMutation } from "./db";
 import { fromServer } from "./repository";
 import type { LocalInventoryItem, MutationResult, OutboxMutation, ServerInventoryItem } from "./types";
 
@@ -15,7 +15,11 @@ export function retryDelay(attempt: number, random = Math.random): number {
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function callMutation(supabase: SupabaseClient, mutation: OutboxMutation): Promise<MutationResult> {
-  const { data, error } = await supabase.rpc("apply_inventory_mutation", {
+  const rpc = supabase.rpc.bind(supabase) as unknown as (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+  const { data, error } = mutation.domain === "restore" ? await rpc("restore_inventory_item_v3", { p_client_mutation_id: mutation.clientMutationId, p_item_id: mutation.itemId, p_expected_version: mutation.expectedVersion }) : mutation.domain === "pantry" ? await rpc("apply_pantry_mutation_v3", {
+    p_client_mutation_id: mutation.clientMutationId, p_item_id: mutation.itemId,
+    p_expected_version: mutation.expectedVersion, p_payload: mutation.payload,
+  }) : await supabase.rpc("apply_inventory_mutation", {
     p_client_mutation_id: mutation.clientMutationId,
     p_operation: mutation.operation,
     p_item_id: mutation.itemId,
@@ -26,19 +30,38 @@ async function callMutation(supabase: SupabaseClient, mutation: OutboxMutation):
   return data as unknown as MutationResult;
 }
 
-async function processQueue(userId: string, supabase: SupabaseClient): Promise<void> {
+async function sessionMatches(supabase: SupabaseClient, userId: string, isActive: () => boolean): Promise<boolean> {
+  if (!isActive()) return false;
+  const { data } = await supabase.auth.getUser();
+  return isActive() && data.user?.id === userId;
+}
+
+async function processQueue(userId: string, supabase: SupabaseClient, isActive: () => boolean): Promise<void> {
   const mutations = await listOutbox(userId);
   const blockedItems = new Set<string>();
-  for (const mutation of mutations) {
+  for (const queued of mutations) {
+    if (!await sessionMatches(supabase, userId, isActive)) return;
+    // The previous delivery may have advanced this entity's causal version.
+    const mutation = (await listOutbox(userId)).find(entry => entry.clientMutationId === queued.clientMutationId);
+    if (!mutation) continue;
     if (blockedItems.has(mutation.itemId) || mutation.state === "conflict") continue;
     if (mutation.state === "error" && mutation.attempts >= MAX_ATTEMPTS) continue;
     let current: OutboxMutation = { ...mutation, state: "processing" };
     await updateMutation(current);
     try {
       const result = await callMutation(supabase, current);
+      if (!await sessionMatches(supabase, userId, isActive)) return;
       const local = await getItem(userId, current.itemId);
       if ((result.status === "applied" || result.status === "duplicate") && result.code === "OK" && result.item) {
-        await applyCanonical(userId, current.clientMutationId, fromServer(result.item));
+        const remaining = (await listOutbox(userId)).filter((entry) => entry.itemId === current.itemId && entry.clientMutationId !== current.clientMutationId);
+        const next = remaining[0];
+        if (next && local) {
+          await removeMutation(current.clientMutationId);
+          await updateMutation({ ...next, expectedVersion: Number(result.item.version) });
+          await putItems([{ ...local, version: Number(result.item.version), syncState: "pending", remoteSnapshot: null }]);
+        } else {
+          await applyCanonical(userId, current.clientMutationId, fromServer(result.item));
+        }
       } else if (result.code === "SYNC_CONFLICT" && local && result.item) {
         current = { ...current, state: "conflict", lastError: result.code, updatedAt: new Date().toISOString() };
         await updateMutation(current);
@@ -66,15 +89,18 @@ async function processQueue(userId: string, supabase: SupabaseClient): Promise<v
   }
 }
 
-async function pull(userId: string, supabase: SupabaseClient): Promise<void> {
+async function pull(userId: string, supabase: SupabaseClient, isActive: () => boolean): Promise<void> {
+  if (!await sessionMatches(supabase, userId, isActive)) return;
   const cursor = await getMeta<{ updatedAt: string; id: string }>(`cursor:${userId}`);
-  let query = supabase.from("inventory_items").select("*").order("updated_at").order("id");
+  let query = supabase.from("inventory_items").select("*").eq("user_id", userId).order("updated_at").order("id");
   if (cursor) query = query.or(`updated_at.gt.${cursor.updatedAt},and(updated_at.eq.${cursor.updatedAt},id.gt.${cursor.id})`);
   const { data, error } = await query;
   if (error) throw error;
-  const rows = (data ?? []) as unknown as ServerInventoryItem[];
+  if (!await sessionMatches(supabase, userId, isActive)) return;
+  const rows = ((data ?? []) as unknown as ServerInventoryItem[]).filter((row) => row.user_id === userId);
   const merged: LocalInventoryItem[] = [];
   for (const row of rows) {
+    if (!isActive()) return;
     const local = await getItem(userId, row.id);
     if (!local || local.syncState === "synced") merged.push(fromServer(row));
   }
@@ -93,11 +119,13 @@ async function exclusive(userId: string, task: () => Promise<void>): Promise<voi
   if (await claimLease(userId, owner)) await task();
 }
 
-export async function syncInventory(userId: string, supabase: SupabaseClient): Promise<void> {
+export async function syncInventory(userId: string, supabase: SupabaseClient, isActive: () => boolean = () => true): Promise<void> {
   if (typeof navigator !== "undefined" && !navigator.onLine) return;
+  if (!await sessionMatches(supabase, userId, isActive)) return;
   await exclusive(userId, async () => {
-    await processQueue(userId, supabase);
-    await pull(userId, supabase);
-    inventoryEvents?.postMessage({ type: "changed", userId });
+    if (!isActive()) return;
+    await processQueue(userId, supabase, isActive);
+    await pull(userId, supabase, isActive);
+    if (isActive()) inventoryEvents?.postMessage({ type: "changed", userId });
   });
 }

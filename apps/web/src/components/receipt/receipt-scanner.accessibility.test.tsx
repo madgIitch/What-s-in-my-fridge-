@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { vi } from "vitest";
 import { ReceiptScanner } from "./receipt-scanner";
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 describe("receipt crop keyboard behavior", () => {
   it("shows a clear route home after confirming a recovered ticket", async () => {

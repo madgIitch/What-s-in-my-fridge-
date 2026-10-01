@@ -115,6 +115,45 @@ export type Database = {
         }
         Relationships: []
       }
+      catalog_manifests: {
+        Row: {
+          captured_at: string
+          completeness: string
+          fetched_at: string | null
+          id: string
+          imported_at: string
+          product_count: number
+          retailer: string
+          schema_version: number
+          sha256: string
+          source: string
+        }
+        Insert: {
+          captured_at: string
+          completeness: string
+          fetched_at?: string | null
+          id?: string
+          imported_at?: string
+          product_count: number
+          retailer: string
+          schema_version: number
+          sha256: string
+          source: string
+        }
+        Update: {
+          captured_at?: string
+          completeness?: string
+          fetched_at?: string | null
+          id?: string
+          imported_at?: string
+          product_count?: number
+          retailer?: string
+          schema_version?: number
+          sha256?: string
+          source?: string
+        }
+        Relationships: []
+      }
       catalog_versions: {
         Row: {
           active: boolean
@@ -196,11 +235,13 @@ export type Database = {
       commercial_products: {
         Row: {
           barcode: string | null
+          catalog_manifest_id: string | null
           created_at: string
           display_name: string
           fetched_at: string | null
           food_concept_id: string | null
           id: string
+          provenance: Json
           retailer: string
           retailer_product_id: string | null
           source: string
@@ -208,11 +249,13 @@ export type Database = {
         }
         Insert: {
           barcode?: string | null
+          catalog_manifest_id?: string | null
           created_at?: string
           display_name: string
           fetched_at?: string | null
           food_concept_id?: string | null
           id?: string
+          provenance?: Json
           retailer: string
           retailer_product_id?: string | null
           source: string
@@ -220,17 +263,26 @@ export type Database = {
         }
         Update: {
           barcode?: string | null
+          catalog_manifest_id?: string | null
           created_at?: string
           display_name?: string
           fetched_at?: string | null
           food_concept_id?: string | null
           id?: string
+          provenance?: Json
           retailer?: string
           retailer_product_id?: string | null
           source?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "commercial_products_catalog_manifest_id_fkey"
+            columns: ["catalog_manifest_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_manifests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "commercial_products_food_concept_id_fkey"
             columns: ["food_concept_id"]
@@ -378,13 +430,47 @@ export type Database = {
         }
         Relationships: []
       }
+      food_concept_aliases: {
+        Row: {
+          created_at: string
+          food_concept_id: string
+          id: string
+          normalized_alias: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          food_concept_id: string
+          id?: string
+          normalized_alias: string
+          source: string
+        }
+        Update: {
+          created_at?: string
+          food_concept_id?: string
+          id?: string
+          normalized_alias?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_concept_aliases_food_concept_id_fkey"
+            columns: ["food_concept_id"]
+            isOneToOne: false
+            referencedRelation: "food_concepts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       food_concepts: {
         Row: {
           category: string | null
           created_at: string
           display_name: string
           id: string
+          shelf_life_days: number | null
           slug: string
+          suggested_location: string | null
           updated_at: string
         }
         Insert: {
@@ -392,7 +478,9 @@ export type Database = {
           created_at?: string
           display_name: string
           id?: string
+          shelf_life_days?: number | null
           slug: string
+          suggested_location?: string | null
           updated_at?: string
         }
         Update: {
@@ -400,7 +488,9 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          shelf_life_days?: number | null
           slug?: string
+          suggested_location?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -557,7 +647,7 @@ export type Database = {
           commercial_product_id: string | null
           created_at: string
           deleted_at: string | null
-          expiry_date: string
+          expiry_date: string | null
           expiry_date_exact: string | null
           food_concept_id: string | null
           freshness_estimated_days: number | null
@@ -566,15 +656,24 @@ export type Database = {
           id: string
           knowledge_provenance: string
           legacy_id: string | null
+          location: string | null
+          location_confirmed: boolean
           name: string
           normalization_source: string | null
           normalization_status: string
           normalized_name: string | null
+          normalizer_version: string | null
           notes: string | null
           quantity: number
           quantity_exact: number | null
           quantity_precision: string
           quantity_unit: string | null
+          raw_name: string | null
+          raw_text: string | null
+          receipt_draft_id: string | null
+          receipt_line_id: string | null
+          receipt_quantity_evidence: Json | null
+          retailer: string | null
           source: string
           stock_mode: string
           stock_state: string | null
@@ -591,7 +690,7 @@ export type Database = {
           commercial_product_id?: string | null
           created_at?: string
           deleted_at?: string | null
-          expiry_date: string
+          expiry_date?: string | null
           expiry_date_exact?: string | null
           food_concept_id?: string | null
           freshness_estimated_days?: number | null
@@ -600,15 +699,24 @@ export type Database = {
           id?: string
           knowledge_provenance?: string
           legacy_id?: string | null
+          location?: string | null
+          location_confirmed?: boolean
           name: string
           normalization_source?: string | null
           normalization_status?: string
           normalized_name?: string | null
+          normalizer_version?: string | null
           notes?: string | null
           quantity: number
           quantity_exact?: number | null
           quantity_precision?: string
           quantity_unit?: string | null
+          raw_name?: string | null
+          raw_text?: string | null
+          receipt_draft_id?: string | null
+          receipt_line_id?: string | null
+          receipt_quantity_evidence?: Json | null
+          retailer?: string | null
           source?: string
           stock_mode?: string
           stock_state?: string | null
@@ -625,7 +733,7 @@ export type Database = {
           commercial_product_id?: string | null
           created_at?: string
           deleted_at?: string | null
-          expiry_date?: string
+          expiry_date?: string | null
           expiry_date_exact?: string | null
           food_concept_id?: string | null
           freshness_estimated_days?: number | null
@@ -634,15 +742,24 @@ export type Database = {
           id?: string
           knowledge_provenance?: string
           legacy_id?: string | null
+          location?: string | null
+          location_confirmed?: boolean
           name?: string
           normalization_source?: string | null
           normalization_status?: string
           normalized_name?: string | null
+          normalizer_version?: string | null
           notes?: string | null
           quantity?: number
           quantity_exact?: number | null
           quantity_precision?: string
           quantity_unit?: string | null
+          raw_name?: string | null
+          raw_text?: string | null
+          receipt_draft_id?: string | null
+          receipt_line_id?: string | null
+          receipt_quantity_evidence?: Json | null
+          retailer?: string | null
           source?: string
           stock_mode?: string
           stock_state?: string | null
@@ -664,6 +781,13 @@ export type Database = {
             columns: ["food_concept_id"]
             isOneToOne: false
             referencedRelation: "food_concepts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_items_receipt_draft_id_fkey"
+            columns: ["receipt_draft_id"]
+            isOneToOne: false
+            referencedRelation: "receipt_drafts"
             referencedColumns: ["id"]
           },
         ]
@@ -1018,6 +1142,7 @@ export type Database = {
       receipt_drafts: {
         Row: {
           captured_at: string
+          confirmation_payload_hash: string | null
           confirmed: boolean
           confirmed_at: string | null
           confirmed_item_ids: string[]
@@ -1032,6 +1157,8 @@ export type Database = {
           legacy_id: string | null
           lines: Json
           merchant: string | null
+          normalization_review: Json
+          normalizer_version: string | null
           ocr_locale: string | null
           ocr_request_id: string | null
           ocr_result: Json | null
@@ -1041,6 +1168,8 @@ export type Database = {
           quota_consumed: boolean
           quota_period: string | null
           raw_text: string
+          retailer: string | null
+          review_decisions: Json
           source: string
           status: string
           total: number | null
@@ -1051,6 +1180,7 @@ export type Database = {
         }
         Insert: {
           captured_at?: string
+          confirmation_payload_hash?: string | null
           confirmed?: boolean
           confirmed_at?: string | null
           confirmed_item_ids?: string[]
@@ -1065,6 +1195,8 @@ export type Database = {
           legacy_id?: string | null
           lines?: Json
           merchant?: string | null
+          normalization_review?: Json
+          normalizer_version?: string | null
           ocr_locale?: string | null
           ocr_request_id?: string | null
           ocr_result?: Json | null
@@ -1074,6 +1206,8 @@ export type Database = {
           quota_consumed?: boolean
           quota_period?: string | null
           raw_text?: string
+          retailer?: string | null
+          review_decisions?: Json
           source?: string
           status?: string
           total?: number | null
@@ -1084,6 +1218,7 @@ export type Database = {
         }
         Update: {
           captured_at?: string
+          confirmation_payload_hash?: string | null
           confirmed?: boolean
           confirmed_at?: string | null
           confirmed_item_ids?: string[]
@@ -1098,6 +1233,8 @@ export type Database = {
           legacy_id?: string | null
           lines?: Json
           merchant?: string | null
+          normalization_review?: Json
+          normalizer_version?: string | null
           ocr_locale?: string | null
           ocr_request_id?: string | null
           ocr_result?: Json | null
@@ -1107,6 +1244,8 @@ export type Database = {
           quota_consumed?: boolean
           quota_period?: string | null
           raw_text?: string
+          retailer?: string | null
+          review_decisions?: Json
           source?: string
           status?: string
           total?: number | null
@@ -1116,6 +1255,47 @@ export type Database = {
           version?: number
         }
         Relationships: []
+      }
+      receipt_line_mutations: {
+        Row: {
+          client_mutation_id: string
+          created_at: string
+          draft_id: string
+          id: string
+          line_id: string
+          request_hash: string
+          result: Json
+          user_id: string
+        }
+        Insert: {
+          client_mutation_id: string
+          created_at?: string
+          draft_id: string
+          id?: string
+          line_id: string
+          request_hash: string
+          result: Json
+          user_id: string
+        }
+        Update: {
+          client_mutation_id?: string
+          created_at?: string
+          draft_id?: string
+          id?: string
+          line_id?: string
+          request_hash?: string
+          result?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipt_line_mutations_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "receipt_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       recipe_import_jobs: {
         Row: {
@@ -1661,6 +1841,53 @@ export type Database = {
         }
         Relationships: []
       }
+      user_product_mappings: {
+        Row: {
+          confirmed_by_user: boolean
+          created_at: string
+          display_name: string
+          food_concept_id: string | null
+          id: string
+          normalized_raw_name: string
+          retailer: string | null
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          confirmed_by_user?: boolean
+          created_at?: string
+          display_name: string
+          food_concept_id?: string | null
+          id?: string
+          normalized_raw_name: string
+          retailer?: string | null
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          confirmed_by_user?: boolean
+          created_at?: string
+          display_name?: string
+          food_concept_id?: string | null
+          id?: string
+          normalized_raw_name?: string
+          retailer?: string | null
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_product_mappings_food_concept_id_fkey"
+            columns: ["food_concept_id"]
+            isOneToOne: false
+            referencedRelation: "food_concepts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1711,6 +1938,15 @@ export type Database = {
           p_meal_entry_id: string
           p_operation: string
           p_payload?: Json
+        }
+        Returns: Json
+      }
+      apply_pantry_mutation_v3: {
+        Args: {
+          p_client_mutation_id: string
+          p_expected_version: number
+          p_item_id: string
+          p_payload: Json
         }
         Returns: Json
       }
@@ -1767,6 +2003,16 @@ export type Database = {
         Args: { p_draft_id: string; p_lines: Json }
         Returns: Json
       }
+      confirm_receipt_draft_v2: {
+        Args: {
+          p_draft_id: string
+          p_lines: Json
+          p_normalizer_version: string
+          p_payload_hash: string
+          p_purchase_date: string
+        }
+        Returns: Json
+      }
       consume_usage: {
         Args: { p_feature: string; p_idempotency_key: string }
         Returns: Json
@@ -1815,6 +2061,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      import_retailer_catalog_v1: {
+        Args: { p_manifest: Json; p_products: Json }
+        Returns: Json
+      }
       invoke_receipt_vision: { Args: { p_draft_id: string }; Returns: Json }
       link_firebase_auth_identity: {
         Args: { firebase_uid: string; target_user_id: string }
@@ -1852,6 +2102,7 @@ export type Database = {
         }
         Returns: Json
       }
+      r1_normalize_text: { Args: { value: string }; Returns: string }
       reconcile_subscription: {
         Args: {
           p_cancel_at_period_end: boolean
@@ -1886,6 +2137,27 @@ export type Database = {
           p_image_hash: string
           p_locale: string
           p_request_id: string
+        }
+        Returns: Json
+      }
+      resolve_receipt_line_v2: {
+        Args: {
+          p_client_mutation_id: string
+          p_decision: string
+          p_display_name: string
+          p_draft_id: string
+          p_expected_version: number
+          p_food_concept_id: string
+          p_line_id: string
+          p_request_hash: string
+        }
+        Returns: Json
+      }
+      restore_inventory_item_v3: {
+        Args: {
+          p_client_mutation_id: string
+          p_expected_version: number
+          p_item_id: string
         }
         Returns: Json
       }

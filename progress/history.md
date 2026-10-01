@@ -39,3 +39,9 @@
 - Preparación manual de las ocho dimensiones; el CLI actual del harness no incluye `prepare`. Sin aprobación ni implementación.
 - 28 criterios: review de ticket, normalización conservadora, edición de Despensa, compatibilidad, offline y comparación visual en localhost.
 - Datasets encontrados en Descargas conservados en `docs/catalogs/data/` con Git LFS y manifest SHA-256. Eroski parcial con 23.172 productos; Aldi con 2.123. Cuatro retailers sin exports localizados.
+
+# 2026-10-01 · Sprint R1 → review_pending
+
+- Aprobación e implementación completadas: purchase intake, review conservadora, correcciones, editor y offline aislado por usuario; compatibilidad v2.
+- Gates, build, 220 pruebas SQL, 24 domain, 11 catálogo y recorridos E2E con DB local aprobados. Capturas 320/390px documentadas.
+- Smoke humano con ticket real pendiente; producción sin cambios. Error de reset local inicial documentado en current.md.

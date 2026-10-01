@@ -1,7 +1,8 @@
 import { describe,expect,it } from "vitest";
 import { parseReceipt,validateConfirmLines,RECEIPT_PARSER_VERSION } from "./parser";
 describe(RECEIPT_PARSER_VERSION,()=>{
- it("normalizes comma amounts and useful lines deterministically",()=>{const a=parseReceipt("MERCADO\n2 x TOMATE 3,50 €\nTOTAL 3,50 €");expect(a).toEqual(parseReceipt("MERCADO\n2 x TOMATE 3,50 €\nTOTAL 3,50 €"));expect(a.items[0]).toMatchObject({name:"TOMATE",quantity:"2",totalPrice:"3.50",accepted:true});expect(a.currency).toBe("EUR")});
+ it("normalizes comma amounts and useful lines deterministically",()=>{const a=parseReceipt("MERCADO\n2 x TOMATE 3,50 €\nTOTAL 3,50 €");expect(a).toEqual(parseReceipt("MERCADO\n2 x TOMATE 3,50 €\nTOTAL 3,50 €"));expect(a.items[0]).toMatchObject({name:"TOMATE",quantity:"2",quantityExplicit:true,quantityEvidence:"explicit_prefix",totalPrice:"3.50",accepted:true});expect(a.currency).toBe("EUR")});
+ it("marks parser defaults as synthetic and keeps explicit pack units",()=>{expect(parseReceipt("MERCADO\nPAN 1,20 €").items[0]).toMatchObject({quantity:"1",unit:"unit",quantityExplicit:false,quantityEvidence:null});expect(parseReceipt("MERCADO\n1 pack HUEVOS 2,50 €").items[0]).toMatchObject({quantity:"1",unit:"pack",quantityExplicit:true,name:"HUEVOS"})});
  it("does not invent lines for empty OCR",()=>expect(parseReceipt(" \n")).toEqual({merchant:null,purchaseDate:null,currency:null,total:null,items:[],unrecognizedLines:[]}));
  it("preserves non-empty OCR with no useful line",()=>{const value=parseReceipt("GRACIAS\nCAJA");expect(value.items).toEqual([]);expect(value.unrecognizedLines).toEqual(["GRACIAS","CAJA"])});
  it("keeps ambiguous dates nullable",()=>expect(parseReceipt("TIENDA\n03/04/2026\nPAN 1,00 €").purchaseDate).toBeNull());

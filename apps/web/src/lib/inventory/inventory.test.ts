@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCivilDate, isCivilDate } from "./dates";
+import { estimatedWindowLabel, formatCivilDate, isCivilDate, localCivilDate, purchasedLabel } from "./dates";
 import { retryDelay } from "./sync";
 
 describe("inventory offline contracts", () => {
@@ -22,5 +22,14 @@ describe("inventory offline contracts", () => {
     expect(retryDelay(1, () => 0)).toBe(800);
     expect(retryDelay(5, () => 0.5)).toBe(16_000);
     expect(retryDelay(99, () => 1)).toBe(30_000);
+  });
+
+  it("formats acquisition separately from exact expiry and estimates", () => {
+    const noon = new Date(2026, 9, 1, 12);
+    expect(localCivilDate(noon)).toBe("2026-10-01");
+    expect(purchasedLabel("2026-10-01", "receipt", "es-ES", noon)).toBe("Comprado hoy");
+    expect(purchasedLabel("2026-10-01", "user", "es-ES", noon)).toBe("Añadido hoy");
+    expect(estimatedWindowLabel(14)).toBe("unos 2 semanas");
+    expect(estimatedWindowLabel(10)).toBe("unos 10 días");
   });
 });
