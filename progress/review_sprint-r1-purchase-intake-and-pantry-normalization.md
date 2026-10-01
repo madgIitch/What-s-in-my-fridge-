@@ -1,6 +1,6 @@
 # Revisión R1 — 2026-10-01
 
-Estado: `review_pending`. Implementación y validación automática completadas sobre Supabase local. El cierre `done` requiere smoke humano según HARNESS.md.
+Estado: `done`, cerrado por petición explícita del usuario el 1 de octubre de 2026. Implementación y validación automática completadas sobre Supabase local. El usuario solicitó el cierre; no se recibió evidencia adicional del smoke con ticket real/cámara/voz. Esas comprobaciones siguen pendientes y este cierre no certifica su ejecución.
 
 ## Evidencia
 
@@ -23,7 +23,7 @@ Los controles/teclado/movimiento reducido se verifican automáticamente en el hu
 
 No hay despliegue, activación de producción ni integración real de los cuatro catálogos ausentes. Incidencia de reset local documentada en `progress/current.md`; las cinco migraciones R1 conservadas son aditivas.
 
-## Pendiente humano
+## Validación humana pendiente tras el cierre solicitado
 
 - [ ] Smoke móvil con ticket real y, cuando estén disponibles, cámara y voz.
-- [ ] Aceptación del diff y comparación visual antes de `done`.
+- [ ] Smoke y comparación visual móvil completos.

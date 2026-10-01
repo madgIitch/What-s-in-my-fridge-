@@ -1,6 +1,6 @@
 # Sesión actual
 
-**sprint-r1-purchase-intake-and-pantry-normalization** implementado, spec aprobado, en review_pending. Checklist completo; evidencia y límites en progress/review_sprint-r1-purchase-intake-and-pantry-normalization.md.
+**sprint-r1-purchase-intake-and-pantry-normalization** cerrado en `done` por petición explícita del usuario el 1 de octubre de 2026. Implementación `6ce5b59` subida a origin/main. Evidencia y límites en progress/review_sprint-r1-purchase-intake-and-pantry-normalization.md. El cierre no acredita el smoke real aún pendiente.
 
 Compra por ticket/barcode/voz/manual con revisión explícita; normalización conservadora y corrección de pendientes; editor de Despensa; outbox por usuario y compatibilidad v2. Migraciones y tipos locales actualizados. Producción sin cambios. R2 queda fuera del alcance.
 
@@ -10,4 +10,4 @@ El 1 de octubre de 2026 el ejecutor hizo por error supabase db reset --local, au
 
 ## Siguiente acción
 
-Smoke humano de R1 en localhost con PRODUCT_V3=true, incluyendo ticket real y dispositivos con cámara/voz. Tras aceptación humana, cerrar con node .harness/spec.mjs done sprint-r1-purchase-intake-and-pantry-normalization, según HARNESS.md. No activar producción automáticamente.
+R1 cerrado. El siguiente sprint es R2; preparar su spec antes de solicitar aprobación e implementar. Mantener registrado el smoke R1 pendiente con ticket real y cámara/voz. No activar producción automáticamente.

@@ -45,3 +45,8 @@
 - Aprobación e implementación completadas: purchase intake, review conservadora, correcciones, editor y offline aislado por usuario; compatibilidad v2.
 - Gates, build, 220 pruebas SQL, 24 domain, 11 catálogo y recorridos E2E con DB local aprobados. Capturas 320/390px documentadas.
 - Smoke humano con ticket real pendiente; producción sin cambios. Error de reset local inicial documentado en current.md.
+
+# 2026-10-01 · Sprint R1 → done por solicitud del usuario
+
+- Cierre explícito solicitado tras el push de la implementación `6ce5b59`.
+- No se aportó evidencia nueva del smoke con ticket real/cámara/voz; continúa pendiente en el review. Producción sin cambios.
