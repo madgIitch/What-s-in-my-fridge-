@@ -297,3 +297,16 @@ Decisiones registradas:
 - **tests:** Unit tests de normalización/cantidades/fechas/importadores, pgTAP para aislamiento, integridad, replay/concurrencia y precedencia. Playwright con Vision mock y DB local: ticket limpio, tres dudosos, correction/unknown/omit, catálogo ausente, barcode y voz no disponibles, offline con reconexión/conflicto, dos usuarios, flag false, 320px. Comparación visual real en localhost frente a 01/06/08, capturas y diferencias documentadas. Harness gates más domain typecheck/tests, db lint y SQL; humo real con catálogo/ticket cuando estén disponibles.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+<!-- harness:sprint-r2-today-decision-engine -->
+## 2026-10-01 · sprint-r2-today-decision-engine aprobado
+
+Contexto: se aprobó el spec `sprint-r2-today-decision-engine` (Sprint R2 - Hoy & Decision Engine).
+
+Decisiones registradas:
+
+- **auth_secrets:** Sesión/RLS delimitan inventario, favoritos, cache y compra. El request no acepta usuario, inventario, plan ni scores. Cache HTTP privada no-store; no cache SW compartido. Logout/cambio de usuario descarta respuesta y datos de Hoy. Sin LLM ni nuevas credenciales. TTMD solo IDs de evento/sesión efímeros y tiempos; sin userId, nombres, recetas, inventario, hash ni texto privado.
+- **rollback_compat:** Flag ausente/false conserva /app InventoryApp, endpoint y cuota legacy v1 y navegación v2. API v3 responde404 con flagfalse. Sin cambios OCR, import, billing, cooking, planificación, proveedores, Pro ni R3-R8. No despliegue/activación ni reset/backfill destructivo. Compras reutilizan semántica actual; procedencia y agrupación avanzada quedan R5.
+- **tests:** Unit domain para presencia/cantidad/unidades/dedup/ranking/frescura/cache; web para contrato, errores, onboarding y métricas; SQL/RLS dos usuarios, compra atómica/replay, permisos, cache y usage invariable. Playwright con DB local: ready/quantity_to_check/missing_one/missing_many/unknown/empty, estimates, Free agotado, compras, dos usuarios y flagfalse. Capturas reales320/393 y comparación06/10. Gates harness, domain typecheck/tests, build, DB lint/pgTAP, instalación frozen si cambia lockfile. Smoke real pendiente R1 no se presenta como completado.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.

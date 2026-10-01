@@ -561,3 +561,34 @@ Convertir la compra en datos culinarios útiles con el mínimo trabajo manual: t
 - Cantidad, adquisición, frescura, normalización y ubicación tienen precisión/procedencia independientes. Solo `quantityExplicit + quantityEvidence=explicit_prefix` del original permite cantidad exacta. La fecha civil la aporta el cliente al confirmar cuando el ticket no tiene una fiable.
 - IndexedDB separa filas y outbox por usuario. Cada mutación declara su dominio `legacy`, `pantry` o `restore`; las pantry aún no enviadas se compactan, mientras una ya intentada conserva payload e idempotency key. Antes y después de I/O remoto se verifica que la sesión aún pertenece al usuario del worker.
 - Catálogo global: lectura autenticada, escritura revocada al cliente y RPC de ingesta exclusiva de `service_role`. Un catálogo ausente o fallido no interviene en OCR ni bloquea review.
+
+<!-- harness:sprint-r2-today-decision-engine -->
+## sprint-r2-today-decision-engine · Sprint R2 - Hoy & Decision Engine
+
+Hacer de '¿Qué cenamos?' el momento central del producto: recomendaciones accionables en la primera pantalla, semánticas y sin cuota.
+
+### Scope aprobado
+
+  - `apps/web/src/app/(auth)/app/page.tsx`
+  - `apps/web/src/components/today/**`
+  - `apps/web/src/lib/recommendations/**`
+  - `apps/web/src/app/api/recommendations/**`
+  - `apps/web/src/styles/product-v3.css`
+  - `apps/web/src/types/database.generated.ts`
+  - `packages/domain/src/recommendations/**`
+  - `packages/domain/src/recipes/**`
+  - `packages/domain/src/pantry/**`
+  - `packages/domain/src/index.ts`
+  - `supabase/migrations/**`
+  - `supabase/tests/**`
+  - `tests/**`
+  - `docs/**`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** Reutilizar PantryItemKnowledge, food_concepts, recetas/ingredientes del catálogo activo y favoritos propios. Proyección conservadora en lectura: concepto explícito o alias exacto único; nunca fuzzy ni backfill automático. Cache v3 privada y separada de v1. Nuevos campos/tablas/RPC solo aditivos; sin resets. R2 no indexa snapshots privados/importados aún sin contrato de catálogo (R3).
+- **external_contracts:** GET /api/recommendations/today?date=YYYY-MM-DD devuelve contrato today-v2 con main<=3, secondary<=3, availability/reasons/missing/unknown, snapshotKey opaca, versiones y estados explícitos. date sirve solo para fecha civil; no ownership. POST /api/recommendations/shopping {recipeId,snapshotKey,clientMutationId} recalcula faltantes de servidor; snapshot cambiado=409, replay devuelve mismos IDs. Nunca invocar begin_recipe_suggestion/consume_usage de v1. CTA Cocinar esto abre detalle existente, sin consumir stock ni iniciar sesión de cocina R4.
+- **edge_cases:** Eliminar tombstones/empty/quantity=0 de disponibilidad; legacy conserva precisión desconocida. Agrupar ingredientes por concepto y sumar requerimientos exactos compatibles antes de comparar; sumar existencias exactas compatibles una sola vez. g/kg y ml/l convertibles; pack/unit/volumen/peso no se mezclan. Ingredientes ambiguos permanecen unknown; nunca contar un desconocido como faltante demostrado. No presumir sal/aceite básicos ni sustituir alimentos. Fecha civil local y cantidades de receta sin escalado de raciones.
+- **ui_states:** PRODUCT_V3=true convierte /app en Hoy automático. Referencias 06/10, tokens R0/R1. Máximo tres decisiones principales compactas: primera tarjeta y CTA visibles a 393x852 antes de bloques secundarios; no exigir que tres tarjetas completas quepan. Onboarding saltables solo en cuenta sin items activos y no visto por ese usuario/dispositivo. Ejemplo explícito aislado sin datos escritos. Empty enlaza a /app/add-purchase y /app/recipes/import. Error/offline honestos; teclado, 44px, foco, reduced motion y sin overflow a320.
+

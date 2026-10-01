@@ -1866,9 +1866,9 @@
         "docs/**",
         "spec.json"
       ],
-      "spec_approved": false,
-      "approved_by": null,
-      "approved_at": null,
+      "spec_approved": true,
+      "approved_by": "peorr",
+      "approved_at": "2026-10-01T22:00:00.177Z",
       "visual_references": [
         "docs/design/neverita-v3/06-onboarding-and-empty-home.png",
         "docs/design/neverita-v3/10-today-decision.png"
@@ -1877,7 +1877,8 @@
       "description": "Hacer de '¿Qué cenamos?' el momento central del producto: recomendaciones accionables en la primera pantalla, semánticas y sin cuota.",
       "manual_spec_ready": true,
       "manual_spec_ready_at": "2026-10-01T21:58:38.762Z",
-      "manual_spec_ready_reason": "Preparación manual: comando prepare ausente; ocho dimensiones resueltas y QA de contratos/casos límite documentada. Sin aprobación ni implementación."
+      "manual_spec_ready_reason": "Preparación manual: comando prepare ausente; ocho dimensiones resueltas y QA de contratos/casos límite documentada. Sin aprobación ni implementación.",
+      "answers_hash": "sha256:fcfc63981385af6ad31a6341ac93a103dcf1ec39c807c79b076124ca35836fbd"
     },
     {
       "id": "sprint-r3-cook-library-and-import-bridge",
