@@ -336,3 +336,7 @@ Decisiones registradas:
 - **tests:** Unit domain para presencia/cantidad/unidades/dedup/ranking/frescura/cache; web para contrato, errores, onboarding y métricas; SQL/RLS dos usuarios, compra atómica/replay, permisos, cache y usage invariable. Playwright con DB local: ready/quantity_to_check/missing_one/missing_many/unknown/empty, estimates, Free agotado, compras, dos usuarios y flagfalse. Capturas reales320/393 y comparación06/10. Gates harness, domain typecheck/tests, build, DB lint/pgTAP, instalación frozen si cambia lockfile. Smoke real pendiente R1 no se presenta como completado.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+## 2026-10-02 · Hotfix R2: clave de estado de Hoy sin serializar el catálogo
+
+En producción `GET /api/recommendations/today` devolvía 503 tras ~9 s: `read_today_cache_v1` agotaba el `statement_timeout` de `authenticated` porque `today_state_key_for_user_v1` serializaba recetas, instrucciones, ingredientes, conceptos y aliases en cada petición (1,56 s local con 10k recetas). La clave conserva fecha, versiones, identidad/checksum del catálogo activo, despensa y favoritos del usuario, pero sustituye el contenido global por `today_catalog_revision.revision`, incrementado por triggers de sentencia en `catalog_versions`, `recipes`, `recipe_ingredients`, `food_concepts` y `food_concept_aliases` (6,5 ms local). Cualquier escritura del catálogo sigue invalidando la caché; la tabla no se expone a clientes.
