@@ -1,5 +1,11 @@
 # Sesión actual
 
+## 2 de octubre de 2026 · migración remota del hotfix de Hoy
+
+Por petición explícita del usuario se aplicó `20261002000200_today_state_key_revision.sql` al proyecto enlazado `bwscshjtwmsfscbjbndq`. El dry-run previo confirmó que era la única migración pendiente; no se aplicaron seeds ni roles. La prueba local `017_today_state_key_revision.test.sql` pasó sus cinco aserciones y `db lint --linked --schema public --level warning --fail-on warning` terminó sin errores. R2 conserva su estado de revisión humana pendiente.
+
+El fallo posterior de CI en `Check generated types match schema` se corrigió añadiendo `today_catalog_revision` a `database.generated.ts`. El diff y el hash del archivo (`8f92e0d`) coinciden con la salida del generador en CI. La regeneración local no pudo ejecutarse porque Docker no estaba disponible; no se hizo reset de la base.
+
 **sprint-r2-today-decision-engine** implementado y en `review_pending`, con `spec_approved: true`. Hoy automático, ranking conservador sin cuota, cantidades inciertas y compra confirmada con snapshot vigente y replay. Onboarding aislado, offline honesto y TTMD sin datos privados.
 
 Gates harness PASS; build PASS; 37 pruebas de dominio y typecheck PASS; 252 aserciones SQL y db lint PASS. Playwright: cuatro recorridos R2 con flag true y rollback false por separado. Concurrencia local PASS. Evidencia: progress/review_sprint-r2-today-decision-engine.md y docs/design/neverita-v3/qa/R2_COMPARISON.md.

@@ -1766,6 +1766,24 @@ export type Database = {
         }
         Relationships: []
       }
+      today_catalog_revision: {
+        Row: {
+          revision: number
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          revision?: number
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          revision?: number
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       today_recommendation_cache: {
         Row: {
           cache_key: string
