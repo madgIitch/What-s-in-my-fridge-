@@ -53,3 +53,7 @@ Solo se aplicó 20261002000100_today_decision_engine.sql en local. No push,
 deploy, SQL remoto, reset ni features futuras. Antes de desplegar se debe aplicar
 la migración aditiva al entorno destino mediante su flujo autorizado.
 El smoke real de R1 continúa pendiente.
+
+## Cierre · 8 de octubre de 2026
+
+Spec marcado done por petición explícita del usuario. Los resultados anteriores se conservan; no se aporta evidencia adicional de smoke humano. El hotfix remoto del 2 de octubre figura en progress/current.md y sustituye el estado operativo inicial de este review.

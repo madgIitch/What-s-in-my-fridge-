@@ -67,7 +67,7 @@ select is((public.consume_usage('recipe_suggestions','suggest-6')->>'allowed')::
 select is((select bool_and((public.consume_usage('recipe_import','import-'||n)->>'allowed')::boolean) from generate_series(1,10) n),true,'ten imports allowed');
 select is((public.consume_usage('recipe_import','import-11')->>'allowed')::boolean,false,'eleventh import denied');
 reset role;
-select is((select count(*) from public.usage_ledger where feature='recipe_import'),11::bigint,'denial is persisted for replay');
+select is((select count(*) from public.usage_ledger where feature='recipe_import' and user_id='b0000000-0000-4000-8000-000000000001'),11::bigint,'denial is persisted for replay');
 set local role authenticated;
 set local request.jwt.claim.sub='b0000000-0000-4000-8000-000000000001';
 select is((public.consume_usage('receipt_ocr','import-11')->>'allowed')::boolean,true,'idempotency key is scoped by feature');

@@ -292,6 +292,66 @@ export type Database = {
           },
         ]
       }
+      cook_availability_cache: {
+        Row: {
+          created_at: string
+          expires_at: string
+          kind: string
+          recipe_id: string
+          recipe_version: string
+          result: Json
+          snapshot_key: string
+          state_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          kind: string
+          recipe_id: string
+          recipe_version: string
+          result: Json
+          snapshot_key?: string
+          state_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          kind?: string
+          recipe_id?: string
+          recipe_version?: string
+          result?: Json
+          snapshot_key?: string
+          state_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cook_mutations: {
+        Row: {
+          client_mutation_id: string
+          created_at: string
+          payload: Json
+          result: Json
+          user_id: string
+        }
+        Insert: {
+          client_mutation_id: string
+          created_at?: string
+          payload: Json
+          result: Json
+          user_id: string
+        }
+        Update: {
+          client_mutation_id?: string
+          created_at?: string
+          payload?: Json
+          result?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       cooking_mutations: {
         Row: {
           client_mutation_id: string
@@ -1311,6 +1371,7 @@ export type Database = {
           manual_text: string | null
           provenance: Json
           result: Json | null
+          retry_generation: number
           retryable: boolean
           source_type: string
           source_url: string | null
@@ -1333,6 +1394,7 @@ export type Database = {
           manual_text?: string | null
           provenance?: Json
           result?: Json | null
+          retry_generation?: number
           retryable?: boolean
           source_type: string
           source_url?: string | null
@@ -1355,6 +1417,7 @@ export type Database = {
           manual_text?: string | null
           provenance?: Json
           result?: Json | null
+          retry_generation?: number
           retryable?: boolean
           source_type?: string
           source_url?: string | null
@@ -1625,6 +1688,8 @@ export type Database = {
           ingredient_key: string | null
           name: string
           quantity: number | null
+          source: string | null
+          source_ref: string | null
           unit: string | null
           updated_at: string
           user_id: string
@@ -1638,6 +1703,8 @@ export type Database = {
           ingredient_key?: string | null
           name: string
           quantity?: number | null
+          source?: string | null
+          source_ref?: string | null
           unit?: string | null
           updated_at?: string
           user_id: string
@@ -1651,6 +1718,8 @@ export type Database = {
           ingredient_key?: string | null
           name?: string
           quantity?: number | null
+          source?: string | null
+          source_ref?: string | null
           unit?: string | null
           updated_at?: string
           user_id?: string
@@ -2003,6 +2072,16 @@ export type Database = {
         }
         Returns: Json
       }
+      apply_cook_mutation_v1: {
+        Args: {
+          p_id: string
+          p_kind: string
+          p_mutation: string
+          p_operation: string
+          p_token: string
+        }
+        Returns: Json
+      }
       apply_cooking_mutation: {
         Args: {
           p_client_mutation_id: string
@@ -2125,6 +2204,24 @@ export type Database = {
         Args: { p_feature: string; p_idempotency_key: string }
         Returns: Json
       }
+      cook_lock_v1: { Args: never; Returns: undefined }
+      cook_missing_v1: {
+        Args: { p_recipe: Json; p_uid: string }
+        Returns: {
+          concept_id: string
+          name: string
+          quantity: number
+          unit: string
+        }[]
+      }
+      cook_recipe_for_user_v1: {
+        Args: { p_id: string; p_kind: string; p_uid: string }
+        Returns: Json
+      }
+      cook_state_key_v1: {
+        Args: { p_id: string; p_kind: string; p_uid: string }
+        Returns: string
+      }
       create_recipe_import_job: {
         Args: {
           p_idempotency_key: string
@@ -2219,6 +2316,11 @@ export type Database = {
         Returns: Json
       }
       r1_normalize_text: { Args: { value: string }; Returns: string }
+      read_cook_context_v1: {
+        Args: { p_id: string; p_kind: string }
+        Returns: Json
+      }
+      read_cook_library_v1: { Args: never; Returns: Json }
       read_today_cache_v1: {
         Args: {
           p_date: string
@@ -2285,6 +2387,7 @@ export type Database = {
         }
         Returns: Json
       }
+      retry_recipe_import_v1: { Args: { p_id: string }; Returns: Json }
       revoke_push_subscription: {
         Args: { p_endpoint_hash: string }
         Returns: boolean
@@ -2310,6 +2413,17 @@ export type Database = {
       set_recipe_import_stage: {
         Args: { p_job_id: string; p_stage: string; p_worker_id: string }
         Returns: boolean
+      }
+      store_cook_cache_v1: {
+        Args: {
+          p_id: string
+          p_kind: string
+          p_result: Json
+          p_state_key: string
+          p_uid: string
+          p_version: string
+        }
+        Returns: Json
       }
       store_today_cache_v1: {
         Args: {

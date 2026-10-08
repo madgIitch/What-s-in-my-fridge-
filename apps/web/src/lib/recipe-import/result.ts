@@ -18,7 +18,7 @@ export function recipeSourceUrl(value: unknown): string | null {
   if (!value || typeof value !== "object") return null;
   const source = (value as ImportedRecipe).source?.url;
   if (typeof source !== "string") return null;
-  try { const url = new URL(source); return ["https:", "http:"].includes(url.protocol) ? url.href : null; } catch { return null; }
+  try { const url = new URL(source); return ["https:", "http:"].includes(url.protocol) && !url.username && !url.password ? url.href : null; } catch { return null; }
 }
 
 export function validateImportedRecipe(value: unknown): value is ImportedRecipe {

@@ -1,5 +1,9 @@
 # Historial de sesiones
 
+## 2026-10-08 — R3 → review_pending
+
+Spec aprobado e implementación completa de Cocinar/imports privados, disponibilidad R2, compra y guardado idempotentes. Gates harness, build, dominio, 290 SQL, DB lint, cinco controles de concurrencia y Playwright v3/rollback PASS. Migración solo local. Evidencia en progress/review_sprint-r3-cook-library-and-import-bridge.md. Gate humano de calidad/proveedores pendiente; sin rollout remoto.
+
 ## 2026-09-28 — Sprint R0 → review_pending
 - Dominio de conocimiento, catálogos separados, migraciones aditivas y shell PRODUCT_V3 implementados. Typecheck, lint, 135 tests web, 20 tests de dominio, build, db lint y 211 pruebas SQL pasan.
 - Smoke Playwright local con flag activada/desactivada; revisión visual continua de localhost contra referencias 08 y 10, evidencia en docs/design/neverita-v3/qa. Producción sin cambios.
@@ -63,3 +67,9 @@
 - Gates, build, domain typecheck/37 tests, db lint/252 SQL y concurrencia PASS. Playwright true: 4 PASS; rollback false: 1 PASS.
 - Capturas localhost 320/393, comparación 06/10 y benchmark reproducible guardados. Migración aditiva aplicada solo en local; sin reset ni despliegue.
 - Pendiente revisión humana; no se cierra automáticamente. Smoke real R1 permanece pendiente.
+
+# 2026-10-08 · R2 done y R3 spec_ready
+
+- Cierre R2 solicitado explícitamente por el usuario, sin nueva evidencia de smoke.
+- R3 preparado con ocho dimensiones, 33 criterios y QA manual; spec_approved=false. Pendiente aprobación antes de implementar.
+- Sin despliegue, SQL remoto ni cambios de aplicación. Carryover humano de calidad/importación preservado.

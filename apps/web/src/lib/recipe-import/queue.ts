@@ -26,7 +26,7 @@ async function cloudTasksAccessToken() {
   return cachedToken.value;
 }
 
-export async function enqueueRecipeJob(jobId: string): Promise<void> {
+export async function enqueueRecipeJob(jobId: string, retryGeneration?: number): Promise<void> {
   const endpoint = process.env.CLOUD_TASKS_ENQUEUE_URL;
   if (!endpoint) {
     if (process.env.NODE_ENV === "production") throw new Error("QUEUE_NOT_CONFIGURED");
@@ -37,7 +37,7 @@ export async function enqueueRecipeJob(jobId: string): Promise<void> {
   if (!workerUrl || !serviceAccountEmail) throw new Error("QUEUE_NOT_CONFIGURED");
   const token = await cloudTasksAccessToken();
   const body = {
-    task: { httpRequest: { httpMethod: "POST", url: workerUrl, headers: { "Content-Type": "application/json" },
+    task: { ...(retryGeneration !== undefined ? { name: `${endpoint.replace(/\/tasks\/?$/, "")}/tasks/recipe-${jobId}-retry-${retryGeneration}` } : {}), httpRequest: { httpMethod: "POST", url: workerUrl, headers: { "Content-Type": "application/json" },
       body: Buffer.from(JSON.stringify({ jobId })).toString("base64"), oidcToken: { serviceAccountEmail, audience: workerUrl } } },
   };
   const response = await fetch(endpoint, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(8_000) });

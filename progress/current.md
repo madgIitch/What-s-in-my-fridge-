@@ -1,5 +1,15 @@
 # Sesión actual
 
+## 8 de octubre de 2026 · R3 implementado, review_pending
+
+R2 cerrado por indicación explícita del usuario. R3 (`sprint-r3-cook-library-and-import-bridge`) aprobado antes de implementar y listo para revisión humana. Biblioteca Cocinar, disponibilidad de imports privados, cantidades desconocidas, compra/guardado transaccionales e importación recuperable implementados dentro del scope.
+
+Gates harness, build, 178 pruebas web, 43 de dominio y typecheck, 290 aserciones SQL, DB lint, concurrencia y Playwright v3/rollback pasan. Evidencia: progress/review_sprint-r3-cook-library-and-import-bridge.md y docs/design/neverita-v3/qa/R3_COMPARISON.md. Migración aditiva aplicada solo local; sin reset, push, despliegue ni SQL remoto.
+
+Siguiente acción: smoke humano y cierre explícito de R3. La activación general mantiene pendientes benchmark humano y smoke real Whisper/GCS; completed no certifica fidelidad. No se inicia R4 sin su spec aprobado.
+
+## Contexto anterior
+
 ## 2 de octubre de 2026 · migración remota del hotfix de Hoy
 
 Por petición explícita del usuario se aplicó `20261002000200_today_state_key_revision.sql` al proyecto enlazado `bwscshjtwmsfscbjbndq`. El dry-run previo confirmó que era la única migración pendiente; no se aplicaron seeds ni roles. La prueba local `017_today_state_key_revision.test.sql` pasó sus cinco aserciones y `db lint --linked --schema public --level warning --fail-on warning` terminó sin errores. R2 conserva su estado de revisión humana pendiente.
