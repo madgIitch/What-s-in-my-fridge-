@@ -1886,7 +1886,7 @@
     {
       "id": "sprint-r3-cook-library-and-import-bridge",
       "name": "Sprint R3 - Cocinar, Importaciones & Recipe Availability",
-      "status": "review_pending",
+      "status": "done",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.13.0",
