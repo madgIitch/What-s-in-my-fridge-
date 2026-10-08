@@ -6,6 +6,7 @@ import styles from "./recipe-detail.module.css";
 import { RecipeAvailability } from "@/components/cook/recipe-availability";
 import { productV3Enabled } from "../../product-v3";
 import { SavedRecipe } from "@/components/cook/saved-recipe";
+import { StartCooking, StartSavedCooking } from "@/components/cooking/start-link";
 
 export default async function RecipeDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string }> }) {
   const { id } = await params;
@@ -14,7 +15,7 @@ export default async function RecipeDetailPage({ params, searchParams }: { param
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   const saved = (await searchParams).saved;
-  if (productV3Enabled() && user && saved) return <SavedRecipe userId={user.id} savedId={saved} recipeRef={{ kind: "catalog", id }} />;
+  if (productV3Enabled() && user && saved) return <><SavedRecipe userId={user.id} savedId={saved} recipeRef={{ kind: "catalog", id }} /><StartSavedCooking userId={user.id} savedId={saved} recipeId={id} /></>;
   const { data: recipe, error } = await supabase
     .from("recipes")
     .select("id,name,instructions,recipe_ingredients(name,measure,position)")
@@ -31,6 +32,7 @@ export default async function RecipeDetailPage({ params, searchParams }: { param
     <p className={styles.eyebrow}>RECETARIO</p>
     <h1>{recipe.name}</h1>
     {productV3Enabled() && user && <RecipeAvailability key={`${user.id}:${id}`} userId={user.id} recipeRef={{ kind: "catalog", id }} />}
+    {productV3Enabled() && user && steps.length > 0 && <StartCooking source={{ kind: 'catalog', id }} />}
     <div className={styles.columns}>
       <section aria-labelledby="ingredients-title"><h2 id="ingredients-title">Ingredientes</h2><ul>{ingredients.map(ingredient => <li key={`${ingredient.position}-${ingredient.name}`}>{ingredient.measure ? `${ingredient.measure} ${ingredient.name}` : ingredient.name}</li>)}</ul></section>
       <section aria-labelledby="steps-title"><h2 id="steps-title">Pasos</h2>{steps.length ? <ol>{steps.map((step, index) => <li key={`${index}-${step}`}>{step}</li>)}</ol> : <p>Esta receta no incluye instrucciones en el catálogo original.</p>}</section>

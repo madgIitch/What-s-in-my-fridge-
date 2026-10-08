@@ -388,6 +388,113 @@ export type Database = {
         }
         Relationships: []
       }
+      cooking_v3_events: {
+        Row: {
+          applied_at: string
+          changes: Json
+          choices: Json
+          compensates: string | null
+          id: string
+          recipe_snapshot: Json
+          recipe_version: string
+          result: Json
+          source_ref: Json
+          undo_until: string
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string
+          changes: Json
+          choices: Json
+          compensates?: string | null
+          id?: string
+          recipe_snapshot: Json
+          recipe_version: string
+          result: Json
+          source_ref: Json
+          undo_until: string
+          user_id: string
+        }
+        Update: {
+          applied_at?: string
+          changes?: Json
+          choices?: Json
+          compensates?: string | null
+          id?: string
+          recipe_snapshot?: Json
+          recipe_version?: string
+          result?: Json
+          source_ref?: Json
+          undo_until?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cooking_v3_events_compensates_fkey"
+            columns: ["compensates"]
+            isOneToOne: true
+            referencedRelation: "cooking_v3_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cooking_v3_mutations: {
+        Row: {
+          client_mutation_id: string
+          payload: Json
+          result: Json
+          user_id: string
+        }
+        Insert: {
+          client_mutation_id: string
+          payload: Json
+          result: Json
+          user_id: string
+        }
+        Update: {
+          client_mutation_id?: string
+          payload?: Json
+          result?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cooking_v3_plans: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          kind: string
+          recipe_version: string
+          result: Json
+          source_id: string
+          state_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          kind: string
+          recipe_version: string
+          result: Json
+          source_id: string
+          state_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          kind?: string
+          recipe_version?: string
+          result?: Json
+          source_id?: string
+          state_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       favorite_mutations: {
         Row: {
           client_mutation_id: string
@@ -2186,6 +2293,15 @@ export type Database = {
         Args: { p_cache_key: string; p_result: Json }
         Returns: undefined
       }
+      confirm_cooking_v3: {
+        Args: {
+          p_ack: boolean
+          p_choices: Json
+          p_mutation: string
+          p_plan: string
+        }
+        Returns: Json
+      }
       confirm_receipt_draft: {
         Args: { p_draft_id: string; p_lines: Json }
         Returns: Json
@@ -2221,6 +2337,19 @@ export type Database = {
       cook_state_key_v1: {
         Args: { p_id: string; p_kind: string; p_uid: string }
         Returns: string
+      }
+      cooking_v3_lock: { Args: { p_write: boolean }; Returns: undefined }
+      cooking_v3_source: {
+        Args: { p_id: string; p_kind: string; p_uid: string }
+        Returns: Json
+      }
+      cooking_v3_state: {
+        Args: { p_id: string; p_kind: string; p_uid: string }
+        Returns: string
+      }
+      cooking_v3_stock: {
+        Args: { p_item: Database["public"]["Tables"]["inventory_items"]["Row"] }
+        Returns: Json
       }
       create_recipe_import_job: {
         Args: {
@@ -2321,6 +2450,10 @@ export type Database = {
         Returns: Json
       }
       read_cook_library_v1: { Args: never; Returns: Json }
+      read_cooking_v3_context: {
+        Args: { p_id: string; p_kind: string }
+        Returns: Json
+      }
       read_today_cache_v1: {
         Args: {
           p_date: string
@@ -2425,6 +2558,16 @@ export type Database = {
         }
         Returns: Json
       }
+      store_cooking_v3_plan: {
+        Args: {
+          p_id: string
+          p_kind: string
+          p_result: Json
+          p_state: string
+          p_uid: string
+        }
+        Returns: Json
+      }
       store_today_cache_v1: {
         Args: {
           p_cache_key: string
@@ -2461,6 +2604,10 @@ export type Database = {
           p_recommendation_version: string
         }
         Returns: string
+      }
+      undo_cooking_v3: {
+        Args: { p_event: string; p_mutation: string }
+        Returns: Json
       }
       valid_meal_consumed: { Args: { value: Json }; Returns: boolean }
     }

@@ -647,3 +647,31 @@ Hacer de '¿Qué cenamos?' el momento central del producto: recomendaciones acci
 - **external_contracts:** GET /api/cook/library?view=today|saved|imported&limit=20&cursor=<opaque> devuelve {contract:cook-library-v1,items,nextCursor}; límite 1..50, cursor ligado a usuario/view/version; cursor inválido 400 CURSOR_INVALID. GET /api/cook/availability?kind=catalog|import&id=<UUID> devuelve {contract:recipe-availability-v1,recipeRef,recipeVersion,snapshotKey,computedAt,expiresAt,availability,haveCount,totalCount,missingCount,unknownCount,quantityToCheck,ingredients,reviewRequired}; ingredients preserva posición/texto/amount_status/value/unit/conceptId y decisión R2 por grupo. Snapshot privado máximo 60 min, clave incluye identidad/revisión de receta, inventario/conceptos y versión motor; se invalida ante cualquier cambio relevante. POST /api/cook/shopping recibe exactamente {recipeRef,snapshotKey,clientMutationId}; POST /api/cook/save exactamente {recipeRef,recipeVersion,clientMutationId}; recipeRef={kind,id}, snapshotKey y mutationId UUID, recipeVersion token opaco. Respuesta mutación {contract:cook-mutation-v1,status:applied|duplicate,result:{itemIds}|{favoriteId,version}}. Error {contract:cook-error-v1,error:{code,message,retryable}}; 400 INVALID_REQUEST,401 AUTH_REQUIRED,404 RECIPE_NOT_FOUND,409 SNAPSHOT_CONFLICT|RECIPE_CONFLICT|MUTATION_CONFLICT,422 RECIPE_INVALID,503 COOK_UNAVAILABLE. Replay con mismo payload devuelve resultado original, mismo ID con otro payload 409. POST /api/recipe-jobs/[jobId]/retry sin body reutiliza job y reserva, deduplica enqueue concurrente, 409 RETRY_NOT_AVAILABLE si no es elegible; conserva contrato recipe-import-job-v1/error-v1. Creation/upload/review/reprocess existentes mantienen sus contratos y flags.
 - **edge_cases:** Reutilizar evaluateTodayRecipe y ranking R2: aliases exactos únicos o concepto explícito validado; no fuzzy comercial, básicos implícitos ni conversiones peso/volumen/pack/unidad. Tombstones/empty/0 no aportan presencia. Agrupar por concepto antes de comparar y sumar cantidades compatibles una sola vez. N de M cuenta grupos semánticos, cada ingrediente no resuelto como grupo individual; N solo have_enough o have_presence_unknown_amount. Déficit exacto también es faltante aunque haya presencia parcial. Unknown no cuenta como faltante ni se añade automáticamente. Sin escalado de raciones. Import y favorito del mismo origen aparecen una vez en cada colección; no deduplicar recetas distintas por título.
 - **ui_states:** Cocinar /app/cook?view=today|saved|imported, default today; query no reconocida vuelve a today. Para hoy agrupa ready en Puedes hacerlo ahora y missing_one con unknownCount=0 y quantityToCheck=false en Te falta poco; resto claramente etiquetado, nunca presentado como ready. Guardadas presenta Tus guardadas e Importadas incluye jobs pendientes/fallidos/completados ordenados created_at desc/id desc. Para hoy usa ranking R2 y paginación estable; Guardadas saved_at desc/id desc. Traer receta abre /app/recipes/import con Enlace/Texto/Archivo existentes. Resultado /app/recipes/import/[jobId] muestra Tienes N de M, filas Suficiente/Lo tienes, cantidad por comprobar/Te falta/Por comprobar y cantidades no indicadas. CTA compra solo faltantes demostrados, confirmación explícita (y aviso review_required); guardar y original. Loading, vacío, error/retry, offline y sesión caducada con foco visible, objetivos 44px y sin overflow 320px. Enlaces Hoy a detalle mantienen /app/recipes/[id]; saved a calendario legacy con parámetros seguros, sin implementar plan semanal R6. Capturas localhost 320/393 contra referencias 05/07, sin inventar fotografías de receta.
+
+<!-- harness:sprint-r4-cooking-mode-and-pantry-reconciliation -->
+## sprint-r4-cooking-mode-and-pantry-reconciliation · Sprint R4 - Cooking Mode & Pantry Reconciliation
+
+Cerrar el loop receta -> cocinar -> despensa sin obligar a registrar cada consumo y sin descontar cantidades desconocidas como si fueran exactas.
+
+### Scope aprobado
+
+  - `apps/web/src/app/(auth)/app/cook/**`
+  - `apps/web/src/app/(auth)/app/recipes/**`
+  - `apps/web/src/app/api/cooking/v3/**`
+  - `apps/web/src/components/cooking/**`
+  - `apps/web/src/lib/cooking/**`
+  - `apps/web/src/types/database.generated.ts`
+  - `packages/domain/src/cooking/**`
+  - `packages/domain/src/pantry/**`
+  - `supabase/migrations/**`
+  - `supabase/tests/**`
+  - `tests/**`
+  - `docs/**`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** CookingSourceRef catalog/import/favorite; plan privado versionado TTL60min; recetas actuales o snapshot favorito inmutable. Lineas exact/qualitative/unresolved y asignación conservadora de lotes. Eventos before/after y compensación única append-only. Draft/outbox cooking independiente, aislado por usuario, sin afectar outbox inventory.
+- **external_contracts:** GET /api/cooking/v3/plan y POST confirm/undo, payload y response definidos en criterios4,13,14,19,26. Replay canónico precede validación de estado vigente; mutation UUID único por usuario y operación/payload. API legacy /api/cooking intacta. planKey ligado a usuario, fuente/revisión y versiones.
+- **edge_cases:** Agrupar conceptos/unidades compatibles; FEFO solo fecha exacta, null al final y desempate estable. Sin sustracción exacta cuando receta/stock unknown o incompatible. Descuento insuficiente bloquea propuesta exacta. Qualitative degrade precision y mantiene provenance. Lotes múltiples no exactos requieren selección explícita; ausencia/ambigüedad no crea pantry. Ajuste manual tiene evidencia user, no extracción.
+- **ui_states:** /app/cook/session?kind&id y /app/cook/session/confirm; entrypoints catálogo/import/favorito. Pasos/progreso, Ya está, preview, Ajustar cantidades y confirmación/undo. Review_required explícito. Borrador por usuario/revisión, recuperación recarga y estados de conflicto/offline claros. Referencia09,320/393,44px,focus,reduced-motion.

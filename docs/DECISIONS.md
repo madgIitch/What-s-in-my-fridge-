@@ -353,3 +353,22 @@ Decisiones registradas:
 - **tests:** Harness typecheck/lint/test/diff-scope, domain typecheck/tests, build web; worker y Python solo si cambia su código. pgTAP/RLS dos usuarios, unicidad import/favorito, snapshot conflict/replay/concurrencia y cuota invariable en retry/guardar/compra. DB lint y migraciones aditivas locales sin reset; fixtures SQL rollback. Playwright DB local + mocks Vision/media/proveedores: URL/texto/archivo, recarga job, resultado 2/4, cantidades unknown, review_required, compra, guardar doble clic, errores recuperables, offline/logout, conflicto y flag false. Comparación visual 320/393 con capturas API real (mocks de presentación marcados). Mantener aceptación de improve-recipe-import-quality y carryover explícito: corpus humano 12 casos split8/4, veinte ejecuciones warm, métricas/umbrales de spec original, WebKit/Firefox y smoke real URL/subida Whisper/GCS. Sin evidencia no declarar fidelidad ni cerrar gate de rollout. Si cambia lockfile ejecutar install frozen.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+<!-- harness:sprint-r4-cooking-mode-and-pantry-reconciliation -->
+## 2026-10-08 · sprint-r4-cooking-mode-and-pantry-reconciliation aprobado
+
+Contexto: se aprobó el spec `sprint-r4-cooking-mode-and-pantry-reconciliation` (Sprint R4 - Cooking Mode & Pantry Reconciliation).
+
+Decisiones registradas:
+
+- **auth_secrets:** Auth.uid y RLS planes/eventos/lotes; 404 uniforme. Request no usuario/receta/after arbitrarios; Origin y JSON estricto. Cache HTTP privada no-store. Logout cancela y purga drafts/outbox cooking saliente. No contenido privado ni secretos en logs.
+- **rollback_compat:** Flag false conserva legacy y no llama RPC v3. No R5/R6/Pro ni proveedores/calendario/cuotas. Migraciones locales aditivas sin reset; compat stock legacy nunca evidencia exacta. No activar rollout ni SQL remoto; calidad humana/Whisper/GCS pendiente de R3 continúa documentada.
+- **tests:** Harness/domain/build/DB lint/pgTAP y Playwright local incluyendo concurrencia, replay, undo, dos usuarios y offline real. SQL rollback; fixture browser solo localhost. Comparación visual09 a320/393, mocks identificados. Lockfile estable no exige instalación; si cambia frozen obligatorio.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+## R4 · decisiones de implementación verificadas
+
+- Cooking utiliza la DB privada reservada neverita-pwa-v1, versión1/store drafts, ya incluida en la purga global de sesión; antes de R4 ningún módulo la creaba. Las intenciones no modifican stock local.
+- Confirm y undo serializan por usuario y bloquean inventario antes de la fuente favorita para evitar inversión de bloqueos con R3; replay se resuelve antes de validar caducidad o versiones. Los controles locales de concurrencia verifican este orden.
+- Un consumo exacto refleja la cantidad demostrada en campos legacy para compatibilidad. Una elección cualitativa elimina precisión exacta; los valores legacy históricos no justifican aritmética. Undo restaura stock con versiones protegidas, preservando notas y auditoría.

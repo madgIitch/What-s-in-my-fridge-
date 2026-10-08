@@ -1998,7 +1998,7 @@
     {
       "id": "sprint-r4-cooking-mode-and-pantry-reconciliation",
       "name": "Sprint R4 - Cooking Mode & Pantry Reconciliation",
-      "status": "spec_ready",
+      "status": "review_pending",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.14.0",
@@ -2081,9 +2081,9 @@
         "docs/**",
         "spec.json"
       ],
-      "spec_approved": false,
-      "approved_by": null,
-      "approved_at": null,
+      "spec_approved": true,
+      "approved_by": "peorr",
+      "approved_at": "2026-10-08T11:52:45.922Z",
       "visual_references": [
         "docs/design/neverita-v3/09-cooking-and-reconciliation.png"
       ],

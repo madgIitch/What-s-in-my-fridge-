@@ -81,3 +81,10 @@ Spec aprobado e implementación completa de Cocinar/imports privados, disponibil
 - Cierre R2 solicitado explícitamente por el usuario, sin nueva evidencia de smoke.
 - R3 preparado con ocho dimensiones, 33 criterios y QA manual; spec_approved=false. Pendiente aprobación antes de implementar.
 - Sin despliegue, SQL remoto ni cambios de aplicación. Carryover humano de calidad/importación preservado.
+
+# 2026-10-08 · Sprint R4 → review_pending
+
+- Aprobación explícita antes de implementar; modo cocina, preview por lotes, confirmación atómica, replay, undo compensatorio e intención offline privada.
+- Gates harness y build PASS; web 183, dominio 53 y typecheck, SQL 332, DB lint y cinco controles de concurrencia PASS. Playwright: cinco recorridos v3 y rollback false separado.
+- Capturas reales 320/393 y comparación09 documentadas. Migración aditiva local; sin reset, SQL remoto, push ni despliegue.
+- Pendiente smoke humano y cierre explícito. Carryover humano de calidad y Whisper/GCS preservado.
