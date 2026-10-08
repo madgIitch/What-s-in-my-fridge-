@@ -1,5 +1,9 @@
 # Historial de sesiones
 
+## 2026-10-08 — R3 → done por petición del usuario
+
+Cierre explícito mediante spec.mjs done. Implementación fdb2938 subida a origin/main. Se conservan pendientes el smoke humano y los gates de calidad/Whisper/GCS; no se aplica SQL remoto ni se activa rollout. R4 sigue sin spec aprobado.
+
 ## 2026-10-08 — R3 → review_pending
 
 Spec aprobado e implementación completa de Cocinar/imports privados, disponibilidad R2, compra y guardado idempotentes. Gates harness, build, dominio, 290 SQL, DB lint, cinco controles de concurrencia y Playwright v3/rollback PASS. Migración solo local. Evidencia en progress/review_sprint-r3-cook-library-and-import-bridge.md. Gate humano de calidad/proveedores pendiente; sin rollout remoto.

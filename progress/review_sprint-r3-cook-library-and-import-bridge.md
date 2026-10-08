@@ -1,4 +1,4 @@
-# R3 · review_pending
+# R3 · done por petición del usuario
 
 8 de octubre de 2026. Implementación y gates automáticos aprobados; pendiente
 smoke humano antes del cierre por spec.mjs done, conforme a HARNESS.md.
