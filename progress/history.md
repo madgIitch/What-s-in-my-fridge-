@@ -1,5 +1,9 @@
 # Historial de sesiones
 
+## 2026-10-08 — R4 → spec_ready
+
+Propuesta e entrevista parseable preparadas manualmente (prepare no existe en el CLI instalado); ocho dimensiones y 31 criterios con QA. Modo cocina, preview, consumo exacto/cualitativo, offline pendiente y undo compensatorio. Sin aprobación ni implementación, SQL o despliegue.
+
 ## 2026-10-08 — R3 → done por petición del usuario
 
 Cierre explícito mediante spec.mjs done. Implementación fdb2938 subida a origin/main. Se conservan pendientes el smoke humano y los gates de calidad/Whisper/GCS; no se aplica SQL remoto ni se activa rollout. R4 sigue sin spec aprobado.

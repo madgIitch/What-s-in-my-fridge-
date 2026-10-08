@@ -1,12 +1,12 @@
 # Sesión actual
 
-## 8 de octubre de 2026 · R3 cerrado por petición del usuario
+## 8 de octubre de 2026 · R3 cerrado y R4 spec_ready
 
 R2 cerrado por indicación explícita del usuario. R3 (`sprint-r3-cook-library-and-import-bridge`) aprobado antes de implementar y cerrado como done por petición explícita del usuario. Biblioteca Cocinar, disponibilidad de imports privados, cantidades desconocidas, compra/guardado transaccionales e importación recuperable implementados dentro del scope.
 
 Gates harness, build, 178 pruebas web, 43 de dominio y typecheck, 290 aserciones SQL, DB lint, concurrencia y Playwright v3/rollback pasan. Evidencia: progress/review_sprint-r3-cook-library-and-import-bridge.md y docs/design/neverita-v3/qa/R3_COMPARISON.md. Migración aditiva aplicada solo local; sin reset, despliegue ni SQL remoto. Implementación subida a origin/main en fdb2938.
 
-Siguiente acción: preparar el spec R4 para aprobación. El cierre solicitado no aporta evidencia adicional de smoke humano. La activación general mantiene pendientes benchmark humano y smoke real Whisper/GCS; completed no certifica fidelidad. No se inicia R4 sin su spec aprobado.
+R4 preparado manualmente: ocho dimensiones, 31 criterios, contratos de plan/confirm/undo y QA durable. Estado spec_ready; spec_approved=false. Siguiente acción: aprobación explícita del spec R4 antes de implementar. El cierre solicitado no aporta evidencia adicional de smoke humano. La activación general mantiene pendientes benchmark humano y smoke real Whisper/GCS; completed no certifica fidelidad. No se inicia R4 sin su spec aprobado.
 
 ## Contexto anterior
 
