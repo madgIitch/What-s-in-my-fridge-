@@ -1778,7 +1778,7 @@
     {
       "id": "sprint-r2-today-decision-engine",
       "name": "Sprint R2 - Hoy & Decision Engine",
-      "status": "review_pending",
+      "status": "done",
       "sdd": true,
       "priority": "P0",
       "milestone": "0.12.0",
