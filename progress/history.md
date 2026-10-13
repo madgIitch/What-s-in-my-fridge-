@@ -94,3 +94,9 @@ Spec aprobado e implementación completa de Cocinar/imports privados, disponibil
 - Spec preparado y aprobado explícitamente; Compra explicable con procedencia, sugerencias separadas, fusión conservadora, offline con outbox propio y conciliación de ticket con deshacer.
 - Gates harness y build PASS; web 188, dominio 9, SQL 392, DB lint PASS. Playwright: cinco recorridos v3 y rollback false separado.
 - Migración aditiva local; sin reset, SQL remoto, push ni despliegue. Pendiente smoke humano y cierre explícito.
+
+## 13 de octubre de 2026 · sprint-r6-weekly-planning-layer
+
+- Spec preparado y aprobado explícitamente; planificación semanal ligera sobre meal_entries, faltantes agregados y salida directa a Compra.
+- Gates harness y build PASS; web 191, dominio 18, SQL 435, DB lint PASS. Playwright: cinco recorridos v3, rollback y regresión R3/R4/R5.
+- Migración aditiva local; sin reset, SQL remoto, push ni despliegue. Pendiente smoke humano y cierre explícito.

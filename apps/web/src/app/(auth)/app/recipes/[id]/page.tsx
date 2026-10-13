@@ -7,6 +7,7 @@ import { RecipeAvailability } from "@/components/cook/recipe-availability";
 import { productV3Enabled } from "../../product-v3";
 import { SavedRecipe } from "@/components/cook/saved-recipe";
 import { StartCooking, StartSavedCooking } from "@/components/cooking/start-link";
+import { ScheduleRecipe } from "@/components/planning/schedule-recipe";
 
 export default async function RecipeDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string }> }) {
   const { id } = await params;
@@ -33,6 +34,7 @@ export default async function RecipeDetailPage({ params, searchParams }: { param
     <h1>{recipe.name}</h1>
     {productV3Enabled() && user && <RecipeAvailability key={`${user.id}:${id}`} userId={user.id} recipeRef={{ kind: "catalog", id }} />}
     {productV3Enabled() && user && steps.length > 0 && <StartCooking source={{ kind: 'catalog', id }} />}
+    {productV3Enabled() && user && <ScheduleRecipe userId={user.id} source={{ kind: 'catalog', id, title: recipe.name, ingredients: ingredients.map(i => ({ name: i.name, measure: i.measure })) }} />}
     <div className={styles.columns}>
       <section aria-labelledby="ingredients-title"><h2 id="ingredients-title">Ingredientes</h2><ul>{ingredients.map(ingredient => <li key={`${ingredient.position}-${ingredient.name}`}>{ingredient.measure ? `${ingredient.measure} ${ingredient.name}` : ingredient.name}</li>)}</ul></section>
       <section aria-labelledby="steps-title"><h2 id="steps-title">Pasos</h2>{steps.length ? <ol>{steps.map((step, index) => <li key={`${index}-${step}`}>{step}</li>)}</ol> : <p>Esta receta no incluye instrucciones en el catálogo original.</p>}</section>

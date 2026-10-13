@@ -1,5 +1,5 @@
 /** R5 shopping loop. Pure rules shared by the UI and mirrored (and tested) against the SQL contract. */
-export type ShopSourceKind = 'recipe_missing' | 'low_stock_suggestion' | 'manual' | 'legacy';
+export type ShopSourceKind = 'recipe_missing' | 'plan_missing' | 'low_stock_suggestion' | 'manual' | 'legacy';
 export type ShopSelection = 'selected' | 'suggested' | 'dismissed';
 export type ShopSection = 'recipes' | 'suggestions' | 'manual';
 
@@ -63,7 +63,7 @@ export function canMerge(a: ShopItem, b: ShopItem): boolean {
 }
 
 export function sectionOf(item: Pick<ShopItem, 'source'>): ShopSection {
-  return item.source === 'recipe_missing' ? 'recipes' : item.source === 'low_stock_suggestion' ? 'suggestions' : 'manual';
+  return item.source === 'recipe_missing' || item.source === 'plan_missing' ? 'recipes' : item.source === 'low_stock_suggestion' ? 'suggestions' : 'manual';
 }
 
 export function shopCounts(items: readonly ShopItem[]) {
@@ -83,11 +83,20 @@ const LOCATIONS: Record<string, string> = { fridge: 'la nevera', pantry: 'la des
 export function shopReason(item: Pick<ShopItem, 'name' | 'source' | 'sources'>): string {
   const recipes = item.sources.filter(s => s.source === 'recipe_missing');
   const stock = item.sources.find(s => s.source === 'low_stock_suggestion');
+  const plans = item.sources.filter(s => s.source === 'plan_missing');
   const parts: string[] = [];
   if (recipes.length) {
     const labels = [...new Set(recipes.map(s => s.label).filter((l): l is string => !!l))];
     if (labels.length === 0) parts.push('Falta para una receta que ya no está disponible');
     else parts.push(`Falta para ${labels[0]}${labels.length > 1 ? ` (+${labels.length - 1} más)` : ''}`);
+  }
+  if (plans.length) {
+    const titles = [...new Set(plans.flatMap(p => {
+      const entries = Array.isArray(p.ref.entries) ? p.ref.entries as { title?: unknown }[] : [];
+      const names = entries.map(e => e.title).filter((t): t is string => typeof t === 'string');
+      return names.length ? names : p.label ? [p.label] : [];
+    }))];
+    parts.push(titles.length === 0 ? 'Falta para tu plan' : `Falta para tu plan: ${titles[0]}${titles.length > 1 ? ` (+${titles.length - 1} más)` : ''}`);
   }
   if (stock) {
     const where = typeof stock.ref.location === 'string' ? LOCATIONS[stock.ref.location] : undefined;

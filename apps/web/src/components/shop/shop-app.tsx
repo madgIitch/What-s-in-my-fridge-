@@ -15,6 +15,7 @@ const recipeHref = (ref: Record<string, unknown>) => typeof ref.id === 'string'
 function Row({ item, onCheck, onRemove, children }: { item: ShopItem; onCheck: () => void; onRemove: () => void; children?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const recipes = item.sources.filter(s => s.source === 'recipe_missing');
+  const planned = item.sources.some(s => s.source === 'plan_missing');
   return <li className={styles.item}>
     <div className={styles.row}>
       <input className={styles.check} type="checkbox" checked={item.checked} onChange={onCheck} aria-label={`${item.name}: ${item.checked ? 'ya en el carrito' : 'marcar como cogido'}`} />
@@ -25,6 +26,7 @@ function Row({ item, onCheck, onRemove, children }: { item: ShopItem; onCheck: (
     </div>
     {open && <div className={styles.more}>
       <span>{shopReason(item)}</span>
+      {planned && <Link href="/app/cook/week">Ver tu semana</Link>}
       {recipes.length > 0 && <ul className={styles.sources}>{recipes.map((s, i) => {
         const href = recipeHref(s.ref);
         return <li key={i}>{href && s.label ? <Link href={href}>{s.label}</Link> : s.label ?? 'Receta no disponible'}</li>;

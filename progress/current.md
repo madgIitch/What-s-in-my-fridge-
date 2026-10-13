@@ -1,5 +1,11 @@
 # Sesión actual
 
+## 13 de octubre de 2026 · R6 implementado, pendiente de revisión
+
+R6 (`sprint-r6-weekly-planning-layer`) aprobado explícitamente e implementado: /app/cook/week con siete días, selector ¿Cuándo la cocinas? (Hoy, Mañana, Otro día) en detalles de receta, Cenar fuera excluyente, Sin decidir como ausencia, legacy de solo lectura, faltantes agregados con cook_missing_v1 y Añadir N a la compra con source plan_missing. R5 sigue pendiente de smoke humano. Estado final: review_pending.
+
+Verificación: typecheck, lint sin warnings, 191 pruebas web, 18 de dominio, build, 435 aserciones SQL (43 propias) y DB lint. Playwright: cinco recorridos con flag true, rollback con --rollback y regresión R3, R4 y R5. Evidencia en progress/review_sprint-r6-weekly-planning-layer.md y docs/design/neverita-v3/qa/R6_COMPARISON.md. Migración aplicada solo localmente; sin reset ni despliegue.
+
 ## 13 de octubre de 2026 · R5 implementado, pendiente de revisión
 
 R4 cerrado por petición explícita del usuario. R5 (`sprint-r5-shopping-loop`) preparado, aprobado explícitamente e implementado: /app/shop con Para tus recetas, Sugerencias por poco stock y Añadido por ti; procedencia múltiple, sugerencias que nunca son stock, fusión solo por concepto y unidad compatible, outbox offline propio, sesión de compra hacia /app/scan y conciliación conservadora del ticket con deshacer. Estado final: review_pending; siguiente acción: smoke humano y cierre explícito.

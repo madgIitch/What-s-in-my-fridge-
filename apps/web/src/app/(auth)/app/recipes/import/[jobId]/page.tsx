@@ -9,6 +9,7 @@ import { ImportRecovery } from "@/components/cook/import-recovery";
 import { productV3Enabled } from "../../../product-v3";
 import { SavedRecipe } from "@/components/cook/saved-recipe";
 import { StartCooking, StartSavedCooking } from "@/components/cooking/start-link";
+import { ScheduleRecipe } from "@/components/planning/schedule-recipe";
 
 export default async function ImportedRecipePage({ params, searchParams }: { params: Promise<{ jobId: string }>; searchParams: Promise<{ saved?: string }> }) {
   const { jobId } = await params;
@@ -48,6 +49,7 @@ export default async function ImportedRecipePage({ params, searchParams }: { par
       <h1>{recipe.title}</h1>
       {productV3Enabled() && <RecipeAvailability key={`${user.id}:${jobId}:${version}`} userId={user.id} recipeRef={{ kind: "import", id: jobId }} />}
       {productV3Enabled() && <StartCooking source={{ kind: 'import', id: jobId }} />}
+      {productV3Enabled() && <ScheduleRecipe userId={user.id} source={{ kind: 'import', id: jobId, title: recipe.title, ingredients: recipe.ingredients.map(i => ({ name: i.name, measure: [i.amount, i.unit].filter(Boolean).join(' ') || null })) }} />}
       {!productV3Enabled() && sourceUrl && <a className={styles.openRecipe} href={sourceUrl} target="_blank" rel="noopener noreferrer">Ver receta original ↗</a>}
       {!productV3Enabled() && recipeNeedsReview(recipe) && <section className={styles.recipeSection} role="status"><h2>Revisa esta receta</h2><p>La importación contiene datos que no se han podido confirmar. Comprueba ingredientes, cantidades y preparación con la fuente original.</p></section>}
       {!productV3Enabled() && <section className={styles.recipeSection}><h2>Ingredientes</h2><ul>{recipe.ingredients.map((ingredient, index) => <li key={index}>{[ingredient.amount, ingredient.unit, ingredient.name].filter(value => value !== null && value !== undefined && value !== "").join(" ")}{!ingredient.amount && <small className={styles.quantityUnknown}>Cantidad no indicada</small>}</li>)}</ul></section>}

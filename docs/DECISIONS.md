@@ -408,3 +408,11 @@ Decisiones registradas:
 - **tests:** Harness, domain, build, DB lint y pgTAP (agregación, unidades, outside, snapshot, idempotencia, PLAN_CHANGED, RLS dos usuarios, legacy). Playwright local con offline real, conflicto entre dispositivos, redirect, zona horaria/DST y rollback; capturas 320/393 con DB/API reales y mocks identificados.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+## R6 · decisiones de implementación verificadas
+
+- La planificación reutiliza `meal_entries` y su outbox (`neverita-meal-calendar`, ya purgado en logout). `apply_meal_mutation` no cambia: un trigger clasifica `plan_kind=outside` cuando el plato es exactamente Cenar fuera en cena y sin receta.
+- Una receta planificada es `dinner` con `recipe_snapshot` v1 y `consumed_at` nulo; el origen vivo se lee con `cook_recipe_for_user_v1` y el snapshot solo es respaldo.
+- Faltantes: se concatenan los ingredientes de todas las recetas y se evalúan una vez con `cook_missing_v1`, de modo que dos recetas de 4 huevos con 6 en stock piden 2. Un día con Cenar fuera no cuenta.
+- `plan_missing` amplía de forma aditiva `shopping_origin`, `shopping_item_sources` y la consolidación de R5. Una fila de procedencia por item y semana lleva las recetas; la clave de estado evita añadir datos obsoletos.
+- Un null JSON en `recipe_snapshot` se almacena como jsonb `null` y rompe la restricción de identidad; los clientes deben omitir la clave.

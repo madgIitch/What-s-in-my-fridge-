@@ -754,3 +754,10 @@ Mantener la planificación como una capa ligera sobre recetas, no como un calend
 - **edge_cases:** Fecha civil con DST y medianoche; límites de 3 recetas por día y 60 por semana; Cenar fuera excluyente en servidor; misma receta mismo día idempotente; unknown e incompatibles no suman; legacy solo lectura; semana sin entradas; actualizar cantidad solo en items no marcados.
 - **ui_states:** /app/cook/week en lista vertical con días como regiones, Sin decidir, Cenar fuera, Registrado antes, selector ¿Cuándo la cocinas? en detalle y CTA Añadir N a la compra. Estados cargando/vacío/error/offline/pendiente/conflicto diferenciados; 320/393 px, 44 px, foco, reduced-motion y referencia 03 sin contenido inventado.
 
+
+## R6 · Planificación semanal ligera
+
+- Datos: `meal_entries.plan_kind` (meal|outside) sobre el calendario existente; items de Compra con `source=plan_missing`, `source_ref=plan:<lunes>` y procedencia por semana.
+- Servidor: `plan_week_v1`, `plan_add_to_shop_v1` y helpers privados (`plan_compute_v1`, `plan_recipe_for_entry_v1`, `plan_concept_v1`). API `/api/plan/v1/{week,shop}`; 404 con `PRODUCT_V3=false`.
+- Cliente: `/app/cook/week`, selector ¿Cuándo la cocinas? en detalles de receta, `lib/planning`, reglas de fecha civil en `packages/domain/src/planning/week.ts`.
+- Invariantes: planificar no escribe despensa; Sin decidir es ausencia de entrada; legacy es solo lectura.

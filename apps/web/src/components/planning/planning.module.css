@@ -1,0 +1,37 @@
+.shell{max-width:42rem;margin:auto;padding:1.25rem 1rem 6rem;color:#51304f;animation:arrive .2s ease-out}
+.kicker{font-size:.85rem;color:#8b677f;margin:1rem 0 0}
+.shell h1{font-size:clamp(1.8rem,7vw,2.5rem);line-height:1.15;font-weight:800;letter-spacing:-.03em;margin:.4rem 0 .6rem}
+.range{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin:.4rem 0 1rem}
+.range strong{font-size:1rem;text-align:center;flex:1}
+.status{font-size:.9rem;line-height:1.5;color:#7e647c;min-height:1.4rem;margin:.2rem 0 .6rem}
+.notice{background:#fff3df;padding:1rem;border-radius:16px;line-height:1.6;margin:1rem 0}
+.notice strong{display:block;margin-bottom:.3rem}
+.day{background:#fffdf7;border-radius:22px;padding:.9rem 1rem;margin:.7rem 0}
+.day[data-today=true]{border:2px solid #ff9aa2}
+.day[data-past=true]{opacity:.8}
+.day h2{font-size:1rem;font-weight:750;margin:0 0 .4rem;text-transform:capitalize}
+.day h2 small{font-weight:600;color:#bd3c62;margin-left:.4rem;text-transform:none}
+.entries{list-style:none;margin:0;padding:0;display:grid;gap:.4rem}
+.entry{display:flex;align-items:center;justify-content:space-between;gap:.6rem;min-height:48px}
+.entry a{color:#78344e;font-weight:700;overflow-wrap:anywhere}
+.entry span{overflow-wrap:anywhere}
+.chip{font-size:.78rem;color:#7a6677;background:#f8e9ee;border-radius:999px;padding:.1rem .55rem;white-space:nowrap}
+.pending{font-size:.78rem;color:#8a5a00;background:#fff3df;border-radius:999px;padding:.1rem .5rem;white-space:nowrap}
+.undecided{color:#7a6677;line-height:1.5;margin:.1rem 0 .5rem}
+.actions{display:flex;flex-wrap:wrap;gap:.5rem;margin:.3rem 0}
+.primary,.secondary,.link{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.6rem 1rem;border-radius:16px;text-decoration:none;color:#78344e;cursor:pointer;font:inherit;font-weight:750}
+.primary{border:1px solid #ff9aa2;background:#ff9aa2;color:#4d3340}
+.secondary{border:1px solid #efb9c8;background:#fff8fa}
+.link{border:0;background:transparent;min-height:44px;padding:.4rem .6rem}
+.missing{margin-top:1.4rem}
+.missing h2{font-size:1.1rem;font-weight:750;margin:0 0 .4rem}
+.missing ul{margin:.4rem 0;padding-left:1.2rem;line-height:1.6}
+.toast{position:fixed;left:1rem;right:1rem;bottom:calc(5.4rem + env(safe-area-inset-bottom));max-width:40rem;margin:auto;background:#51304f;color:#fff;border-radius:16px;padding:.7rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.toast button{background:transparent;border:0;color:#ffd2dc;font:inherit;font-weight:750;min-height:44px;cursor:pointer}
+.when{margin:1.2rem 0;padding:1rem;border-radius:20px;background:#fffdf7}
+.when h2{font-size:1.05rem;font-weight:750;margin:0 0 .6rem}
+.when input[type=date]{min-height:48px;padding:.5rem .7rem;border:1px solid #e8b3c5;border-radius:14px;background:#fff8fa;color:inherit;max-width:100%}
+.shell :is(a,button,input,summary):focus-visible,.when :is(a,button,input):focus-visible{outline:3px solid #bd3c62;outline-offset:3px}
+.shell button:disabled,.when button:disabled{opacity:.55;cursor:default}
+@keyframes arrive{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.shell{animation:none}}

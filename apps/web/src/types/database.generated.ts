@@ -1038,6 +1038,7 @@ export type Database = {
           meal_date: string
           meal_type: string
           notes: string | null
+          plan_kind: string
           recipe_id: string | null
           recipe_snapshot: Json | null
           source: string
@@ -1057,6 +1058,7 @@ export type Database = {
           meal_date: string
           meal_type: string
           notes?: string | null
+          plan_kind?: string
           recipe_id?: string | null
           recipe_snapshot?: Json | null
           source?: string
@@ -1076,6 +1078,7 @@ export type Database = {
           meal_date?: string
           meal_type?: string
           notes?: string | null
+          plan_kind?: string
           recipe_id?: string | null
           recipe_snapshot?: Json | null
           source?: string
@@ -2633,6 +2636,32 @@ export type Database = {
         Returns: undefined
       }
       owns_row: { Args: { row_user_id: string }; Returns: boolean }
+      plan_add_to_shop_v1: {
+        Args: {
+          p_from: string
+          p_key: string
+          p_mutation: string
+          p_today: string
+        }
+        Returns: Json
+      }
+      plan_args_ok_v1: {
+        Args: { p_from: string; p_today: string }
+        Returns: boolean
+      }
+      plan_compute_v1: {
+        Args: { p_from: string; p_today: string; p_uid: string }
+        Returns: Json
+      }
+      plan_concept_v1: { Args: { p_ing: Json }; Returns: string }
+      plan_recipe_for_entry_v1: {
+        Args: {
+          p_entry: Database["public"]["Tables"]["meal_entries"]["Row"]
+          p_uid: string
+        }
+        Returns: Json
+      }
+      plan_week_v1: { Args: { p_from: string; p_today: string }; Returns: Json }
       process_stripe_event: {
         Args: {
           p_cancel_at_period_end: boolean

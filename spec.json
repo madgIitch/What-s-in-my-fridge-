@@ -2195,7 +2195,7 @@
     {
       "id": "sprint-r6-weekly-planning-layer",
       "name": "Sprint R6 - Lightweight Weekly Planning",
-      "status": "spec_ready",
+      "status": "review_pending",
       "sdd": true,
       "priority": "P1",
       "milestone": "0.16.0",

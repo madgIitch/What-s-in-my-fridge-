@@ -35,7 +35,7 @@ export function ProductV3Nav() {
     <div className="product-v3-add">
       <Link href="/app/add-purchase" aria-label="Añadir compra" aria-current={pathname.startsWith("/app/add-purchase") ? "page" : undefined}>+</Link>
     </div>
-    {destinations.slice(2).map((item) => <Link key={item.href} href={item.href} aria-current={pathname === item.href || (item.href === "/app/shop" && pathname === "/app/shopping-list") || (item.href === "/app/cook" && ["/app/recipes", "/app/favorites"].includes(pathname)) ? "page" : undefined}>
+    {destinations.slice(2).map((item) => <Link key={item.href} href={item.href} aria-current={pathname === item.href || (item.href === "/app/shop" && pathname === "/app/shopping-list") || (item.href === "/app/cook" && (["/app/recipes", "/app/favorites"].includes(pathname) || pathname.startsWith("/app/cook/"))) ? "page" : undefined}>
       <NavigationIcon href={item.href} /><span>{item.label}</span>
     </Link>)}
   </nav>;

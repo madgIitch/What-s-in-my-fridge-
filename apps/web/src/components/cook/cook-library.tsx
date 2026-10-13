@@ -28,7 +28,7 @@ export function CookLibraryApp({ userId, view }: { userId: string; view: string 
     { title: 'Para revisar o completar', items: items.filter(i => i.availability?.availability !== 'ready' && !(i.availability?.availability === 'missing_one' && !i.availability.unknownCount && !i.availability.quantityToCheck)) },
   ] : [{ title: view === 'saved' ? 'Tus guardadas' : 'Tus importaciones', items }];
   return <main className={styles.shell}>
-    <header className={styles.header}><h1>Cocinar</h1><Link className={styles.link} href='/app/recipes/import'>Traer receta</Link></header>
+    <header className={styles.header}><h1>Cocinar</h1><Link className={styles.link} href='/app/cook/week'>Tu semana</Link><Link className={styles.link} href='/app/recipes/import'>Traer receta</Link></header>
     <nav className={styles.tabs} aria-label='Biblioteca de recetas'>{[['today', 'Para hoy'], ['saved', 'Guardadas'], ['imported', 'Importadas']].map(([id, name]) => <Link key={id} href={`/app/cook?view=${id}`} aria-current={view === id ? 'page' : undefined}>{name}</Link>)}</nav>
     <p role='status'>{resource.status === 'loading' ? 'Consultando tus recetas…' : resource.status === 'offline' ? resource.data ? `Resultado anterior · Sin conexión · ${new Date(resource.data.computedAt).toLocaleString('es')}` : 'Sin conexión; aún no hay una biblioteca guardada.' : resource.message}</p>
     {resource.status === 'expired' ? <Link className={styles.link} href='/login?returnTo=%2Fapp%2Fcook'>Iniciar sesión</Link> : <>

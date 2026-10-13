@@ -39,6 +39,10 @@ describe('R5 shopping rules', () => {
     expect(shopReason(item({ source: 'recipe_missing', sources: [recipe(null)] }))).toBe('Falta para una receta que ya no está disponible');
     expect(shopReason(item({ source: 'low_stock_suggestion', sources: [{ source: 'low_stock_suggestion', ref: { location: 'fridge' }, label: 'Leche', quantity: null, unit: null }] })))
       .toBe('Te queda poco leche en la nevera');
+    const plan = (entries: { title: string }[]) => ({ source: 'plan_missing' as const, ref: { weekStart: '2026-10-19', entries }, label: null, quantity: 2, unit: 'unit' });
+    expect(shopReason(item({ source: 'plan_missing', sources: [plan([{ title: 'Tortilla' }, { title: 'Tortilla' }])] }))).toBe('Falta para tu plan: Tortilla');
+    expect(shopReason(item({ source: 'plan_missing', sources: [plan([{ title: 'Tortilla' }, { title: 'Pisto' }])] }))).toBe('Falta para tu plan: Tortilla (+1 más)');
+    expect(sectionOf({ source: 'plan_missing' })).toBe('recipes');
     expect(shopReason(item({ source: 'manual' }))).toBe('Lo añadiste tú');
     expect(shopReason(item({ source: 'legacy' }))).toBe('Añadido antes de la nueva lista');
   });
