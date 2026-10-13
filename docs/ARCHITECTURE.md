@@ -716,3 +716,41 @@ Convertir Compra en la salida accionable de recetas y despensa, manteniendo clar
 - API: `/api/shop/v1/{list,mutations,session,reconcile,undo}`; 404 con `PRODUCT_V3=false`.
 - Cliente: `/app/shop`, `lib/shop` (contratos, hook, IndexedDB `neverita-shop-v1`), reglas puras en `packages/domain/src/shopping-list/shop.ts`.
 - Invariante: Compra nunca escribe despensa; una sugerencia o un item no es stock.
+
+<!-- harness:sprint-r6-weekly-planning-layer -->
+## sprint-r6-weekly-planning-layer · Sprint R6 - Lightweight Weekly Planning
+
+Mantener la planificación como una capa ligera sobre recetas, no como un calendario principal, y convertir el plan semanal en necesidades de compra.
+
+### Scope aprobado
+
+  - `apps/web/src/app/(auth)/app/cook/week/**`
+  - `apps/web/src/app/(auth)/app/cook/page.tsx`
+  - `apps/web/src/app/(auth)/app/calendar/page.tsx`
+  - `apps/web/src/app/(auth)/app/recipes/[id]/**`
+  - `apps/web/src/app/(auth)/app/recipes/import/**`
+  - `apps/web/src/app/api/plan/v1/**`
+  - `apps/web/src/components/planning/**`
+  - `apps/web/src/components/cook/**`
+  - `apps/web/src/components/navigation/**`
+  - `apps/web/src/components/shop/**`
+  - `apps/web/src/lib/meal-calendar/**`
+  - `apps/web/src/lib/planning/**`
+  - `apps/web/src/lib/shop/**`
+  - `apps/web/src/types/database.generated.ts`
+  - `packages/domain/src/meals/**`
+  - `packages/domain/src/planning/**`
+  - `packages/domain/src/shopping-list/**`
+  - `supabase/migrations/**`
+  - `supabase/tests/**`
+  - `tests/**`
+  - `docs/**`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** meal_entries reutilizada con plan_kind aditiva (meal|outside); recetas planificadas como dinner con snapshot v1 y consumed_at nulo; recipe_id solo catálogo, import:<uuid> en snapshot. Items de Compra con source=plan_missing, source_ref plan:<lunes> y procedencia por entrada. Sin tablas paralelas ni recetas falsas.
+- **external_contracts:** GET /api/plan/v1/week y POST /api/plan/v1/shop (plan-week-v1, plan-shop-v1); altas y bajas por /api/meals sin cambios; cook_missing_v1 reutilizado para faltantes; contratos R5 de Compra ampliados solo con plan_missing.
+- **edge_cases:** Fecha civil con DST y medianoche; límites de 3 recetas por día y 60 por semana; Cenar fuera excluyente en servidor; misma receta mismo día idempotente; unknown e incompatibles no suman; legacy solo lectura; semana sin entradas; actualizar cantidad solo en items no marcados.
+- **ui_states:** /app/cook/week en lista vertical con días como regiones, Sin decidir, Cenar fuera, Registrado antes, selector ¿Cuándo la cocinas? en detalle y CTA Añadir N a la compra. Estados cargando/vacío/error/offline/pendiente/conflicto diferenciados; 320/393 px, 44 px, foco, reduced-motion y referencia 03 sin contenido inventado.
+

@@ -395,3 +395,16 @@ Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
 - Fusión: mismo concepto resuelto y unidad de la misma familia (g/kg, ml/l/cl, unit, pack) o, sin concepto, mismo nombre normalizado (`r1_normalize_text`). Un origen repetido no se suma dos veces. Nunca se funde cantidad desconocida con exacta.
 - Sugerencias: solo stock `qualitative` `low`/`empty` con concepto confirmado y sin otro lote suficiente. Descartar se ata a la versión del lote (`suggested_stock_version`).
 - Outbox de Compra en su propia base `neverita-shop-v1`; conflicto de versión conserva la intención como `conflict` y nunca la reaplica sin decisión del usuario.
+
+<!-- harness:sprint-r6-weekly-planning-layer -->
+## 2026-10-13 · sprint-r6-weekly-planning-layer aprobado
+
+Contexto: se aprobó el spec `sprint-r6-weekly-planning-layer` (Sprint R6 - Lightweight Weekly Planning).
+
+Decisiones registradas:
+
+- **auth_secrets:** auth.uid y RLS de meal_entries intactas; funciones nuevas SECURITY DEFINER con search_path vacío y grants mínimos. Requests sin userId, fechas fuera de rango ni cantidades del cliente; Origin same-origin y JSON estricto; cache private,no-store; 404 uniforme; plan local purgado en logout.
+- **rollback_compat:** PRODUCT_V3=false conserva /app/calendar, /api/meals y Compra legacy; /api/plan/v1 da 404 sin escrituras; selector oculto. plan_kind aditiva con default; datos legacy intactos y legibles. Migraciones locales sin reset; sin R7, proveedores ni cambios a reconciliación de R5.
+- **tests:** Harness, domain, build, DB lint y pgTAP (agregación, unidades, outside, snapshot, idempotencia, PLAN_CHANGED, RLS dos usuarios, legacy). Playwright local con offline real, conflicto entre dispositivos, redirect, zona horaria/DST y rollback; capturas 320/393 con DB/API reales y mocks identificados.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
