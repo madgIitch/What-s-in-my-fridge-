@@ -372,3 +372,16 @@ Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
 - Cooking utiliza la DB privada reservada neverita-pwa-v1, versión1/store drafts, ya incluida en la purga global de sesión; antes de R4 ningún módulo la creaba. Las intenciones no modifican stock local.
 - Confirm y undo serializan por usuario y bloquean inventario antes de la fuente favorita para evitar inversión de bloqueos con R3; replay se resuelve antes de validar caducidad o versiones. Los controles locales de concurrencia verifican este orden.
 - Un consumo exacto refleja la cantidad demostrada en campos legacy para compatibilidad. Una elección cualitativa elimina precisión exacta; los valores legacy históricos no justifican aritmética. Undo restaura stock con versiones protegidas, preservando notas y auditoría.
+
+<!-- harness:sprint-r5-shopping-loop -->
+## 2026-10-13 · sprint-r5-shopping-loop aprobado
+
+Contexto: se aprobó el spec `sprint-r5-shopping-loop` (Sprint R5 - Compra & Loop Closure).
+
+Decisiones registradas:
+
+- **auth_secrets:** auth.uid y RLS en todas las tablas nuevas; SECURITY DEFINER con search_path vacío y grants mínimos. Requests sin userId ni source arbitrario; Origin same-origin y JSON estricto; cache private,no-store; 404 uniforme. Logout purga cache y outbox de Compra. Sin datos privados en logs.
+- **rollback_compat:** PRODUCT_V3=false conserva /app/shopping-list y APIs legacy; /api/shop/v1 da 404 sin escrituras. Filas legacy y de Today migran como legacy/recipe_missing sin pérdida ni duplicados. Migraciones solo locales aditivas; sin R6/R7, proveedores ni cambios a R1/R4.
+- **tests:** Harness, domain, build, DB lint y pgTAP (RLS dos usuarios, idempotencia, atomicidad, reconciliación, deshacer). Playwright local con offline real, conflicto entre dispositivos, ticket y rollback; capturas 320/393 con DB/API reales y mocks de proveedor identificados.
+
+Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.

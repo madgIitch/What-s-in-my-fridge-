@@ -675,3 +675,36 @@ Cerrar el loop receta -> cocinar -> despensa sin obligar a registrar cada consum
 - **external_contracts:** GET /api/cooking/v3/plan y POST confirm/undo, payload y response definidos en criterios4,13,14,19,26. Replay canónico precede validación de estado vigente; mutation UUID único por usuario y operación/payload. API legacy /api/cooking intacta. planKey ligado a usuario, fuente/revisión y versiones.
 - **edge_cases:** Agrupar conceptos/unidades compatibles; FEFO solo fecha exacta, null al final y desempate estable. Sin sustracción exacta cuando receta/stock unknown o incompatible. Descuento insuficiente bloquea propuesta exacta. Qualitative degrade precision y mantiene provenance. Lotes múltiples no exactos requieren selección explícita; ausencia/ambigüedad no crea pantry. Ajuste manual tiene evidencia user, no extracción.
 - **ui_states:** /app/cook/session?kind&id y /app/cook/session/confirm; entrypoints catálogo/import/favorito. Pasos/progreso, Ya está, preview, Ajustar cantidades y confirmación/undo. Review_required explícito. Borrador por usuario/revisión, recuperación recarga y estados de conflicto/offline claros. Referencia09,320/393,44px,focus,reduced-motion.
+
+<!-- harness:sprint-r5-shopping-loop -->
+## sprint-r5-shopping-loop · Sprint R5 - Compra & Loop Closure
+
+Convertir Compra en la salida accionable de recetas y despensa, manteniendo claro por qué aparece cada cosa y cerrando el ciclo al terminar en el supermercado.
+
+### Scope aprobado
+
+  - `apps/web/src/app/(auth)/app/shop/**`
+  - `apps/web/src/app/(auth)/app/shopping-list/**`
+  - `apps/web/src/app/(auth)/app/scan/**`
+  - `apps/web/src/app/api/shop/v1/**`
+  - `apps/web/src/components/shop/**`
+  - `apps/web/src/components/shopping-list/**`
+  - `apps/web/src/components/navigation/**`
+  - `apps/web/src/components/cook/recipe-availability.tsx`
+  - `apps/web/src/lib/shopping-list/**`
+  - `apps/web/src/lib/shop/**`
+  - `apps/web/src/types/database.generated.ts`
+  - `packages/domain/src/shopping-list/**`
+  - `supabase/migrations/**`
+  - `supabase/tests/**`
+  - `tests/**`
+  - `docs/**`
+  - `spec.json`
+
+### Contexto técnico
+
+- **data_model:** shopping_list_items ampliada de forma aditiva (source, food_concept_id, selection, purchased_at, purchase_ref, shopping_session_id); shopping_item_sources para procedencia múltiple; shopping_sessions y shopping_events append-only para reconciliación y deshacer. Sugerencias persistidas como selection=suggested, nunca stock. checked (tienda) y purchased (ticket) son estados distintos.
+- **external_contracts:** GET /api/shop/v1/list y POST /api/shop/v1/mutations (shopping-list-v1, shopping-mutation-v1); RPC reconcile_shopping_after_receipt_v1 invocada tras ticket confirmado; enlace /app/scan?shoppingSession=<UUID>. Contratos R1 confirm_receipt_draft_v2, R2 apply_today_shopping_v1 y legacy apply_shopping_list_mutation no cambian.
+- **edge_cases:** Dedupe solo con concepto y unidad compatibles; unknown, pack/unit y peso/volumen no se suman. Sin concepto solo fusiona nombre normalizado idéntico. Stock exacto no genera sugerencias; descartada no resucita con la misma versión. Receta origen borrada, ticket abandonado, ticket sin sesión, cobertura parcial, múltiples candidatos y item checked sin ticket quedan definidos.
+- **ui_states:** /app/shop con tres secciones, alta rápida, detalle explicativo por item, CTA He terminado y Revisar compra tras ticket. Estados cargando/vacío/error/offline/pendiente/conflicto diferenciados; 320/393 px, 44 px, foco, reduced-motion y referencia 04-shopping-list.png sin contenido inventado.
+
