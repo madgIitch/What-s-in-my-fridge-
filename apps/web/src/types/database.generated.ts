@@ -1786,17 +1786,131 @@ export type Database = {
           },
         ]
       }
+      shopping_events: {
+        Row: {
+          applied_at: string
+          changes: Json
+          compensates: string | null
+          draft_id: string
+          id: string
+          kind: string
+          session_id: string | null
+          summary: Json
+          undo_until: string
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string
+          changes?: Json
+          compensates?: string | null
+          draft_id: string
+          id?: string
+          kind: string
+          session_id?: string | null
+          summary?: Json
+          undo_until: string
+          user_id: string
+        }
+        Update: {
+          applied_at?: string
+          changes?: Json
+          compensates?: string | null
+          draft_id?: string
+          id?: string
+          kind?: string
+          session_id?: string | null
+          summary?: Json
+          undo_until?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopping_events_compensates_fkey"
+            columns: ["compensates"]
+            isOneToOne: true
+            referencedRelation: "shopping_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shopping_events_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "receipt_drafts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shopping_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "shopping_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shopping_item_sources: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          label: string | null
+          quantity: number | null
+          ref_key: string
+          source: string
+          source_ref: Json
+          unit: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          label?: string | null
+          quantity?: number | null
+          ref_key: string
+          source: string
+          source_ref: Json
+          unit?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          label?: string | null
+          quantity?: number | null
+          ref_key?: string
+          source?: string
+          source_ref?: Json
+          unit?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopping_item_sources_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "shopping_list_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shopping_list_items: {
         Row: {
           checked: boolean
           created_at: string
           deleted_at: string | null
+          food_concept_id: string | null
           id: string
           ingredient_key: string | null
           name: string
+          purchase_ref: string | null
+          purchased_at: string | null
           quantity: number | null
-          source: string | null
+          selection: string
+          shopping_session_id: string | null
+          source: string
           source_ref: string | null
+          suggested_stock_version: number | null
           unit: string | null
           updated_at: string
           user_id: string
@@ -1806,12 +1920,18 @@ export type Database = {
           checked?: boolean
           created_at?: string
           deleted_at?: string | null
+          food_concept_id?: string | null
           id?: string
           ingredient_key?: string | null
           name: string
+          purchase_ref?: string | null
+          purchased_at?: string | null
           quantity?: number | null
-          source?: string | null
+          selection?: string
+          shopping_session_id?: string | null
+          source?: string
           source_ref?: string | null
+          suggested_stock_version?: number | null
           unit?: string | null
           updated_at?: string
           user_id: string
@@ -1821,18 +1941,39 @@ export type Database = {
           checked?: boolean
           created_at?: string
           deleted_at?: string | null
+          food_concept_id?: string | null
           id?: string
           ingredient_key?: string | null
           name?: string
+          purchase_ref?: string | null
+          purchased_at?: string | null
           quantity?: number | null
-          source?: string | null
+          selection?: string
+          shopping_session_id?: string | null
+          source?: string
           source_ref?: string | null
+          suggested_stock_version?: number | null
           unit?: string | null
           updated_at?: string
           user_id?: string
           version?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shopping_list_items_food_concept_id_fkey"
+            columns: ["food_concept_id"]
+            isOneToOne: false
+            referencedRelation: "food_concepts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shopping_list_items_purchase_ref_fkey"
+            columns: ["purchase_ref"]
+            isOneToOne: false
+            referencedRelation: "receipt_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shopping_list_mutations: {
         Row: {
@@ -1866,6 +2007,65 @@ export type Database = {
           payload?: Json
           result?: Json | null
           status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      shopping_sessions: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          draft_id: string | null
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          draft_id?: string | null
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          draft_id?: string | null
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopping_sessions_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "receipt_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shopping_v1_mutations: {
+        Row: {
+          client_mutation_id: string
+          created_at: string
+          payload: Json
+          result: Json
+          user_id: string
+        }
+        Insert: {
+          client_mutation_id: string
+          created_at?: string
+          payload: Json
+          result: Json
+          user_id: string
+        }
+        Update: {
+          client_mutation_id?: string
+          created_at?: string
+          payload?: Json
+          result?: Json
           user_id?: string
         }
         Relationships: []
@@ -2236,6 +2436,18 @@ export type Database = {
         }
         Returns: Json
       }
+      apply_shop_mutation_v1: {
+        Args: {
+          p_expected: number
+          p_item: string
+          p_mutation: string
+          p_name: string
+          p_op: string
+          p_quantity: number
+          p_unit: string
+        }
+        Returns: Json
+      }
       apply_shopping_list_mutation: {
         Args: {
           p_client_mutation_id: string
@@ -2462,6 +2674,15 @@ export type Database = {
         }
         Returns: Json
       }
+      reconcile_shopping_after_receipt_v1: {
+        Args: {
+          p_draft: string
+          p_mode?: string
+          p_mutation: string
+          p_session?: string
+        }
+        Returns: Json
+      }
       reconcile_subscription: {
         Args: {
           p_cancel_at_period_end: boolean
@@ -2547,6 +2768,30 @@ export type Database = {
         Args: { p_job_id: string; p_stage: string; p_worker_id: string }
         Returns: boolean
       }
+      shop_concept_for_v1: {
+        Args: { p_key: string; p_name: string }
+        Returns: string
+      }
+      shop_consolidate_v1: { Args: { p_uid: string }; Returns: undefined }
+      shop_item_json: {
+        Args: {
+          p_item: Database["public"]["Tables"]["shopping_list_items"]["Row"]
+        }
+        Returns: Json
+      }
+      shop_list_v1: { Args: never; Returns: Json }
+      shop_refresh_suggestions_v1: {
+        Args: { p_uid: string }
+        Returns: undefined
+      }
+      shop_unit_v1: {
+        Args: { p: string }
+        Returns: {
+          base: string
+          factor: number
+        }[]
+      }
+      start_shopping_session_v1: { Args: { p_mutation: string }; Returns: Json }
       store_cook_cache_v1: {
         Args: {
           p_id: string
@@ -2606,6 +2851,10 @@ export type Database = {
         Returns: string
       }
       undo_cooking_v3: {
+        Args: { p_event: string; p_mutation: string }
+        Returns: Json
+      }
+      undo_shopping_reconciliation_v1: {
         Args: { p_event: string; p_mutation: string }
         Returns: Json
       }

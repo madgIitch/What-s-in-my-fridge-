@@ -385,3 +385,13 @@ Decisiones registradas:
 - **tests:** Harness, domain, build, DB lint y pgTAP (RLS dos usuarios, idempotencia, atomicidad, reconciliación, deshacer). Playwright local con offline real, conflicto entre dispositivos, ticket y rollback; capturas 320/393 con DB/API reales y mocks de proveedor identificados.
 
 Consecuencia: futuras features deben respetar este contrato salvo nuevo ADR.
+
+## R5 · decisiones de implementación verificadas
+
+- `shopping_list_items.source`/`source_ref` ya existían desde R3 con una restricción solo para `recipe_missing`. R5 la sustituye por `shopping_origin` (añade `low_stock_suggestion`, `manual`, `legacy`), pone `legacy` por defecto y conserva el índice único de R3. La procedencia múltiple vive en `shopping_item_sources`, no en `source_ref`.
+- Los items de Hoy (R2) no cambian de contrato: un trigger sobre `today_shopping_mutations` les añade procedencia `recipe_missing` y solo reclasifica la fila si no choca con el índice único de R3.
+- La reconciliación del ticket es una RPC propia (`reconcile_shopping_after_receipt_v1`), no parte de `confirm_receipt_draft_v2`. La pantalla Compra descubre los tickets confirmados sin conciliar desde `shop_list_v1`; así no se tocó `purchase-review.tsx`, que queda fuera del scope aprobado.
+- La entrada de ticket sigue siendo `/app/scan`; `/app/add-purchase/ticket` no existe y no se creó. La sesión de compra viaja en `?shoppingSession=<uuid>` y en `shopping_sessions`.
+- Fusión: mismo concepto resuelto y unidad de la misma familia (g/kg, ml/l/cl, unit, pack) o, sin concepto, mismo nombre normalizado (`r1_normalize_text`). Un origen repetido no se suma dos veces. Nunca se funde cantidad desconocida con exacta.
+- Sugerencias: solo stock `qualitative` `low`/`empty` con concepto confirmado y sin otro lote suficiente. Descartar se ata a la versión del lote (`suggested_stock_version`).
+- Outbox de Compra en su propia base `neverita-shop-v1`; conflicto de versión conserva la intención como `conflict` y nunca la reaplica sin decisión del usuario.

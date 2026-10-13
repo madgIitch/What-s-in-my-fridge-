@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { purgeAllShopData } from "@/lib/shop/storage";
 
 const destinations = [
   { href: "/app", label: "Hoy" },
   { href: "/app/pantry", label: "Despensa" },
   { href: "/app/cook", label: "Cocinar" },
-  { href: "/app/shopping-list", label: "Compra" },
+  { href: "/app/shop", label: "Compra" },
 ] as const;
 
 function NavigationIcon({ href }: { href: string }) {
@@ -21,6 +23,11 @@ function NavigationIcon({ href }: { href: string }) {
 
 export function ProductV3Nav() {
   const pathname = usePathname();
+  // The private-session cleanup announces sign-out and account switches with this event.
+  useEffect(() => {
+    window.addEventListener("neverita:stop-workers", purgeAllShopData);
+    return () => window.removeEventListener("neverita:stop-workers", purgeAllShopData);
+  }, []);
   return <nav className="product-v3-nav" aria-label="Navegación principal">
     {destinations.slice(0, 2).map((item) => <Link key={item.href} href={item.href} aria-current={pathname === item.href ? "page" : undefined}>
       <NavigationIcon href={item.href} /><span>{item.label}</span>
@@ -28,7 +35,7 @@ export function ProductV3Nav() {
     <div className="product-v3-add">
       <Link href="/app/add-purchase" aria-label="Añadir compra" aria-current={pathname.startsWith("/app/add-purchase") ? "page" : undefined}>+</Link>
     </div>
-    {destinations.slice(2).map((item) => <Link key={item.href} href={item.href} aria-current={pathname === item.href || (item.href === "/app/cook" && ["/app/recipes", "/app/favorites"].includes(pathname)) ? "page" : undefined}>
+    {destinations.slice(2).map((item) => <Link key={item.href} href={item.href} aria-current={pathname === item.href || (item.href === "/app/shop" && pathname === "/app/shopping-list") || (item.href === "/app/cook" && ["/app/recipes", "/app/favorites"].includes(pathname)) ? "page" : undefined}>
       <NavigationIcon href={item.href} /><span>{item.label}</span>
     </Link>)}
   </nav>;

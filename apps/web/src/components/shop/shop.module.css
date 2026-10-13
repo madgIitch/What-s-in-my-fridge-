@@ -1,0 +1,39 @@
+.shell{max-width:42rem;margin:auto;padding:1.25rem 1rem 6rem;color:#51304f;animation:arrive .2s ease-out}
+.kicker{font-size:.85rem;color:#8b677f;margin:1rem 0 0}
+.shell h1{font-size:clamp(1.8rem,7vw,2.5rem);line-height:1.15;font-weight:800;letter-spacing:-.03em;margin:.4rem 0 1rem}
+.shell h2{font-size:1.1rem;font-weight:750;margin:1.6rem 0 .3rem}
+.hint{font-size:.88rem;line-height:1.5;color:#7a6677;margin:.1rem 0 .7rem}
+.status{font-size:.9rem;line-height:1.5;color:#7e647c;min-height:1.4rem;margin:.2rem 0 .6rem}
+.notice{background:#fff3df;padding:1rem;border-radius:16px;line-height:1.6;margin:1rem 0}
+.notice strong{display:block;margin-bottom:.3rem}
+.warn{background:#ffe9ee}
+.add{display:grid;grid-template-columns:minmax(0,1fr) 5.2rem 5.2rem;gap:.5rem;margin:1rem 0}
+.add input{min-height:48px;padding:.55rem .7rem;border:1px solid #e8b3c5;border-radius:14px;background:#fff8fa;color:inherit;min-width:0;width:100%}
+.add button{grid-column:1/-1}
+.list{list-style:none;margin:0;padding:0 1rem;border-radius:24px;background:#fffdf7}
+.item{padding:.35rem 0;border-bottom:1px solid #f0dce3}
+.item:last-child{border:0}
+.row{display:flex;gap:.7rem;align-items:center;min-height:56px}
+.check{width:26px;height:26px;flex-shrink:0;accent-color:#bd3c62}
+.name{flex:1;min-width:0;line-height:1.4;overflow-wrap:anywhere}
+.name[data-done=true]{text-decoration:line-through;color:#8b727f}
+.qty{font-size:.88rem;color:#7a6677;white-space:nowrap}
+.pending{font-size:.78rem;color:#8a5a00;background:#fff3df;border-radius:999px;padding:.1rem .5rem;white-space:nowrap}
+.more{display:grid;gap:.4rem;padding:0 0 .8rem 2.2rem;font-size:.9rem;line-height:1.55}
+.more a{color:#78344e;font-weight:700}
+.sources{margin:0;padding-left:1.1rem}
+.actions{display:flex;flex-wrap:wrap;gap:.5rem;margin:.2rem 0 .3rem}
+.primary,.secondary,.link{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.6rem 1rem;border-radius:16px;font-weight:750;text-decoration:none;color:#78344e;cursor:pointer;font:inherit;font-weight:750}
+.primary{border:1px solid #ff9aa2;background:#ff9aa2;color:#4d3340}
+.secondary{border:1px solid #efb9c8;background:#fff8fa}
+.link{border:0;background:transparent;min-height:44px;padding:.4rem .6rem}
+.suggested{border:1px dashed #efb9c8;border-radius:20px;padding:.4rem 1rem;margin:.5rem 0;background:#fffaf5}
+.footer{display:grid;gap:.5rem;margin-top:1.5rem}
+.empty{background:#fffdf7;border-radius:24px;padding:1.4rem 1rem;line-height:1.6}
+.toast{position:fixed;left:1rem;right:1rem;bottom:calc(5.4rem + env(safe-area-inset-bottom));max-width:40rem;margin:auto;background:#51304f;color:#fff;border-radius:16px;padding:.7rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.toast button{background:transparent;border:0;color:#ffd2dc;font:inherit;font-weight:750;min-height:44px;cursor:pointer}
+.shell :is(a,button,input,summary):focus-visible{outline:3px solid #bd3c62;outline-offset:3px}
+.shell button:disabled{opacity:.55;cursor:default}
+@keyframes arrive{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(max-width:360px){.add{grid-template-columns:minmax(0,1fr)}.add button{grid-column:auto}}
+@media(prefers-reduced-motion:reduce){.shell{animation:none}}

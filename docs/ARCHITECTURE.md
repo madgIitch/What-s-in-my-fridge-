@@ -708,3 +708,11 @@ Convertir Compra en la salida accionable de recetas y despensa, manteniendo clar
 - **edge_cases:** Dedupe solo con concepto y unidad compatibles; unknown, pack/unit y peso/volumen no se suman. Sin concepto solo fusiona nombre normalizado idéntico. Stock exacto no genera sugerencias; descartada no resucita con la misma versión. Receta origen borrada, ticket abandonado, ticket sin sesión, cobertura parcial, múltiples candidatos y item checked sin ticket quedan definidos.
 - **ui_states:** /app/shop con tres secciones, alta rápida, detalle explicativo por item, CTA He terminado y Revisar compra tras ticket. Estados cargando/vacío/error/offline/pendiente/conflicto diferenciados; 320/393 px, 44 px, foco, reduced-motion y referencia 04-shopping-list.png sin contenido inventado.
 
+
+## R5 · Compra y cierre del ciclo
+
+- Datos: `shopping_list_items` (+ `food_concept_id`, `selection`, `purchased_at`, `purchase_ref`, `shopping_session_id`, `suggested_stock_version`), `shopping_item_sources` (procedencia múltiple), `shopping_sessions`, `shopping_events` (append-only, deshacer único por compensación) y `shopping_v1_mutations` (replay).
+- Servidor: `shop_list_v1` (refresca sugerencias, consolida y lista), `apply_shop_mutation_v1`, `start_shopping_session_v1`, `reconcile_shopping_after_receipt_v1`, `undo_shopping_reconciliation_v1`. Todas `SECURITY DEFINER`, `search_path` vacío, solo `authenticated`.
+- API: `/api/shop/v1/{list,mutations,session,reconcile,undo}`; 404 con `PRODUCT_V3=false`.
+- Cliente: `/app/shop`, `lib/shop` (contratos, hook, IndexedDB `neverita-shop-v1`), reglas puras en `packages/domain/src/shopping-list/shop.ts`.
+- Invariante: Compra nunca escribe despensa; una sugerencia o un item no es stock.

@@ -88,3 +88,9 @@ Spec aprobado e implementación completa de Cocinar/imports privados, disponibil
 - Gates harness y build PASS; web 183, dominio 53 y typecheck, SQL 332, DB lint y cinco controles de concurrencia PASS. Playwright: cinco recorridos v3 y rollback false separado.
 - Capturas reales 320/393 y comparación09 documentadas. Migración aditiva local; sin reset, SQL remoto, push ni despliegue.
 - Pendiente smoke humano y cierre explícito. Carryover humano de calidad y Whisper/GCS preservado.
+
+## 13 de octubre de 2026 · sprint-r5-shopping-loop
+
+- Spec preparado y aprobado explícitamente; Compra explicable con procedencia, sugerencias separadas, fusión conservadora, offline con outbox propio y conciliación de ticket con deshacer.
+- Gates harness y build PASS; web 188, dominio 9, SQL 392, DB lint PASS. Playwright: cinco recorridos v3 y rollback false separado.
+- Migración aditiva local; sin reset, SQL remoto, push ni despliegue. Pendiente smoke humano y cierre explícito.

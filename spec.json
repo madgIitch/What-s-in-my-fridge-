@@ -2096,7 +2096,7 @@
     {
       "id": "sprint-r5-shopping-loop",
       "name": "Sprint R5 - Compra & Loop Closure",
-      "status": "spec_ready",
+      "status": "review_pending",
       "sdd": true,
       "priority": "P1",
       "milestone": "0.15.0",

@@ -1,5 +1,13 @@
 # Sesión actual
 
+## 13 de octubre de 2026 · R5 implementado, pendiente de revisión
+
+R4 cerrado por petición explícita del usuario. R5 (`sprint-r5-shopping-loop`) preparado, aprobado explícitamente e implementado: /app/shop con Para tus recetas, Sugerencias por poco stock y Añadido por ti; procedencia múltiple, sugerencias que nunca son stock, fusión solo por concepto y unidad compatible, outbox offline propio, sesión de compra hacia /app/scan y conciliación conservadora del ticket con deshacer. Estado final: review_pending; siguiente acción: smoke humano y cierre explícito.
+
+Verificación: typecheck, lint sin warnings, 188 pruebas web, 9 de dominio, build, 392 aserciones SQL (60 propias) y DB lint. Playwright: cinco recorridos con flag true y rollback con flag false por separado. Evidencia en progress/review_sprint-r5-shopping-loop.md y docs/design/neverita-v3/qa/R5_COMPARISON.md. Migración aplicada solo localmente; sin reset ni despliegue.
+
+Desviaciones documentadas: ticket sigue en /app/scan (no existe /app/add-purchase/ticket); conciliación se ofrece desde Compra porque purchase-review.tsx está fuera de scope; purga al cerrar sesión vía evento neverita:stop-workers desde la navegación v3.
+
 ## 8 de octubre de 2026 · R4 implementado, pendiente de revisión
 
 R4 (`sprint-r4-cooking-mode-and-pantry-reconciliation`) aprobado explícitamente por el usuario e implementado: pasos de cocina recuperables, preview conservador por lotes, ajustes explícitos, confirmación transaccional e idempotente, deshacer compensatorio y cola offline privada sin descuento optimista. Estado final: review_pending; siguiente acción: smoke humano y cierre explícito.
